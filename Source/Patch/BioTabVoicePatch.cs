@@ -16,7 +16,7 @@ namespace RimTalk.TTS.Patch
     [StaticConstructorOnStartup]
     public static class BioTabVoicePatch
     {
-        private static readonly Texture2D VoiceIcon = ContentFinder<Texture2D>.Get("UI/Commands/VoiceSettings", reportFailure: false) 
+        private static readonly Texture2D VoiceIcon = ContentFinder<Texture2D>.Get("UI/VoiceSettings", reportFailure: false) 
             ?? Texture2D.whiteTexture;
 
         private static Type _hediffPersonaType;

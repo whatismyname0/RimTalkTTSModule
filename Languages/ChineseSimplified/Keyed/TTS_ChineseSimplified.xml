@@ -8,7 +8,7 @@
     <RimTalk.Settings.TTS.Enable>启用 TTS</RimTalk.Settings.TTS.Enable>
     <RimTalk.Settings.TTS.EnableTooltip>对话显示时自动转换为语音。</RimTalk.Settings.TTS.EnableTooltip>
     <RimTalk.Settings.TTS.ButtonEnable>启用 快捷开关</RimTalk.Settings.TTS.ButtonEnable>
-    <RimTalk.Settings.TTS.ButtonEnableTooltip>在游戏界面显示快捷语音开关，它的设置不会保存。</RimTalk.Settings.TTS.ButtonEnableTooltip>
+    <RimTalk.Settings.TTS.ButtonEnableTooltip>在游戏界面显示快捷语音开关，它的设置不会保存。若TTS模块未启用则不生效。</RimTalk.Settings.TTS.ButtonEnableTooltip>
     <RimTalk.TTS.OnOffUpdated>语音生成已{0}</RimTalk.TTS.OnOffUpdated>
     <RimTalk.TTS.On>开启</RimTalk.TTS.On>
     <RimTalk.TTS.Off>关闭</RimTalk.TTS.Off>
@@ -36,7 +36,7 @@
     <RimTalk.Settings.TTS.ModelName>自定义名称</RimTalk.Settings.TTS.ModelName>
     <RimTalk.Settings.TTS.AddVoiceModel>添加语音模型</RimTalk.Settings.TTS.AddVoiceModel>
     <RimTalk.Settings.TTS.Info>需要 Fish Audio API 密钥和语音参考 ID。括号内容将在语音合成前自动移除。</RimTalk.Settings.TTS.Info>
-    <RimTalk.Settings.TTS.DefaultModel>默认模型（{0}）</RimTalk.Settings.TTS.DefaultModel>
+    <RimTalk.Settings.TTS.DefaultModel>默认模型: {0}</RimTalk.Settings.TTS.DefaultModel>
     <RimTalk.Settings.TTS.NotSet>(未设置)</RimTalk.Settings.TTS.NotSet>
     <RimTalk.Settings.TTS.NoneModel>无（跳过语音）</RimTalk.Settings.TTS.NoneModel>
     <RimTalk.Settings.TTS.ClearDefault>(清除默认)</RimTalk.Settings.TTS.ClearDefault>

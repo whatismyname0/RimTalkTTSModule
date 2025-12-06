@@ -6,8 +6,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Verse;
-using RimTalk.TTS.Data;
-using System.Configuration;
 using RimTalk.TTS.Service;
 
 namespace RimTalk.TTS.Patch
@@ -30,6 +28,12 @@ namespace RimTalk.TTS.Patch
         
         // TalkHistory methods
         private static MethodInfo _isTalkIgnoredMethod;
+
+        // ToggleButton
+        private static bool _pendingToggle = false;
+        private static bool _pendingToggleValue = false;
+        private static readonly object _pendingToggleLock = new object();
+        private static string _pendingToggleMessage = "";
         
         /// <summary>
         /// Check if a dialogue is marked as ignored in main RimTalk
@@ -557,39 +561,70 @@ namespace RimTalk.TTS.Patch
                 return blockedDialogues.Contains(dialogueId);
             }
         }
-    }
     
-    [StaticConstructorOnStartup]
-    [HarmonyPatch(typeof(PlaySettings), nameof(PlaySettings.DoPlaySettingsGlobalControls))]
-    public static class TogglePatch
-    {
-        private static readonly Texture2D RimTalkToggleIcon = ContentFinder<Texture2D>.Get("UI/SettingsUI");
-
-        public static void Postfix(WidgetRow row, bool worldView)
+        [StaticConstructorOnStartup]
+        [HarmonyPatch(typeof(PlaySettings), nameof(PlaySettings.DoPlaySettingsGlobalControls))]
+        public static class TogglePatch
         {
-            if (worldView || row is null)
-                return;
+            private static readonly Texture2D RimTalkToggleIcon = ContentFinder<Texture2D>.Get("UI/ToggleButton");
 
-            var settings = TTSModule.Instance.GetSettings();
-
-            if (settings.ButtonDisplay != true)
+            public static void Postfix(WidgetRow row, bool worldView)
             {
-                return;
-            }
+                if (worldView || row is null)
+                    return;
 
-            bool onOff = settings.isTemporarilyOff;
+                var settings = TTSModule.Instance.GetSettings();
 
-            row.ToggleableIcon(ref onOff, RimTalkToggleIcon, "",
-                SoundDefOf.Mouseover_ButtonToggle);
-
-            if (onOff != settings.isTemporarilyOff)
-            {
-                settings.isTemporarilyOff = onOff;
-                Messages.Message("RimTalk.TTS.OnOffUpdated".Translate(onOff ? "RimTalk.TTS.On" : "RimTalk.TTS.Off"), 
-                    MessageTypeDefOf.TaskCompletion, false);
-                if (!onOff)
+                if (settings.ButtonDisplay != true)
                 {
-                    TTSService.StopAll(false);
+                    return;
+                }
+
+                bool onOff = settings.isOnButton;
+
+                row.ToggleableIcon(ref onOff, RimTalkToggleIcon, "",
+                    SoundDefOf.Mouseover_ButtonToggle);
+
+                if (onOff != settings.isOnButton)
+                {
+                    settings.isOnButton = onOff;
+                    lock (_pendingToggleLock)
+                    {
+                        _pendingToggle = true;
+                        _pendingToggleValue = onOff;
+                        _pendingToggleMessage = "RimTalk.TTS.OnOffUpdated".Translate(onOff ? "RimTalk.TTS.On".Translate() : "RimTalk.TTS.Off".Translate());
+                    }
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(TickManager), nameof(TickManager.DoSingleTick))]
+        public static class Update_PendingToggleExecutor
+        {
+            static void Postfix()
+            {
+                if (!_pendingToggle) return;
+                bool onOff;
+                string msg;
+                lock (_pendingToggleLock)
+                {
+                    onOff = _pendingToggleValue;
+                    msg = _pendingToggleMessage;
+                    _pendingToggle = false;
+                    _pendingToggleMessage = "";
+                }
+
+                try
+                {
+                    Messages.Message(msg, MessageTypeDefOf.TaskCompletion, false);
+                    if (!onOff)
+                    {
+                        TTSService.StopAll(false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"[RimTalk.TTS] PendingToggleExecutor error: {ex}");
                 }
             }
         }

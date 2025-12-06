@@ -8,7 +8,7 @@
     <RimTalk.Settings.TTS.Enable>Enable TTS</RimTalk.Settings.TTS.Enable>
     <RimTalk.Settings.TTS.EnableTooltip>Automatically converts dialogue to speech when displayed.</RimTalk.Settings.TTS.EnableTooltip>
     <RimTalk.Settings.TTS.ButtonEnable>Enable on-off button</RimTalk.Settings.TTS.ButtonEnable>
-    <RimTalk.Settings.TTS.ButtonEnableTooltip>Enable an on-off button in in-game UI, its setting won't save</RimTalk.Settings.TTS.ButtonEnableTooltip>
+    <RimTalk.Settings.TTS.ButtonEnableTooltip>Enable a toggle button on in-game UI, its setting won't be saved. Ignored when TTS is disabled.</RimTalk.Settings.TTS.ButtonEnableTooltip>
     <RimTalk.TTS.OnOffUpdated>Text to Speech Module {0}</RimTalk.TTS.OnOffUpdated>
     <RimTalk.TTS.On>turned on</RimTalk.TTS.On>
     <RimTalk.TTS.Off>turned off</RimTalk.TTS.Off>
@@ -36,7 +36,7 @@
     <RimTalk.Settings.TTS.ModelName>Custom Name</RimTalk.Settings.TTS.ModelName>
     <RimTalk.Settings.TTS.AddVoiceModel>Add Voice Model</RimTalk.Settings.TTS.AddVoiceModel>
     <RimTalk.Settings.TTS.Info>Requires Fish Audio API key and voice reference ID. Text in brackets will be automatically removed before speech synthesis.</RimTalk.Settings.TTS.Info>
-    <RimTalk.Settings.TTS.DefaultModel>Default Model ({0})</RimTalk.Settings.TTS.DefaultModel>
+    <RimTalk.Settings.TTS.DefaultModel>Default Model: {0}</RimTalk.Settings.TTS.DefaultModel>
     <RimTalk.Settings.TTS.NotSet>(Not Set)</RimTalk.Settings.TTS.NotSet>
     <RimTalk.Settings.TTS.NoneModel>None (Skip TTS)</RimTalk.Settings.TTS.NoneModel>
     <RimTalk.Settings.TTS.ClearDefault>(Clear Default)</RimTalk.Settings.TTS.ClearDefault>

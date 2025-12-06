@@ -31,7 +31,7 @@ namespace RimTalk.TTS.Data
 
         public bool ButtonDisplay = true;
 
-        public bool isTemporarilyOff = false;
+        public bool isOnButton = true;
 
         public override void ExposeData()
         {

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using RimTalk.TTS.Data;
 using RimTalk.TTS.Patch;
@@ -67,7 +69,7 @@ namespace RimTalk.TTS.Service
             }
 
             // Check if TTS Module is still active
-            if (!TTSModule.Instance.IsActive||!settings.isTemporarilyOff)
+            if (!TTSModule.Instance.IsActive||!settings.isOnButton)
             {
                 Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was cancelled during generation (TTS module off)");
                 CleanupFailedDialogue(dialogueId);
@@ -138,7 +140,7 @@ namespace RimTalk.TTS.Service
                 }
 
                 // Check if TTS Module is still active
-                if (!TTSModule.Instance.IsActive||!settings.isTemporarilyOff)
+                if (!TTSModule.Instance.IsActive||!settings.isOnButton)
                 {
                     Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was cancelled during generation (TTS module off)");
                     CleanupFailedDialogue(dialogueId);
@@ -157,7 +159,7 @@ namespace RimTalk.TTS.Service
                 );
 
                 // Check if TTS Module is still active
-                if (!TTSModule.Instance.IsActive||!settings.isTemporarilyOff)
+                if (!TTSModule.Instance.IsActive||!settings.isOnButton)
                 {
                     Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was cancelled during generation (TTS module off)");
                     CleanupFailedDialogue(dialogueId);
@@ -239,13 +241,30 @@ namespace RimTalk.TTS.Service
             {
                 _isShuttingDown = true;
             }
+
+            List<Guid> toCancel;
+            lock (RimTalkPatches.blockedDialogues)
+            {
+                toCancel = RimTalkPatches.blockedDialogues.ToList();
+            }
             
             // Cancel all pending TTS generation tasks
-            foreach (var kvp in RimTalkPatches.blockedDialogues)
+            foreach (var id in toCancel)
             {
-                CancelDialogue(kvp);
+                try
+                {
+                    CancelDialogue(id);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"[RimTalk.TTS] StopAll: error cancelling dialogue {id}: {ex}");
+                }
             }
-            RimTalkPatches.blockedDialogues.Clear();
+            
+            lock (RimTalkPatches.blockedDialogues)
+            {
+                RimTalkPatches.blockedDialogues.Clear();
+            }
             
             AudioPlaybackService.StopAndClear();
         }

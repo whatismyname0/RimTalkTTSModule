@@ -8,7 +8,6 @@
     <RimTalk.Settings.TTS.Enable>Enable TTS</RimTalk.Settings.TTS.Enable>
     <RimTalk.Settings.TTS.EnableTooltip>Automatically converts dialogue to speech when displayed.</RimTalk.Settings.TTS.EnableTooltip>
     <RimTalk.Settings.TTS.ApiKey>Fish Audio API Key:</RimTalk.Settings.TTS.ApiKey>
-    <RimTalk.Settings.TTS.ReferenceId>Reference ID:</RimTalk.Settings.TTS.ReferenceId>
     <RimTalk.Settings.TTS.ModelLabel>TTS Model: {0}</RimTalk.Settings.TTS.ModelLabel>
     <RimTalk.Settings.TTS.ModelHighQuality>fishaudio-1 (v1.6)</RimTalk.Settings.TTS.ModelHighQuality>
     <RimTalk.Settings.TTS.ModelFaster>s1 (Faster, Recommended)</RimTalk.Settings.TTS.ModelFaster>
@@ -27,7 +26,6 @@
     <RimTalk.Settings.TTS.Volume>Volume</RimTalk.Settings.TTS.Volume>
     <RimTalk.Settings.TTS.VoiceModels>Voice Models</RimTalk.Settings.TTS.VoiceModels>
     <RimTalk.Settings.TTS.DefaultVoiceModel>Default Voice Model</RimTalk.Settings.TTS.DefaultVoiceModel>
-    <RimTalk.Settings.TTS.NoDefault>Use Reference ID</RimTalk.Settings.TTS.NoDefault>
     <RimTalk.Settings.TTS.None>None (Skip TTS)</RimTalk.Settings.TTS.None>
     <RimTalk.Settings.TTS.ModelID>Model ID</RimTalk.Settings.TTS.ModelID>
     <RimTalk.Settings.TTS.ModelName>Custom Name</RimTalk.Settings.TTS.ModelName>
@@ -50,7 +48,6 @@
     <RimTalk.Settings.TTS.UsingDefaultPrompt>Status: Using Default Prompt</RimTalk.Settings.TTS.UsingDefaultPrompt>
     <RimTalk.Settings.TTS.UsingCustomPrompt>Status: Using Custom Prompt</RimTalk.Settings.TTS.UsingCustomPrompt>
     <RimTalk.Settings.TTS.ModelConfigurations>Voice Model Configurations</RimTalk.Settings.TTS.ModelConfigurations>
-    <RimTalk.Settings.TTS.EnabledHeader>Enabled</RimTalk.Settings.TTS.EnabledHeader>
     <RimTalk.Settings.TTS.NoCustomModels>No custom voice models configured yet.\n\nAdd models in TTS Settings to see them here.</RimTalk.Settings.TTS.NoCustomModels>
 
     <!-- LLM API Settings -->

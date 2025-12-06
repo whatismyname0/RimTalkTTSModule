@@ -46,9 +46,6 @@ namespace RimTalk.TTS.UI
             listing.Label("RimTalk.Settings.TTS.ApiKey".Translate());
             settings.FishAudioApiKey = listing.TextEntry(settings.FishAudioApiKey);
 
-            listing.Label("RimTalk.Settings.TTS.ReferenceId".Translate());
-            settings.FishAudioReferenceId = listing.TextEntry(settings.FishAudioReferenceId);
-
             listing.Gap();
 
             // TTS Model Selection
@@ -268,9 +265,6 @@ namespace RimTalk.TTS.UI
             Rect idHeaderRect = new Rect(x, y, idWidth, height);
             Widgets.Label(idHeaderRect, "RimTalk.Settings.TTS.ColumnModelID".Translate());
 
-            Rect enabledHeaderRect = new Rect(tableHeaderRect.xMax - 70f, y, 70f, height);
-            Widgets.Label(enabledHeaderRect, "RimTalk.Settings.TTS.EnabledHeader".Translate());
-
             listing.Gap(6f);
 
             // Draw each model config row
@@ -316,14 +310,6 @@ namespace RimTalk.TTS.UI
             // Model ID field
             Rect idRect = new Rect(x, y, idWidth, height);
             model.ModelId = Widgets.TextField(idRect, model.ModelId ?? "");
-
-            // Enable/Disable toggle (add IsEnabled property to VoiceModel if needed)
-            Rect toggleRect = new Rect(rowRect.xMax - 60f, y + (height - 24f) / 2f, 24f, 24f);
-            // Note: VoiceModel needs an IsEnabled property for this to work
-            // For now, we'll skip this or you can add the property
-            // bool enabled = model.IsEnabled;
-            // Widgets.Checkbox(toggleRect.position, ref enabled);
-            // model.IsEnabled = enabled;
         }
 
         private static void DrawApiConfigSection(Listing_Standard listing, TTSSettings settings)

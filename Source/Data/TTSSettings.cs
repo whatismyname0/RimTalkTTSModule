@@ -11,7 +11,6 @@ namespace RimTalk.TTS.Data
         // TTS Configuration
         public bool EnableTTS = false;
         public string FishAudioApiKey = "";
-        public string FishAudioReferenceId = "";
         public float TTSVolume = 0.8f;
         public List<VoiceModel> VoiceModels = new();
         public string TTSTranslationLanguage = "";
@@ -36,7 +35,6 @@ namespace RimTalk.TTS.Data
             
             Scribe_Values.Look(ref EnableTTS, "enableTTS", false);
             Scribe_Values.Look(ref FishAudioApiKey, "fishAudioApiKey", "");
-            Scribe_Values.Look(ref FishAudioReferenceId, "fishAudioReferenceId", "");
             Scribe_Values.Look(ref TTSVolume, "ttsVolume", 0.8f);
             Scribe_Collections.Look(ref VoiceModels, "voiceModels", LookMode.Deep);
             Scribe_Values.Look(ref TTSTranslationLanguage, "ttsTranslationLanguage", "");

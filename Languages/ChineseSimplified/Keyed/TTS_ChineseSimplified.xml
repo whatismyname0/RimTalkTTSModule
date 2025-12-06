@@ -8,7 +8,6 @@
     <RimTalk.Settings.TTS.Enable>启用 TTS</RimTalk.Settings.TTS.Enable>
     <RimTalk.Settings.TTS.EnableTooltip>对话显示时自动转换为语音。</RimTalk.Settings.TTS.EnableTooltip>
     <RimTalk.Settings.TTS.ApiKey>Fish Audio API 密钥：</RimTalk.Settings.TTS.ApiKey>
-    <RimTalk.Settings.TTS.ReferenceId>参考 ID：</RimTalk.Settings.TTS.ReferenceId>
     <RimTalk.Settings.TTS.ModelLabel>TTS 模型：{0}</RimTalk.Settings.TTS.ModelLabel>
     <RimTalk.Settings.TTS.ModelHighQuality>fishaudio-1 (v1.6)</RimTalk.Settings.TTS.ModelHighQuality>
     <RimTalk.Settings.TTS.ModelFaster>s1（更快，推荐）</RimTalk.Settings.TTS.ModelFaster>
@@ -27,7 +26,6 @@
     <RimTalk.Settings.TTS.Volume>音量</RimTalk.Settings.TTS.Volume>
     <RimTalk.Settings.TTS.VoiceModels>语音模型</RimTalk.Settings.TTS.VoiceModels>
     <RimTalk.Settings.TTS.DefaultVoiceModel>默认语音模型</RimTalk.Settings.TTS.DefaultVoiceModel>
-    <RimTalk.Settings.TTS.NoDefault>使用参考 ID</RimTalk.Settings.TTS.NoDefault>
     <RimTalk.Settings.TTS.None>无（跳过语音）</RimTalk.Settings.TTS.None>
     <RimTalk.Settings.TTS.ModelID>模型 ID</RimTalk.Settings.TTS.ModelID>
     <RimTalk.Settings.TTS.ModelName>自定义名称</RimTalk.Settings.TTS.ModelName>
@@ -50,7 +48,6 @@
     <RimTalk.Settings.TTS.UsingDefaultPrompt>状态：正在使用默认提示词</RimTalk.Settings.TTS.UsingDefaultPrompt>
     <RimTalk.Settings.TTS.UsingCustomPrompt>状态：正在使用自定义提示词</RimTalk.Settings.TTS.UsingCustomPrompt>
     <RimTalk.Settings.TTS.ModelConfigurations>语音模型配置</RimTalk.Settings.TTS.ModelConfigurations>
-    <RimTalk.Settings.TTS.EnabledHeader>启用</RimTalk.Settings.TTS.EnabledHeader>
     <RimTalk.Settings.TTS.NoCustomModels>尚未配置自定义语音模型。\n\n在 TTS 设置中添加模型后即可在此看到。</RimTalk.Settings.TTS.NoCustomModels>
 
     <!-- LLM API 设置 -->

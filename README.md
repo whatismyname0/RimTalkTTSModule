@@ -11,6 +11,7 @@ RimTalk TTS是一个**Rimtalk的子模组**，为Rimtalk添加了语音生成功
 ### 前置模组 (Required)
 1. **Harmony** - brrainz.harmony
 2. **RimTalk** - cj.rimtalk
+```
 
 ### Python环境
 ```

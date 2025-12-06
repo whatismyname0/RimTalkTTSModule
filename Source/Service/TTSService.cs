@@ -111,6 +111,15 @@ namespace RimTalk.TTS.Service
                     Patch.RimTalkPatches.ReleaseBlock(dialogueId);
                     return;
                 }
+
+                // Check if dialogue was cancelled during generation
+                if (Patch.RimTalkPatches.IsTalkIgnored(dialogueId))
+                {
+                    Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was ignored during generation (discarding audio)");
+                    CleanupFailedDialogue(dialogueId);
+                    Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                    return;
+                }
                 
                 // Generate speech via Fish Audio API
                 byte[] audioData = await FishAudioTTSClient.GenerateSpeechAsync(

@@ -1,11 +1,14 @@
 using HarmonyLib;
 using System;
+using RimWorld;
+using UnityEngine;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Verse;
+using RimTalk.TTS.Data;
+using System.Configuration;
+using RimTalk.TTS.Service;
 
 namespace RimTalk.TTS.Patch
 {
@@ -552,6 +555,42 @@ namespace RimTalk.TTS.Patch
             lock (_blockLock)
             {
                 return blockedDialogues.Contains(dialogueId);
+            }
+        }
+    }
+    
+    [StaticConstructorOnStartup]
+    [HarmonyPatch(typeof(PlaySettings), nameof(PlaySettings.DoPlaySettingsGlobalControls))]
+    public static class TogglePatch
+    {
+        private static readonly Texture2D RimTalkToggleIcon = ContentFinder<Texture2D>.Get("UI/SettingsUI");
+
+        public static void Postfix(WidgetRow row, bool worldView)
+        {
+            if (worldView || row is null)
+                return;
+
+            var settings = TTSModule.Instance.GetSettings();
+
+            if (settings.ButtonDisplay != true)
+            {
+                return;
+            }
+
+            bool onOff = settings.isTemporarilyOff;
+
+            row.ToggleableIcon(ref onOff, RimTalkToggleIcon, "",
+                SoundDefOf.Mouseover_ButtonToggle);
+
+            if (onOff != settings.isTemporarilyOff)
+            {
+                settings.isTemporarilyOff = onOff;
+                Messages.Message("RimTalk.TTS.OnOffUpdated".Translate(onOff ? "RimTalk.TTS.On" : "RimTalk.TTS.Off"), 
+                    MessageTypeDefOf.TaskCompletion, false);
+                if (!onOff)
+                {
+                    TTSService.StopAll(false);
+                }
             }
         }
     }

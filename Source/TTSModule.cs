@@ -28,6 +28,11 @@ namespace RimTalk.TTS
             // Will be replaced with actual mod settings when Initialize() is called
             _settings = new TTSSettings();
         }
+        
+        public TTSSettings GetSettings()
+        {
+            return _settings;
+        }
 
         public void Initialize()
         {

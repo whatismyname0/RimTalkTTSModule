@@ -42,6 +42,10 @@ namespace RimTalk.TTS.UI
 
             listing.Gap();
 
+            listing.CheckboxLabeled("RimTalk.Settings.TTS.ButtonEnable".Translate(), ref settings.ButtonDisplay, "RimTalk.Settings.TTS.ButtonEnableTooltip".Translate());
+
+            listing.Gap();
+
             // Fish Audio API Configuration
             listing.Label("RimTalk.Settings.TTS.ApiKey".Translate());
             settings.FishAudioApiKey = listing.TextEntry(settings.FishAudioApiKey);

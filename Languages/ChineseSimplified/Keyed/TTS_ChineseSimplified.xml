@@ -7,6 +7,11 @@
     <RimTalk.Settings.TTS.Title>语音合成设置</RimTalk.Settings.TTS.Title>
     <RimTalk.Settings.TTS.Enable>启用 TTS</RimTalk.Settings.TTS.Enable>
     <RimTalk.Settings.TTS.EnableTooltip>对话显示时自动转换为语音。</RimTalk.Settings.TTS.EnableTooltip>
+    <RimTalk.Settings.TTS.ButtonEnable>启用 快捷开关</RimTalk.Settings.TTS.ButtonEnable>
+    <RimTalk.Settings.TTS.ButtonEnableTooltip>在游戏界面显示快捷语音开关，它的设置不会保存。</RimTalk.Settings.TTS.ButtonEnableTooltip>
+    <RimTalk.TTS.OnOffUpdated>语音生成已{0}</RimTalk.TTS.OnOffUpdated>
+    <RimTalk.TTS.On>开启</RimTalk.TTS.On>
+    <RimTalk.TTS.Off>关闭</RimTalk.TTS.Off>
     <RimTalk.Settings.TTS.ApiKey>Fish Audio API 密钥：</RimTalk.Settings.TTS.ApiKey>
     <RimTalk.Settings.TTS.ModelLabel>TTS 模型：{0}</RimTalk.Settings.TTS.ModelLabel>
     <RimTalk.Settings.TTS.ModelHighQuality>fishaudio-1 (v1.6)</RimTalk.Settings.TTS.ModelHighQuality>

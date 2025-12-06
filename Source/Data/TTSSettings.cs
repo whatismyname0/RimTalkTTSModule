@@ -29,6 +29,10 @@ namespace RimTalk.TTS.Data
         public float TTSTemperature = 0.9f; // TTS generation temperature (0.7-1.0)
         public float TTSTopP = 0.9f; // TTS generation top_p (0.7-1.0)
 
+        public bool ButtonDisplay = true;
+
+        public bool isTemporarilyOff = false;
+
         public override void ExposeData()
         {
             base.ExposeData();
@@ -43,6 +47,7 @@ namespace RimTalk.TTS.Data
             Scribe_Values.Look(ref TTSModel, "ttsModel", "s1");
             Scribe_Values.Look(ref TTSTemperature, "ttsTemperature", 0.9f);
             Scribe_Values.Look(ref TTSTopP, "ttsTopP", 0.9f);
+            Scribe_Values.Look(ref ButtonDisplay, "buttonDisplay", true);
             
             // LLM API configuration
             Scribe_Values.Look<TTSApiProvider>(ref ApiProvider, "apiProvider", TTSApiProvider.DeepSeek);

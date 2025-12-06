@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Concurrent;
-using System.Threading;
 using System.Threading.Tasks;
 using RimTalk.TTS.Data;
 using RimTalk.TTS.Patch;
@@ -54,6 +52,24 @@ namespace RimTalk.TTS.Service
             if (voiceModelId == VoiceModel.NONE_MODEL_ID)
             {
                 Log.Message($"[RimTalk.TTS] DEBUG: Pawn '{pawn?.LabelShort}' has NONE voice model - setting null audio and releasing block");
+                CleanupFailedDialogue(dialogueId);
+                Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                return;
+            }
+
+            // Check if dialogue was cancelled during generation
+            if (Patch.RimTalkPatches.IsTalkIgnored(dialogueId))
+            {
+                Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was ignored during generation (discarding audio)");
+                CleanupFailedDialogue(dialogueId);
+                Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                return;
+            }
+
+            // Check if TTS Module is still active
+            if (!TTSModule.Instance.IsActive||!settings.isTemporarilyOff)
+            {
+                Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was cancelled during generation (TTS module off)");
                 CleanupFailedDialogue(dialogueId);
                 Patch.RimTalkPatches.ReleaseBlock(dialogueId);
                 return;
@@ -120,6 +136,15 @@ namespace RimTalk.TTS.Service
                     Patch.RimTalkPatches.ReleaseBlock(dialogueId);
                     return;
                 }
+
+                // Check if TTS Module is still active
+                if (!TTSModule.Instance.IsActive||!settings.isTemporarilyOff)
+                {
+                    Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was cancelled during generation (TTS module off)");
+                    CleanupFailedDialogue(dialogueId);
+                    Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                    return;
+                }
                 
                 // Generate speech via Fish Audio API
                 byte[] audioData = await FishAudioTTSClient.GenerateSpeechAsync(
@@ -130,6 +155,15 @@ namespace RimTalk.TTS.Service
                     settings.TTSTemperature,
                     settings.TTSTopP
                 );
+
+                // Check if TTS Module is still active
+                if (!TTSModule.Instance.IsActive||!settings.isTemporarilyOff)
+                {
+                    Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was cancelled during generation (TTS module off)");
+                    CleanupFailedDialogue(dialogueId);
+                    Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                    return;
+                }
 
                 // Check if dialogue was cancelled during generation
                 if (Patch.RimTalkPatches.IsTalkIgnored(dialogueId))

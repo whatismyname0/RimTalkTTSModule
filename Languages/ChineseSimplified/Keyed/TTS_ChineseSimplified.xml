@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+    <!-- RimTalk TTS Module - 简体中文翻译 -->
+    
+    <!-- Settings_TTS.cs -->
+    <RimTalk.Settings.TTS>语音合成</RimTalk.Settings.TTS>
+    <RimTalk.Settings.TTS.Title>语音合成设置</RimTalk.Settings.TTS.Title>
+    <RimTalk.Settings.TTS.Enable>启用 TTS</RimTalk.Settings.TTS.Enable>
+    <RimTalk.Settings.TTS.EnableTooltip>对话显示时自动转换为语音。</RimTalk.Settings.TTS.EnableTooltip>
+    <RimTalk.Settings.TTS.ApiKey>Fish Audio API 密钥：</RimTalk.Settings.TTS.ApiKey>
+    <RimTalk.Settings.TTS.ReferenceId>参考 ID：</RimTalk.Settings.TTS.ReferenceId>
+    <RimTalk.Settings.TTS.ModelLabel>TTS 模型：{0}</RimTalk.Settings.TTS.ModelLabel>
+    <RimTalk.Settings.TTS.ModelHighQuality>fishaudio-1 (v1.6)</RimTalk.Settings.TTS.ModelHighQuality>
+    <RimTalk.Settings.TTS.ModelFaster>s1（更快，推荐）</RimTalk.Settings.TTS.ModelFaster>
+    <RimTalk.Settings.TTS.VolumeLabel>音量：{0}</RimTalk.Settings.TTS.VolumeLabel>
+    <RimTalk.Settings.TTS.TemperatureLabel>温度：{0}</RimTalk.Settings.TTS.TemperatureLabel>
+    <RimTalk.Settings.TTS.TopPLabel>Top P：{0}</RimTalk.Settings.TTS.TopPLabel>
+    <RimTalk.Settings.TTS.TranslationLanguage>翻译语言（留空以禁用）：</RimTalk.Settings.TTS.TranslationLanguage>
+    <RimTalk.Settings.TTS.TranslationLanguageInfo>留空以禁用翻译。输入语言（如"中文"、"English"、"日本語"）以在语音合成前翻译所有对话。</RimTalk.Settings.TTS.TranslationLanguageInfo>
+    <RimTalk.Settings.TTS.ProcessingPromptLabel>TTS 处理提示词：</RimTalk.Settings.TTS.ProcessingPromptLabel>
+    <RimTalk.Settings.TTS.Model>TTS 模型</RimTalk.Settings.TTS.Model>
+    <RimTalk.Settings.TTS.ModelInfo>推荐使用 Fish Audio S1</RimTalk.Settings.TTS.ModelInfo>
+    <RimTalk.Settings.TTS.Temperature>温度（越低越稳定，越高情感越丰富）</RimTalk.Settings.TTS.Temperature>
+    <RimTalk.Settings.TTS.TopP>Top P（控制一致性，越低越一致，但会显得僵硬）</RimTalk.Settings.TTS.TopP>
+    <RimTalk.Settings.TTS.ProcessingPrompt>TTS 处理提示词</RimTalk.Settings.TTS.ProcessingPrompt>
+    <RimTalk.Settings.TTS.ProcessingPromptInfo>使用 {language} 代表目标语言，{text} 代表对话文本。此提示词用于在发送到 TTS API 前处理文本。</RimTalk.Settings.TTS.ProcessingPromptInfo>
+    <RimTalk.Settings.TTS.Volume>音量</RimTalk.Settings.TTS.Volume>
+    <RimTalk.Settings.TTS.VoiceModels>语音模型</RimTalk.Settings.TTS.VoiceModels>
+    <RimTalk.Settings.TTS.DefaultVoiceModel>默认语音模型</RimTalk.Settings.TTS.DefaultVoiceModel>
+    <RimTalk.Settings.TTS.NoDefault>使用参考 ID</RimTalk.Settings.TTS.NoDefault>
+    <RimTalk.Settings.TTS.None>无（跳过语音）</RimTalk.Settings.TTS.None>
+    <RimTalk.Settings.TTS.ModelID>模型 ID</RimTalk.Settings.TTS.ModelID>
+    <RimTalk.Settings.TTS.ModelName>自定义名称</RimTalk.Settings.TTS.ModelName>
+    <RimTalk.Settings.TTS.AddVoiceModel>添加语音模型</RimTalk.Settings.TTS.AddVoiceModel>
+    <RimTalk.Settings.TTS.Info>需要 Fish Audio API 密钥和语音参考 ID。括号内容将在语音合成前自动移除。</RimTalk.Settings.TTS.Info>
+    <RimTalk.Settings.TTS.DefaultModel>默认模型（{0}）</RimTalk.Settings.TTS.DefaultModel>
+    <RimTalk.Settings.TTS.NotSet>(未设置)</RimTalk.Settings.TTS.NotSet>
+    <RimTalk.Settings.TTS.NoneModel>无（跳过语音）</RimTalk.Settings.TTS.NoneModel>
+    <RimTalk.Settings.TTS.ClearDefault>(清除默认)</RimTalk.Settings.TTS.ClearDefault>
+    <RimTalk.Settings.TTS.ColumnDescription>左列：模型名称（界面显示），右列：模型 ID（用于 API 调用）</RimTalk.Settings.TTS.ColumnDescription>
+    <RimTalk.Settings.TTS.ColumnModelName>模型名称</RimTalk.Settings.TTS.ColumnModelName>
+    <RimTalk.Settings.TTS.ColumnModelID>模型 ID</RimTalk.Settings.TTS.ColumnModelID>
+    <RimTalk.Settings.TTS.Delete>删除</RimTalk.Settings.TTS.Delete>
+    <RimTalk.Settings.TTS.AddModelSection>添加模型：</RimTalk.Settings.TTS.AddModelSection>
+    <RimTalk.Settings.TTS.NameLabel>名称：</RimTalk.Settings.TTS.NameLabel>
+    <RimTalk.Settings.TTS.IDLabel>ID：</RimTalk.Settings.TTS.IDLabel>
+    <RimTalk.Settings.TTS.AddModelButton>添加模型</RimTalk.Settings.TTS.AddModelButton>
+    <RimTalk.Settings.TTS.ProcessingPromptTip>使用 {language} 代表目标语言，{text} 代表对话文本。建议使用外部编辑器编辑复杂提示词。</RimTalk.Settings.TTS.ProcessingPromptTip>
+    <RimTalk.Settings.TTS.ResetPrompt>重置提示词</RimTalk.Settings.TTS.ResetPrompt>
+    <RimTalk.Settings.TTS.UsingDefaultPrompt>状态：正在使用默认提示词</RimTalk.Settings.TTS.UsingDefaultPrompt>
+    <RimTalk.Settings.TTS.UsingCustomPrompt>状态：正在使用自定义提示词</RimTalk.Settings.TTS.UsingCustomPrompt>
+    <RimTalk.Settings.TTS.ModelConfigurations>语音模型配置</RimTalk.Settings.TTS.ModelConfigurations>
+    <RimTalk.Settings.TTS.EnabledHeader>启用</RimTalk.Settings.TTS.EnabledHeader>
+    <RimTalk.Settings.TTS.NoCustomModels>尚未配置自定义语音模型。\n\n在 TTS 设置中添加模型后即可在此看到。</RimTalk.Settings.TTS.NoCustomModels>
+
+    <!-- LLM API 设置 -->
+    <RimTalk.Settings.TTS.LLMApiConfig>LLM API 配置</RimTalk.Settings.TTS.LLMApiConfig>
+    <RimTalk.Settings.TTS.ProviderLabel>API 提供商：</RimTalk.Settings.TTS.ProviderLabel>
+    <RimTalk.Settings.TTS.CustomProvider>自定义</RimTalk.Settings.TTS.CustomProvider>
+    <RimTalk.Settings.TTS.LLMModelLabel>模型：</RimTalk.Settings.TTS.LLMModelLabel>
+    <RimTalk.Settings.TTS.LLMApiKeyLabel>API 密钥：</RimTalk.Settings.TTS.LLMApiKeyLabel>
+    <RimTalk.Settings.TTS.CustomBaseUrlLabel>自定义基础 URL：</RimTalk.Settings.TTS.CustomBaseUrlLabel>
+
+    <!-- PersonaEditorWindow.cs -->
+    <RimTalk.PersonaEditor.VoiceModel>语音模型</RimTalk.PersonaEditor.VoiceModel>
+    <RimTalk.PersonaEditor.UseDefault>使用默认</RimTalk.PersonaEditor.UseDefault>
+    <RimTalk.PersonaEditor.None>无（跳过语音）</RimTalk.PersonaEditor.None>
+
+    <!-- BioTabVoicePatch.cs & VoiceSelectionWindow.cs -->
+    <RimTalk.TTS.VoiceModel>语音</RimTalk.TTS.VoiceModel>
+    <RimTalk.TTS.VoiceModelTooltip>语音模型选择</RimTalk.TTS.VoiceModelTooltip>
+    <RimTalk.TTS.CurrentVoice>当前语音</RimTalk.TTS.CurrentVoice>
+    <RimTalk.TTS.VoiceSelection>语音选择 - {0}</RimTalk.TTS.VoiceSelection>
+    <RimTalk.TTS.VoiceSelectionDesc>为该角色的对话选择语音模型。</RimTalk.TTS.VoiceSelectionDesc>
+    <RimTalk.TTS.VoiceNone>无</RimTalk.TTS.VoiceNone>
+    <RimTalk.TTS.VoiceNoneDesc>禁用该角色的语音合成</RimTalk.TTS.VoiceNoneDesc>
+    <RimTalk.TTS.VoiceDefault>默认</RimTalk.TTS.VoiceDefault>
+    <RimTalk.TTS.VoiceDefaultDesc>使用 TTS 设置中的默认语音模型</RimTalk.TTS.VoiceDefaultDesc>
+    <RimTalk.TTS.Save>保存</RimTalk.TTS.Save>
+    <RimTalk.TTS.Cancel>取消</RimTalk.TTS.Cancel>
+    <RimTalk.TTS.VoiceUpdated>{0}的语音模型已更新</RimTalk.TTS.VoiceUpdated>
+</LanguageData>

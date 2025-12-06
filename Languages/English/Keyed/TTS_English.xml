@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+    <!-- RimTalk TTS Module - English Translation -->
+    
+    <!-- Settings_TTS.cs -->
+    <RimTalk.Settings.TTS>TTS</RimTalk.Settings.TTS>
+    <RimTalk.Settings.TTS.Title>Text-to-Speech Settings</RimTalk.Settings.TTS.Title>
+    <RimTalk.Settings.TTS.Enable>Enable TTS</RimTalk.Settings.TTS.Enable>
+    <RimTalk.Settings.TTS.EnableTooltip>Automatically converts dialogue to speech when displayed.</RimTalk.Settings.TTS.EnableTooltip>
+    <RimTalk.Settings.TTS.ApiKey>Fish Audio API Key:</RimTalk.Settings.TTS.ApiKey>
+    <RimTalk.Settings.TTS.ReferenceId>Reference ID:</RimTalk.Settings.TTS.ReferenceId>
+    <RimTalk.Settings.TTS.ModelLabel>TTS Model: {0}</RimTalk.Settings.TTS.ModelLabel>
+    <RimTalk.Settings.TTS.ModelHighQuality>fishaudio-1 (v1.6)</RimTalk.Settings.TTS.ModelHighQuality>
+    <RimTalk.Settings.TTS.ModelFaster>s1 (Faster, Recommended)</RimTalk.Settings.TTS.ModelFaster>
+    <RimTalk.Settings.TTS.VolumeLabel>Volume: {0}</RimTalk.Settings.TTS.VolumeLabel>
+    <RimTalk.Settings.TTS.TemperatureLabel>Temperature: {0}</RimTalk.Settings.TTS.TemperatureLabel>
+    <RimTalk.Settings.TTS.TopPLabel>Top P: {0}</RimTalk.Settings.TTS.TopPLabel>
+    <RimTalk.Settings.TTS.TranslationLanguage>Translation Language (leave empty to disable):</RimTalk.Settings.TTS.TranslationLanguage>
+    <RimTalk.Settings.TTS.TranslationLanguageInfo>Leave empty to disable translation. Enter a language (e.g., "English", "Chinese", "Japanese") to translate all dialogue before TTS.</RimTalk.Settings.TTS.TranslationLanguageInfo>
+    <RimTalk.Settings.TTS.ProcessingPromptLabel>TTS Processing Prompt:</RimTalk.Settings.TTS.ProcessingPromptLabel>
+    <RimTalk.Settings.TTS.Model>TTS Model</RimTalk.Settings.TTS.Model>
+    <RimTalk.Settings.TTS.ModelInfo>Fish Audio S1 is recommended.</RimTalk.Settings.TTS.ModelInfo>
+    <RimTalk.Settings.TTS.Temperature>Temperature (The lower the stabler, the higher the more emotional)</RimTalk.Settings.TTS.Temperature>
+    <RimTalk.Settings.TTS.TopP>Top P (Consistency control, the lower the more consistent, also more rigid)</RimTalk.Settings.TTS.TopP>
+    <RimTalk.Settings.TTS.ProcessingPrompt>TTS Processing Prompt</RimTalk.Settings.TTS.ProcessingPrompt>
+    <RimTalk.Settings.TTS.ProcessingPromptInfo>Use {language} for target language and {text} for the dialogue text. This prompt is used to process text before sending to TTS API.</RimTalk.Settings.TTS.ProcessingPromptInfo>
+    <RimTalk.Settings.TTS.Volume>Volume</RimTalk.Settings.TTS.Volume>
+    <RimTalk.Settings.TTS.VoiceModels>Voice Models</RimTalk.Settings.TTS.VoiceModels>
+    <RimTalk.Settings.TTS.DefaultVoiceModel>Default Voice Model</RimTalk.Settings.TTS.DefaultVoiceModel>
+    <RimTalk.Settings.TTS.NoDefault>Use Reference ID</RimTalk.Settings.TTS.NoDefault>
+    <RimTalk.Settings.TTS.None>None (Skip TTS)</RimTalk.Settings.TTS.None>
+    <RimTalk.Settings.TTS.ModelID>Model ID</RimTalk.Settings.TTS.ModelID>
+    <RimTalk.Settings.TTS.ModelName>Custom Name</RimTalk.Settings.TTS.ModelName>
+    <RimTalk.Settings.TTS.AddVoiceModel>Add Voice Model</RimTalk.Settings.TTS.AddVoiceModel>
+    <RimTalk.Settings.TTS.Info>Requires Fish Audio API key and voice reference ID. Text in brackets will be automatically removed before speech synthesis.</RimTalk.Settings.TTS.Info>
+    <RimTalk.Settings.TTS.DefaultModel>Default Model ({0})</RimTalk.Settings.TTS.DefaultModel>
+    <RimTalk.Settings.TTS.NotSet>(Not Set)</RimTalk.Settings.TTS.NotSet>
+    <RimTalk.Settings.TTS.NoneModel>None (Skip TTS)</RimTalk.Settings.TTS.NoneModel>
+    <RimTalk.Settings.TTS.ClearDefault>(Clear Default)</RimTalk.Settings.TTS.ClearDefault>
+    <RimTalk.Settings.TTS.ColumnDescription>Left column: Model Name (for display), Right column: Model ID (for API calls)</RimTalk.Settings.TTS.ColumnDescription>
+    <RimTalk.Settings.TTS.ColumnModelName>Model Name</RimTalk.Settings.TTS.ColumnModelName>
+    <RimTalk.Settings.TTS.ColumnModelID>Model ID</RimTalk.Settings.TTS.ColumnModelID>
+    <RimTalk.Settings.TTS.Delete>Delete</RimTalk.Settings.TTS.Delete>
+    <RimTalk.Settings.TTS.AddModelSection>Add Model:</RimTalk.Settings.TTS.AddModelSection>
+    <RimTalk.Settings.TTS.NameLabel>Name:</RimTalk.Settings.TTS.NameLabel>
+    <RimTalk.Settings.TTS.IDLabel>ID:</RimTalk.Settings.TTS.IDLabel>
+    <RimTalk.Settings.TTS.AddModelButton>Add Model</RimTalk.Settings.TTS.AddModelButton>
+    <RimTalk.Settings.TTS.ProcessingPromptTip>Use {language} for target language and {text} for dialogue text. External editor recommended for complex prompts.</RimTalk.Settings.TTS.ProcessingPromptTip>
+    <RimTalk.Settings.TTS.ResetPrompt>Reset Prompt</RimTalk.Settings.TTS.ResetPrompt>
+    <RimTalk.Settings.TTS.UsingDefaultPrompt>Status: Using Default Prompt</RimTalk.Settings.TTS.UsingDefaultPrompt>
+    <RimTalk.Settings.TTS.UsingCustomPrompt>Status: Using Custom Prompt</RimTalk.Settings.TTS.UsingCustomPrompt>
+    <RimTalk.Settings.TTS.ModelConfigurations>Voice Model Configurations</RimTalk.Settings.TTS.ModelConfigurations>
+    <RimTalk.Settings.TTS.EnabledHeader>Enabled</RimTalk.Settings.TTS.EnabledHeader>
+    <RimTalk.Settings.TTS.NoCustomModels>No custom voice models configured yet.\n\nAdd models in TTS Settings to see them here.</RimTalk.Settings.TTS.NoCustomModels>
+
+    <!-- LLM API Settings -->
+    <RimTalk.Settings.TTS.LLMApiConfig>LLM API Configuration</RimTalk.Settings.TTS.LLMApiConfig>
+    <RimTalk.Settings.TTS.ProviderLabel>API Provider:</RimTalk.Settings.TTS.ProviderLabel>
+    <RimTalk.Settings.TTS.CustomProvider>Custom</RimTalk.Settings.TTS.CustomProvider>
+    <RimTalk.Settings.TTS.LLMModelLabel>Model:</RimTalk.Settings.TTS.LLMModelLabel>
+    <RimTalk.Settings.TTS.LLMApiKeyLabel>API Key:</RimTalk.Settings.TTS.LLMApiKeyLabel>
+    <RimTalk.Settings.TTS.CustomBaseUrlLabel>Custom Base URL:</RimTalk.Settings.TTS.CustomBaseUrlLabel>
+
+    <!-- PersonaEditorWindow.cs -->
+    <RimTalk.PersonaEditor.VoiceModel>Voice Model</RimTalk.PersonaEditor.VoiceModel>
+    <RimTalk.PersonaEditor.UseDefault>Use Default</RimTalk.PersonaEditor.UseDefault>
+    <RimTalk.PersonaEditor.None>None (Skip TTS)</RimTalk.PersonaEditor.None>
+
+    <!-- BioTabVoicePatch.cs & VoiceSelectionWindow.cs -->
+    <RimTalk.TTS.VoiceModel>Voice</RimTalk.TTS.VoiceModel>
+    <RimTalk.TTS.VoiceModelTooltip>Voice Model Selection</RimTalk.TTS.VoiceModelTooltip>
+    <RimTalk.TTS.CurrentVoice>Current Voice</RimTalk.TTS.CurrentVoice>
+    <RimTalk.TTS.VoiceSelection>Voice Selection - {0}</RimTalk.TTS.VoiceSelection>
+    <RimTalk.TTS.VoiceSelectionDesc>Choose a voice model for this character's dialogue.</RimTalk.TTS.VoiceSelectionDesc>
+    <RimTalk.TTS.VoiceNone>None</RimTalk.TTS.VoiceNone>
+    <RimTalk.TTS.VoiceNoneDesc>Disable TTS for this character</RimTalk.TTS.VoiceNoneDesc>
+    <RimTalk.TTS.VoiceDefault>Default</RimTalk.TTS.VoiceDefault>
+    <RimTalk.TTS.VoiceDefaultDesc>Use the default voice model from TTS settings</RimTalk.TTS.VoiceDefaultDesc>
+    <RimTalk.TTS.Save>Save</RimTalk.TTS.Save>
+    <RimTalk.TTS.Cancel>Cancel</RimTalk.TTS.Cancel>
+    <RimTalk.TTS.VoiceUpdated>Voice model updated for {0}</RimTalk.TTS.VoiceUpdated>
+</LanguageData>

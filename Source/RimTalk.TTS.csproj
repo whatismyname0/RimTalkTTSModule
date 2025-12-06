@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <GameVersion Condition=" '$(GameVersion)' == '' ">1.6</GameVersion>
+        <OutputType>Library</OutputType>
+        <TargetFramework>net48</TargetFramework>
+        <PlatformTarget>x64</PlatformTarget>
+        <RootNamespace>RimTalk.TTS</RootNamespace>
+        <AssemblyName>RimTalk.TTS</AssemblyName>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+        <RimWorldDir Condition=" '$(RimWorldDir)' == '' ">$(RIMWORLD_DIR)</RimWorldDir>
+
+        <OutputPath>../1.6/Assemblies</OutputPath>
+        <LangVersion>default</LangVersion>
+    </PropertyGroup>
+
+    <!-- Define version constants based on GameVersion -->
+    <PropertyGroup>
+        <DefineConstants>$(DefineConstants);V$(GameVersion.Replace('.', '_'))</DefineConstants>
+    </PropertyGroup>
+
+    <!-- Release build configuration -->
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <Optimize>false</Optimize>
+        <DebugSymbols>true</DebugSymbols>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Core RimWorld & UnityEngine libraries -->
+        <PackageReference Include="Krafs.Rimworld.Ref" Version="$(GameVersion).*-*" PrivateAssets="All" />
+        <!-- Harmony API -->
+        <PackageReference Include="Lib.Harmony.Ref" Version="2.*" PrivateAssets="All"/>
+    </ItemGroup>
+
+</Project>

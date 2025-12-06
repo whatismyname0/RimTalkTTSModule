@@ -28,6 +28,7 @@ Setup:
 3. Configure TTS settings in mod options
 4. Assign voice models to your colonists
 
+ATTENTION: When using Alt+F4 to close the game, RimTalk TTS may not shutdown the server.
 This mod operates non-invasively through Harmony patches and does not modify RimTalk's core code.
 	</description>
 	<supportedVersions>

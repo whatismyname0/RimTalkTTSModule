@@ -2,7 +2,6 @@
 
 这是RimTalk的语音合成扩展，作为独立模组运行。
 
-### 独立模组设计
 RimTalk TTS是一个**Rimtalk的子模组**，为Rimtalk添加了语音生成功能
 
 ```

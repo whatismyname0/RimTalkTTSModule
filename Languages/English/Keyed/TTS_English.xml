@@ -19,7 +19,7 @@
     <RimTalk.Settings.TTS.VolumeLabel>Volume: {0}</RimTalk.Settings.TTS.VolumeLabel>
     <RimTalk.Settings.TTS.TemperatureLabel>Temperature: {0}</RimTalk.Settings.TTS.TemperatureLabel>
     <RimTalk.Settings.TTS.TopPLabel>Top P: {0}</RimTalk.Settings.TTS.TopPLabel>
-    <RimTalk.Settings.TTS.TranslationLanguage>Translation Language (leave empty to disable):</RimTalk.Settings.TTS.TranslationLanguage>
+    <RimTalk.Settings.TTS.TranslationLanguage>Translation Language (must):</RimTalk.Settings.TTS.TranslationLanguage>
     <RimTalk.Settings.TTS.TranslationLanguageInfo>Leave empty to disable translation. Enter a language (e.g., "English", "Chinese", "Japanese") to translate all dialogue before TTS.</RimTalk.Settings.TTS.TranslationLanguageInfo>
     <RimTalk.Settings.TTS.ProcessingPromptLabel>TTS Processing Prompt:</RimTalk.Settings.TTS.ProcessingPromptLabel>
     <RimTalk.Settings.TTS.Model>TTS Model</RimTalk.Settings.TTS.Model>

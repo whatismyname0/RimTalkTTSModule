@@ -19,7 +19,7 @@
     <RimTalk.Settings.TTS.VolumeLabel>音量：{0}</RimTalk.Settings.TTS.VolumeLabel>
     <RimTalk.Settings.TTS.TemperatureLabel>温度：{0}</RimTalk.Settings.TTS.TemperatureLabel>
     <RimTalk.Settings.TTS.TopPLabel>Top P：{0}</RimTalk.Settings.TTS.TopPLabel>
-    <RimTalk.Settings.TTS.TranslationLanguage>翻译语言（留空以禁用）：</RimTalk.Settings.TTS.TranslationLanguage>
+    <RimTalk.Settings.TTS.TranslationLanguage>翻译语言（必须填写）：</RimTalk.Settings.TTS.TranslationLanguage>
     <RimTalk.Settings.TTS.TranslationLanguageInfo>留空以禁用翻译。输入语言（如"中文"、"English"、"日本語"）以在语音合成前翻译所有对话。</RimTalk.Settings.TTS.TranslationLanguageInfo>
     <RimTalk.Settings.TTS.ProcessingPromptLabel>TTS 处理提示词：</RimTalk.Settings.TTS.ProcessingPromptLabel>
     <RimTalk.Settings.TTS.Model>TTS 模型</RimTalk.Settings.TTS.Model>

@@ -35,5 +35,7 @@ RimTalk TTS  ← 此模组
 - TTS参数(temperature, top_p等)
 
 github:https://github.com/whatismyname0/RimTalkTTSModule
+
 贴吧发布页及安装教程:https://tieba.baidu.com/p/10278651916
+
 B站演示视频:https://www.bilibili.com/video/BV1PB2fBsEtQ

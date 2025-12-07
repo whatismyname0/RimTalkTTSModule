@@ -1,6 +1,23 @@
 Urgent:
-Support more online TTS service supplier (I don't know which to support, and I need professional comment)
-Support local TTS model (I don't have any experience and the format could be a mess)
+    Support more online TTS service supplier
+    {
+        I don't know which to support, and I need professional comment
+    }
+    Support local TTS model
+    {
+        I don't have any experience and the format could be a mess
+    }
 
 Improvement:
-I'm sleepy.
+    In Progress:
+        Voice source location follow pawn
+        {
+            status: half-complete, can run. Source is not following the pawn. At least no runtime error.
+        }
+    planned:
+        cooldown time after TTS generation
+        {
+            desc: Add a cooldown time independent of Rimtalk's cooldown time, set when all content of a complete dialogue is generated with its audio all played or skipped, during which, according to user's settings, Rimtalk cannot generate more dialogues, or Rimtalk will still generate dialogues, however, restricted by Rimtalk's cooldown time, and the same time, TTS will not function until TTS module's cooldown time is over.
+        }
+
+Bug fix:

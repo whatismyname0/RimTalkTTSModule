@@ -19,5 +19,9 @@ Improvement:
         {
             desc: Add a cooldown time independent of Rimtalk's cooldown time, set when all content of a complete dialogue is generated with its audio all played or skipped, during which, according to user's settings, Rimtalk cannot generate more dialogues, or Rimtalk will still generate dialogues, however, restricted by Rimtalk's cooldown time, and the same time, TTS will not function until TTS module's cooldown time is over.
         }
+        total code refactor
+        {
+            desc: Code structure is a PoS now.
+        }
 
 Bug fix:

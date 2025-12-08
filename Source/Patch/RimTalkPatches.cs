@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using Verse;
 using RimTalk.TTS.Service;
+using RimWorld.QuestGen;
 
 namespace RimTalk.TTS.Patch
 {
@@ -150,6 +151,9 @@ namespace RimTalk.TTS.Patch
             {
                 try
                 {
+                    if (!TTSModule.Instance.IsActive)
+                        return true;
+
                     if (pawn == null || talk == null || _getIdMethod == null)
                         return true;
 
@@ -168,7 +172,7 @@ namespace RimTalk.TTS.Patch
                     }
 
                     // Play audio (will wait for TTS generation and previous playback)
-                    Service.AudioPlaybackService.PlayAudio(dialogueId);
+                    Service.AudioPlaybackService.PlayAudio(dialogueId, pawn);
                     return true; // Allow original method to execute
                 }
                 catch (Exception ex)
@@ -208,6 +212,8 @@ namespace RimTalk.TTS.Patch
 
             static void Prefix(Guid id)
             {
+                if (!TTSModule.Instance.IsActive)
+                    return;
                 try
                 {
                     TTSModule.Instance.OnDialogueCancelled(id);
@@ -250,28 +256,10 @@ namespace RimTalk.TTS.Patch
             }
 
             // Postfix: Register the TalkResponses list with its owning Pawn
+            // Note: Always register, even if TTS is disabled, to support hot-switching
             static void Postfix(object __instance, Pawn pawn)
             {
-                try
-                {
-                    if (__instance == null || pawn == null)
-                        return;
-
-                    var talkResponsesField = _pawnStateType.GetField("TalkResponses", BindingFlags.Public | BindingFlags.Instance);
-                    if (talkResponsesField == null)
-                        return;
-
-                    var talkResponsesList = talkResponsesField.GetValue(__instance);
-                    if (talkResponsesList == null)
-                        return;
-
-                    // Register this list in our map
-                    _listToPawnMap.Add(talkResponsesList, pawn);
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning($"[RimTalk.TTS] PawnStateConstructor_Patch error: {ex.Message}");
-                }
+                AddPawnDialogueList(__instance, pawn);
             }
         }
 
@@ -314,6 +302,9 @@ namespace RimTalk.TTS.Patch
             {
                 try
                 {
+                    if (!TTSModule.Instance.IsActive)
+                        return;
+
                     if (__instance == null || _getIdMethod == null || _getTextMethod == null)
                         return;
 
@@ -385,6 +376,9 @@ namespace RimTalk.TTS.Patch
             {
                 try
                 {
+                    if (!TTSModule.Instance.IsActive)
+                        return;
+
                     if (__instance == null || _getIdMethod == null)
                         return;
 
@@ -405,6 +399,7 @@ namespace RimTalk.TTS.Patch
                     var talkResponse = talkResponsesList[0];
                     if (talkResponse == null)
                         return;
+
 
                     var dialogueId = (Guid)_getIdMethod.Invoke(talkResponse, null);
                     // Cancel TTS generation or discard generated audio
@@ -511,6 +506,8 @@ namespace RimTalk.TTS.Patch
         {
             static void Prefix(Pawn __instance, bool silentlyRemoveReferences)
             {
+                if (!TTSModule.Instance.IsActive)
+                    return;
                 try
                 {
                     if (__instance != null)
@@ -570,6 +567,9 @@ namespace RimTalk.TTS.Patch
 
             public static void Postfix(WidgetRow row, bool worldView)
             {
+                if (!TTSModule.Instance.IsActive)
+                    return;
+
                 if (worldView || row is null)
                     return;
 
@@ -603,6 +603,8 @@ namespace RimTalk.TTS.Patch
         {
             static void Postfix()
             {
+                if (!TTSModule.Instance.IsActive)
+                    return;
                 if (!_pendingToggle) return;
                 bool onOff;
                 string msg;
@@ -626,6 +628,110 @@ namespace RimTalk.TTS.Patch
                 {
                     Log.Error($"[RimTalk.TTS] PendingToggleExecutor error: {ex}");
                 }
+            }
+        }
+
+        public static void AddPawnDialogueList(object __instance, Pawn pawn)
+        {
+            try
+            {
+                if (__instance == null || pawn == null)
+                    return;
+
+                var talkResponsesField = _pawnStateType?.GetField("TalkResponses", BindingFlags.Public | BindingFlags.Instance);
+                if (talkResponsesField == null)
+                    return;
+
+                var talkResponsesList = talkResponsesField.GetValue(__instance);
+                if (talkResponsesList == null)
+                    return;
+
+                // Register this list in our map (GetOrCreateValue is idempotent)
+                _listToPawnMap.GetOrCreateValue(talkResponsesList);
+                _listToPawnMap.Remove(talkResponsesList);
+                _listToPawnMap.Add(talkResponsesList, pawn);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"[RimTalk.TTS] AddPawnDialogueList (PawnState constructor) error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Find and register a pawn's PawnState.TalkResponses list from the RimTalk WorldComponent
+        /// Used when reloading a map to restore the pawn-to-list mapping
+        /// </summary>
+        public static void AddPawnDialogueList(Pawn pawn)
+        {
+            try
+            {
+                if (pawn == null)
+                    return;
+
+                if (_talkServiceType == null || _pawnStateType == null)
+                    return;
+
+                // Get RimTalk WorldComponent from current game
+                var rimTalkWorldComponentType = _talkServiceType.Assembly.GetType("RimTalk.Data.RimTalkWorldComponent");
+                if (rimTalkWorldComponentType == null)
+                {
+                    Log.Warning("[RimTalk.TTS] AddPawnDialogueList: RimTalkWorldComponent type not found");
+                    return;
+                }
+
+                var worldComp = Current.Game?.World?.GetComponent(rimTalkWorldComponentType);
+                if (worldComp == null)
+                {
+                    Log.Warning("[RimTalk.TTS] AddPawnDialogueList: RimTalkWorldComponent not found in current game");
+                    return;
+                }
+
+                // Get PawnStates dictionary from WorldComponent
+                var pawnStatesField = rimTalkWorldComponentType.GetField("PawnStates", BindingFlags.Public | BindingFlags.Instance);
+                if (pawnStatesField == null)
+                {
+                    Log.Warning("[RimTalk.TTS] AddPawnDialogueList: PawnStates field not found");
+                    return;
+                }
+
+                var pawnStates = pawnStatesField.GetValue(worldComp) as System.Collections.IDictionary;
+                if (pawnStates == null)
+                {
+                    Log.Warning("[RimTalk.TTS] AddPawnDialogueList: PawnStates is null or not a dictionary");
+                    return;
+                }
+
+                // Get PawnState for this pawn
+                if (!pawnStates.Contains(pawn))
+                {
+                    // Pawn doesn't have a PawnState yet, this is normal for new pawns
+                    return;
+                }
+
+                var pawnState = pawnStates[pawn];
+                if (pawnState == null)
+                    return;
+
+                // Get TalkResponses list from PawnState
+                var talkResponsesField = _pawnStateType.GetField("TalkResponses", BindingFlags.Public | BindingFlags.Instance);
+                if (talkResponsesField == null)
+                {
+                    Log.Warning("[RimTalk.TTS] AddPawnDialogueList: TalkResponses field not found");
+                    return;
+                }
+
+                var talkResponsesList = talkResponsesField.GetValue(pawnState);
+                if (talkResponsesList == null)
+                    return;
+
+                // Register this list in our map (remove first if exists, then add)
+                // This ensures the mapping is always up-to-date
+                _listToPawnMap.Remove(talkResponsesList);
+                _listToPawnMap.Add(talkResponsesList, pawn);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"[RimTalk.TTS] AddPawnDialogueList (1 param) error for pawn '{pawn?.LabelShort}': {ex.Message}");
             }
         }
     }

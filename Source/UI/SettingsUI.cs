@@ -2,6 +2,7 @@ using System.Linq;
 using UnityEngine;
 using Verse;
 using RimTalk.TTS.Data;
+using RimTalk.TTS.Service;
 
 namespace RimTalk.TTS.UI
 {
@@ -22,6 +23,7 @@ namespace RimTalk.TTS.UI
             float voiceModelRowHeight = 36f; // Height per voice model row (30f + 6f gap)
             int voiceModelCount = settings.VoiceModels?.Count ?? 0;
             float contentHeight = baseHeight + (voiceModelCount * voiceModelRowHeight);
+            bool isOn = settings.EnableTTS;
             
             Rect viewRect = new Rect(0f, 0f, inRect.width - 20f, contentHeight);
             
@@ -33,11 +35,27 @@ namespace RimTalk.TTS.UI
             // Enable TTS
             listing.CheckboxLabeled("RimTalk.Settings.TTS.Enable".Translate(), ref settings.EnableTTS, "RimTalk.Settings.TTS.EnableTooltip".Translate());
 
-            if (!settings.EnableTTS)
+            // Handle TTS toggle
+            if (isOn != settings.EnableTTS)
             {
-                listing.End();
-                Widgets.EndScrollView();
-                return;
+                if (!settings.EnableTTS)
+                {
+                    // TTS turned OFF: stop all audio and clear state
+                    AudioPlaybackService.StopAndClear();
+                    Log.Message("[RimTalk.TTS] TTS disabled via settings");
+                    listing.End();
+                    Widgets.EndScrollView();
+                    return;
+                }
+                else
+                {
+                    // TTS turned ON: reload map to register all pawns
+                    if (Find.CurrentMap != null)
+                    {
+                        TTSService.ReloadMap(Find.CurrentMap);
+                        Log.Message("[RimTalk.TTS] TTS enabled via settings, reloading map pawns");
+                    }
+                }
             }
 
             listing.Gap();

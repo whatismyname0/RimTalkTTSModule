@@ -287,5 +287,24 @@ namespace RimTalk.TTS.Service
                 AudioPlaybackService.RemovePendingAudio(dialogueId);
             }
         }
+
+        public static void ReloadMap(Map map)
+        {
+            if (map == null)
+                return;
+
+            foreach (var pawn in map.mapPawns.AllPawns)
+            {
+                try
+                {
+                    // Ask RimTalkPatches to attempt to locate and register this pawn's PawnState.TalkResponses list
+                    RimTalk.TTS.Patch.RimTalkPatches.AddPawnDialogueList(pawn);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning($"[RimTalk.TTS] ReloadMap: failed to register pawn {pawn?.LabelShort}: {ex.Message}");
+                }
+            }
+        }
     }
 }

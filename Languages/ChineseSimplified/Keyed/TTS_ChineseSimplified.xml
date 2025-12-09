@@ -82,7 +82,11 @@
     <RimTalk.TTS.Cancel>取消</RimTalk.TTS.Cancel>
     <RimTalk.TTS.VoiceUpdated>{0}的语音模型已更新</RimTalk.TTS.VoiceUpdated>
 
-    <!-- Overlay_DrawSettingsDropdown_Transpiler -->
-    <RimTalk.TTS.Reset>TTS清空语音</RimTalk.TTS.Reset>
+    <!-- Overlay_MapComponentOnGUI_Postfix -->
+    <RimTalk.TTS.Reset>清空语音</RimTalk.TTS.Reset>
     <RimTalk.TTS.ResetComplete>已清空当前所有等待播放/生成的语音</RimTalk.TTS.ResetComplete>
+    <RimTalk.TTS.Generate>生成新一组对话</RimTalk.TTS.Generate>
+    <RimTalk.TTS.GenerateComplete>已开始生成新的一组对话</RimTalk.TTS.GenerateComplete>
+    <RimTalk.TTS.Ignore>忽略当前所有对话</RimTalk.TTS.Ignore>
+    <RimTalk.TTS.IgnoreComplete>已忽略当前所有对话</RimTalk.TTS.IgnoreComplete>
 </LanguageData>

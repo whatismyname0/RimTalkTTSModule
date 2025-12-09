@@ -161,7 +161,7 @@ namespace RimTalk.TTS.Service
                 {
                     if (!RimTalkPatches.IsBlocked(dialogueId))
                     {
-                        Log.Warning($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} is no longer blocked after generation (discarding audio)");
+                        Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} is no longer blocked after generation (discarding audio)");
                         CleanupFailedDialogue(dialogueId);
                     }
                     else

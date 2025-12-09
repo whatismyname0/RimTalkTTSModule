@@ -82,7 +82,11 @@
     <RimTalk.TTS.Cancel>Cancel</RimTalk.TTS.Cancel>
     <RimTalk.TTS.VoiceUpdated>Voice model updated for {0}</RimTalk.TTS.VoiceUpdated>
 
-    <!-- Overlay_DrawSettingsDropdown_Transpiler -->
-    <RimTalk.TTS.Reset>TTS Audio clear</RimTalk.TTS.Reset>
+    <!-- Overlay_MapComponentOnGUI_Postfix -->
+    <RimTalk.TTS.Reset>Audio clear</RimTalk.TTS.Reset>
     <RimTalk.TTS.ResetComplete>Cleared all audio waiting to be played/generated</RimTalk.TTS.ResetComplete>
+    <RimTalk.TTS.Generate>Generate dialogue</RimTalk.TTS.Generate>
+    <RimTalk.TTS.GenerateComplete>Generation started</RimTalk.TTS.GenerateComplete>
+    <RimTalk.TTS.Ignore>Ignore existing dialogues</RimTalk.TTS.Ignore>
+    <RimTalk.TTS.IgnoreComplete>Ignored all existing dialogues</RimTalk.TTS.IgnoreComplete>
 </LanguageData>

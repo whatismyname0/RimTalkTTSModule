@@ -657,61 +657,156 @@ namespace RimTalk.TTS.Patch
             }
         }
 
-        // [HarmonyPatch]
-        // public static class Overlay_DrawSettingsDropdown_Postfix
-        // {
-        //     // Target the non-public instance method DrawSettingsDropdown on RimTalk.UI.Overlay
-        //     static MethodBase TargetMethod()
-        //     {
-        //         return typeof(global::RimTalk.UI.Overlay).GetMethod("DrawSettingsDropdown", BindingFlags.NonPublic | BindingFlags.Instance);
-        //     }
+        private static Rect resetButtonScreenRect = default;
+        private static Rect generateButtonScreenRect = default;
+        private static Rect ignoreButtonScreenRect = default;
 
-        //     // Postfix runs after DrawSettingsDropdown; only draw our independent reset UI
-        //     // when the overlay's private _showSettingsDropdown flag is true. This keeps
-        //     // behavior consistent with the overlay's other windows while remaining self-contained.
-        //     static void Postfix(object __instance)
-        //     {
-        //         try
-        //         {
-        //             if (__instance == null) return;
+        [HarmonyPatch]
+        public static class Overlay_MapComponentOnGUI_Postfix
+        {
+            // Target the non-public instance method DrawSettingsDropdown on RimTalk.UI.Overlay
+            static MethodBase TargetMethod()
+            {
+                return typeof(global::RimTalk.UI.Overlay).GetMethod("MapComponentOnGUI", BindingFlags.Public | BindingFlags.Instance);
+            }
 
-        //             var overlayType = __instance.GetType();
-        //             var showField = overlayType.GetField("_showSettingsDropdown", BindingFlags.NonPublic | BindingFlags.Instance);
-        //             if (showField == null) return;
+            static void Postfix(object __instance)
+            {
+                try
+                {
+                    if (__instance == null) return;
+                    if (!TTSModule.Instance.IsActive) return;
 
-        //             bool show = false;
-        //             try
-        //             {
-        //                 show = (bool)showField.GetValue(__instance);
-        //             }
-        //             catch
-        //             {
-        //                 // If we can't read the flag treat as not showing
-        //                 return;
-        //             }
+                    var overlayType = __instance.GetType();
 
-        //             if (!show) return;
+                    // Prefer placing the Reset button to the left of the gear icon if available
+                    var gearField = overlayType.GetField("_gearIconScreenRect", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        //             var rectField = overlayType.GetField("_settingsDropdownRect", BindingFlags.NonPublic | BindingFlags.Instance);
-        //             if (rectField == null) return;
+                    var gearRect = (Rect)gearField.GetValue(__instance);
+                    // Button sizing and positioning: place to the left of the gear icon with a small padding
+                    float resetBtnWidth = 120f;
+                    float generateBtnWidth = 150f;
+                    float ignoreBtnWidth = 150f;
+                    float btnHeight = Mathf.Max(gearRect.height, 28f);
+                    float padding = 6f;
+                    resetButtonScreenRect.Set(gearRect.x - resetBtnWidth - padding, gearRect.y, resetBtnWidth, btnHeight);
+                    generateButtonScreenRect.Set(gearRect.x - resetBtnWidth - generateBtnWidth - 2*padding, gearRect.y, generateBtnWidth, btnHeight);
+                    ignoreButtonScreenRect.Set(gearRect.x - resetBtnWidth - generateBtnWidth - ignoreBtnWidth - 2*padding, gearRect.y, ignoreBtnWidth, btnHeight);
 
-        //             var rect = (Rect)rectField.GetValue(__instance);
-        //             Rect rectReset = new Rect(rect.x, rect.y + rect.height - 10f, rect.width, 50f);
-        //             var resetButtonRect = GenUI.ContractedBy(rectReset, 10f);
+                    if (Widgets.ButtonText(resetButtonScreenRect, "RimTalk.TTS.Reset".Translate()))
+                    {
+                        ResetButtonFunc();
+                    }
+                    if (Widgets.ButtonText(generateButtonScreenRect, "RimTalk.TTS.Generate".Translate()))
+                    {
+                        genereteButtonFunc();
+                    }
+                    if (Widgets.ButtonText(ignoreButtonScreenRect, "RimTalk.TTS.Ignore".Translate()))
+                    {
+                        ignoreButtonFunc();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ErrorUtil.LogException("Overlay_DrawSettingsDropdown_Postfix", ex);
+                }
+            }
+        }
 
-        //             Widgets.DrawBoxSolid(rectReset, new Color(0.15f, 0.15f, 0.15f, 0.95f));
+        [HarmonyPatch]
+        public static class Overlay_HandleInput_Prefix
+        {
+            // Target the non-public instance method HandleInput on RimTalk.UI.Overlay
+            static MethodBase TargetMethod()
+            {
+                return typeof(global::RimTalk.UI.Overlay).GetMethod("HandleInput", BindingFlags.NonPublic | BindingFlags.Instance);
+            }
 
-        //             if (Widgets.ButtonText(resetButtonRect, "RimTalk.TTS.Reset".Translate()))
-        //             {
-        //                 Messages.Message("RimTalk.TTS.ResetComplete".Translate(), MessageTypeDefOf.TaskCompletion, false);
-        //                 TTSService.StopAll(false);
-        //             }
-        //         }
-        //         catch (Exception ex)
-        //         {
-        //             ErrorUtil.LogException("Overlay_DrawSettingsDropdown_Postfix", ex);
-        //         }
-        //     }
-        // }
+            static bool Prefix(object __instance)
+            {
+                if (!TTSModule.Instance.IsActive) return true;
+                if (__instance == null) return true;
+                
+                Event currentEvent = Event.current;
+
+                if (currentEvent.type == EventType.MouseDown && currentEvent.button == 0)
+                {
+                    if (resetButtonScreenRect.Contains(currentEvent.mousePosition))
+                    {
+                        currentEvent.Use();
+                        ResetButtonFunc();
+                        return false; // Consume event
+                    }
+                    if (generateButtonScreenRect.Contains(currentEvent.mousePosition))
+                    {
+                        currentEvent.Use();
+                        genereteButtonFunc();
+                        return false; // Consume event
+                    }
+                    if (ignoreButtonScreenRect.Contains(currentEvent.mousePosition))
+                    {
+                        currentEvent.Use();
+                        ignoreButtonFunc();
+                        return false; // Consume event
+                    }
+                }
+
+                return true;
+            }
+        }
+
+        private static void ResetButtonFunc()
+        {
+            Messages.Message("RimTalk.TTS.ResetComplete".Translate(), MessageTypeDefOf.TaskCompletion, false);
+            TTSService.StopAll(false);
+        }
+
+        private static void genereteButtonFunc()
+        {
+            Messages.Message("RimTalk.TTS.GenerateComplete".Translate(), MessageTypeDefOf.TaskCompletion, false);
+            // Select a pawn based on the current iteration strategy
+            Pawn selectedPawn = PawnSelector.SelectNextAvailablePawn();
+
+            if (selectedPawn != null)
+            {
+                // 1. ALWAYS try to get from the general pool first.
+                bool talkGenerated;
+                // If the pawn is a free colonist not in danger and the pool has requests
+                if (!selectedPawn.IsFreeNonSlaveColonist || selectedPawn.IsQuestLodger() || TalkRequestPool.IsEmpty || global::RimTalk.Util.PawnUtil.IsInDanger(selectedPawn,true)) talkGenerated=false;
+                else
+                {
+                    var request = TalkRequestPool.GetRequestFromPool(selectedPawn);
+                    talkGenerated = request != null && TalkService.GenerateTalk(request);
+                }
+
+                // 2. If the pawn has a specific talk request, try generating it
+                if (!talkGenerated)
+                {
+                    var pawnState = global::RimTalk.Data.Cache.Get(selectedPawn);
+                    if (pawnState.GetNextTalkRequest() != null)
+                    {
+                        talkGenerated = TalkService.GenerateTalk(pawnState.GetNextTalkRequest());
+                        if(talkGenerated)
+                            pawnState.TalkRequests.RemoveFirst();
+                    }
+                }
+
+                // 3. Fallback: generate based on current context if nothing else worked
+                if (!talkGenerated)
+                {
+                    TalkRequest talkRequest = new TalkRequest(null, selectedPawn);
+                    TalkService.GenerateTalk(talkRequest);
+                }
+            }
+        }
+        private static void ignoreButtonFunc()
+        {
+            Messages.Message("RimTalk.TTS.IgnoreComplete".Translate(), MessageTypeDefOf.TaskCompletion, false);
+            
+            foreach (var pawn in global::RimTalk.Data.Cache.GetAll())
+            {
+                pawn.IgnoreAllTalkResponses();
+            }
+        }
     }
 }

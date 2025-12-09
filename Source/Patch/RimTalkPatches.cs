@@ -1,13 +1,16 @@
 using HarmonyLib;
 using System;
+using System.Diagnostics;
 using RimWorld;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using RimTalk.Service;
 using Verse;
 using RimTalk.TTS.Service;
-using RimWorld.QuestGen;
+using RimTalk.TTS.Util;
+using RimTalk.Data;
 
 namespace RimTalk.TTS.Patch
 {
@@ -17,18 +20,7 @@ namespace RimTalk.TTS.Patch
     /// </summary>
     public static class RimTalkPatches
     {
-        // Core RimTalk types
-        private static Type _talkServiceType;
-        private static Type _talkResponseType;
-        private static Type _talkHistoryType;
-        private static Type _pawnStateType;
-        
-        // TalkResponse methods
-        private static MethodInfo _getIdMethod;
-        private static MethodInfo _getTextMethod;
-        
-        // TalkHistory methods
-        private static MethodInfo _isTalkIgnoredMethod;
+        // Note: RimTalk types are now referenced directly via assembly reference
 
         // ToggleButton
         private static bool _pendingToggle = false;
@@ -43,14 +35,11 @@ namespace RimTalk.TTS.Patch
         {
             try
             {
-                if (_isTalkIgnoredMethod != null)
-                {
-                    return (bool)_isTalkIgnoredMethod.Invoke(null, new object[] { dialogueId });
-                }
+                return global::RimTalk.Data.TalkHistory.IsTalkIgnored(dialogueId);
             }
             catch (Exception ex)
             {
-                Log.Error($"[RimTalk.TTS] IsTalkIgnored error: {ex.Message}");
+                ErrorUtil.LogException("IsTalkIgnored", ex);
             }
             return false;
         }
@@ -62,50 +51,7 @@ namespace RimTalk.TTS.Patch
         // Map TalkResponses lists to their owning Pawns
         private static readonly ConditionalWeakTable<object, Pawn> _listToPawnMap = new ConditionalWeakTable<object, Pawn>();
 
-        static RimTalkPatches()
-        {
-            try
-            {
-                Log.Message("[RimTalk.TTS] RimTalkPatches initialization started");
-                
-                // Find main RimTalk types via reflection
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    if (assembly.GetName().Name == "RimTalk")
-                    {
-                        Log.Message($"[RimTalk.TTS] Found RimTalk assembly: {assembly.FullName}");
-                        
-                        _talkServiceType = assembly.GetType("RimTalk.Service.TalkService");
-                        _talkResponseType = assembly.GetType("RimTalk.Data.TalkResponse");
-                        _talkHistoryType = assembly.GetType("RimTalk.Data.TalkHistory");
-                        _pawnStateType = assembly.GetType("RimTalk.Data.PawnState");
-                        
-                        if (_talkResponseType != null)
-                        {
-                            _getIdMethod = _talkResponseType.GetProperty("Id")?.GetGetMethod();
-                            _getTextMethod = _talkResponseType.GetProperty("Text")?.GetGetMethod();
-                        }
-                        
-                        if (_talkHistoryType != null)
-                        {
-                            _isTalkIgnoredMethod = _talkHistoryType.GetMethod("IsTalkIgnored", BindingFlags.Public | BindingFlags.Static);
-                        }
-                        
-                        Log.Message($"[RimTalk.TTS] Reflection initialized - TalkService:{_talkServiceType != null}, TalkResponse:{_talkResponseType != null}, PawnState:{_pawnStateType != null}, GetId:{_getIdMethod != null}, GetText:{_getTextMethod != null}");
-                        break;
-                    }
-                }
-
-                if (_talkServiceType == null)
-                {
-                    Log.Warning("[RimTalk.TTS] RimTalk assembly not found! Ensure RimTalk is loaded before RimTalk TTS.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"[RimTalk.TTS] RimTalkPatches initialization failed: {ex.Message}");
-            }
-        }
+        // No runtime reflection required; types are referenced directly
 
         /// <summary>
         /// Patch: TalkService.CreateInteraction - Intercept when dialogue is displayed
@@ -115,34 +61,28 @@ namespace RimTalk.TTS.Patch
         {
             static bool Prepare()
             {
-                if (_talkServiceType == null || _talkResponseType == null)
-                {
-                    Log.Warning("[RimTalk.TTS] CreateInteraction_Patch: Required types not found, skipping patch");
-                    return false;
-                }
-                
-                var method = _talkServiceType.GetMethod("CreateInteraction", 
+                var method = typeof(TalkService).GetMethod("CreateInteraction",
                     BindingFlags.NonPublic | BindingFlags.Static,
                     null,
-                    new[] { typeof(Pawn), _talkResponseType },
+                    new[] { typeof(Pawn), typeof(global::RimTalk.Data.TalkResponse) },
                     null);
-                
+
                 if (method == null)
                 {
                     Log.Warning("[RimTalk.TTS] CreateInteraction_Patch: Method not found, skipping patch");
                     return false;
                 }
-                
+
                 Log.Message("[RimTalk.TTS] Successfully found CreateInteraction method");
                 return true;
             }
 
             static MethodBase TargetMethod()
             {
-                return _talkServiceType?.GetMethod("CreateInteraction", 
+                return typeof(TalkService).GetMethod("CreateInteraction",
                     BindingFlags.NonPublic | BindingFlags.Static,
                     null,
-                    new[] { typeof(Pawn), _talkResponseType },
+                    new[] { typeof(Pawn), typeof(global::RimTalk.Data.TalkResponse) },
                     null);
             }
 
@@ -154,10 +94,15 @@ namespace RimTalk.TTS.Patch
                     if (!TTSModule.Instance.IsActive)
                         return true;
 
-                    if (pawn == null || talk == null || _getIdMethod == null)
+                    if (pawn == null || talk == null)
                         return true;
 
-                    var dialogueId = (Guid)_getIdMethod.Invoke(talk, null);
+                    // Cast to RimTalk.Data.TalkResponse and read properties directly
+                    var talkResp = talk as global::RimTalk.Data.TalkResponse;
+                    if (talkResp == null)
+                        return true;
+
+                    var dialogueId = talkResp.Id;
                     
                     // Check if audio is currently playing - block new interactions
                     if (Service.AudioPlaybackService.IsCurrentlyPlaying())
@@ -177,7 +122,7 @@ namespace RimTalk.TTS.Patch
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"[RimTalk.TTS] CreateInteraction Prefix error: {ex.Message}");
+                    ErrorUtil.LogException("CreateInteraction Prefix", ex);
                     return true; // On error, allow execution
                 }
             }
@@ -192,7 +137,7 @@ namespace RimTalk.TTS.Patch
             static bool Prepare()
             {
                 Log.Message("[RimTalk.TTS] AddIgnored_Patch.Prepare() called");
-                var method = _talkHistoryType?.GetMethod("AddIgnored", BindingFlags.Public | BindingFlags.Static);
+                var method = typeof(global::RimTalk.Data.TalkHistory).GetMethod("AddIgnored", BindingFlags.Public | BindingFlags.Static);
                 if (method == null)
                 {
                     Log.Warning("[RimTalk.TTS] AddIgnored_Patch: Method not found, skipping patch");
@@ -205,7 +150,7 @@ namespace RimTalk.TTS.Patch
             static MethodBase TargetMethod()
             {
                 Log.Message("[RimTalk.TTS] AddIgnored_Patch.TargetMethod() called");
-                var method = _talkHistoryType?.GetMethod("AddIgnored", BindingFlags.Public | BindingFlags.Static);
+                var method = typeof(global::RimTalk.Data.TalkHistory).GetMethod("AddIgnored", BindingFlags.Public | BindingFlags.Static);
                 Log.Message($"[RimTalk.TTS] AddIgnored_Patch.TargetMethod() returning: {method?.Name ?? "NULL"}");
                 return method;
             }
@@ -220,7 +165,7 @@ namespace RimTalk.TTS.Patch
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"[RimTalk.TTS] AddIgnored error: {ex.Message}");
+                    ErrorUtil.LogException("AddIgnored_Patch Prefix", ex);
                 }
             }
         }
@@ -233,33 +178,36 @@ namespace RimTalk.TTS.Patch
         {
             static bool Prepare()
             {
-                if (_pawnStateType == null)
-                {
-                    Log.Warning("[RimTalk.TTS] PawnStateConstructor_Patch: PawnState type not found, skipping patch");
-                    return false;
-                }
-                
-                var ctor = _pawnStateType.GetConstructor(new[] { typeof(Pawn) });
+                var ctor = typeof(global::RimTalk.Data.PawnState).GetConstructor(new[] { typeof(Pawn) });
                 if (ctor == null)
                 {
                     Log.Warning("[RimTalk.TTS] PawnStateConstructor_Patch: Constructor not found, skipping patch");
                     return false;
                 }
-                
+
                 Log.Message("[RimTalk.TTS] Successfully found PawnState constructor");
                 return true;
             }
 
             static MethodBase TargetMethod()
             {
-                return _pawnStateType?.GetConstructor(new[] { typeof(Pawn) });
+                return typeof(global::RimTalk.Data.PawnState).GetConstructor(new[] { typeof(Pawn) });
             }
 
             // Postfix: Register the TalkResponses list with its owning Pawn
             // Note: Always register, even if TTS is disabled, to support hot-switching
             static void Postfix(object __instance, Pawn pawn)
             {
-                AddPawnDialogueList(__instance, pawn);
+                    try
+                    {
+                        // Register using the freshly constructed PawnState instance to avoid
+                        // calling Cache.Get(pawn) which may construct PawnState and cause recursion.
+                        AddPawnDialogueListForPawnState(__instance, pawn);
+                    }
+                    catch (Exception ex)
+                    {
+                        ErrorUtil.LogException("PawnStateConstructor_Patch Postfix", ex);
+                    }
             }
         }
 
@@ -271,29 +219,22 @@ namespace RimTalk.TTS.Patch
         {
             static bool Prepare()
             {
-                if (_talkResponseType == null)
-                {
-                    Log.Warning("[RimTalk.TTS] TalkResponsesAdd_Patch: TalkResponse type not found, skipping patch");
-                    return false;
-                }
-                
-                var listType = typeof(List<>).MakeGenericType(_talkResponseType);
+                var listType = typeof(List<global::RimTalk.Data.TalkResponse>);
                 var method = listType.GetMethod("Add", BindingFlags.Public | BindingFlags.Instance);
-                
+
                 if (method == null)
                 {
                     Log.Warning("[RimTalk.TTS] TalkResponsesAdd_Patch: List<TalkResponse>.Add method not found, skipping patch");
                     return false;
                 }
-                
+
                 Log.Message("[RimTalk.TTS] Successfully found List<TalkResponse>.Add method");
                 return true;
             }
 
             static MethodBase TargetMethod()
             {
-                if (_talkResponseType == null) return null;
-                var listType = typeof(List<>).MakeGenericType(_talkResponseType);
+                var listType = typeof(List<global::RimTalk.Data.TalkResponse>);
                 return listType.GetMethod("Add", BindingFlags.Public | BindingFlags.Instance);
             }
 
@@ -305,7 +246,7 @@ namespace RimTalk.TTS.Patch
                     if (!TTSModule.Instance.IsActive)
                         return;
 
-                    if (__instance == null || _getIdMethod == null || _getTextMethod == null)
+                    if (__instance == null)
                         return;
 
                     // Check if this list is registered in our map
@@ -316,16 +257,16 @@ namespace RimTalk.TTS.Patch
                     }
 
                     // Get the item that was just added
-                    var list = __instance as System.Collections.IList;
+                    var list = __instance as List<global::RimTalk.Data.TalkResponse>;
                     if (list == null || list.Count == 0)
                         return;
 
-                    object item = list[list.Count - 1];
+                    var item = list[list.Count - 1];
                     if (item == null)
                         return;
 
-                    var dialogueId = (Guid)_getIdMethod.Invoke(item, null);
-                    var text = (string)_getTextMethod.Invoke(item, null);
+                    var dialogueId = item.Id;
+                    var text = item.Text;
                     
                     // Immediately mark dialogue as "generating" to block display
                     RequestBlock(dialogueId);
@@ -335,7 +276,7 @@ namespace RimTalk.TTS.Patch
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"[RimTalk.TTS] TalkResponsesAdd_Patch error: {ex.Message}");
+                    ErrorUtil.LogException("TalkResponsesAdd_Patch", ex);
                 }
             }
         }
@@ -348,13 +289,7 @@ namespace RimTalk.TTS.Patch
         {
             static bool Prepare()
             {
-                if (_pawnStateType == null || _talkResponseType == null)
-                {
-                    Log.Warning("[RimTalk.TTS] IgnoreTalkResponse_Patch: Required types not found, skipping patch");
-                    return false;
-                }
-                
-                var method = _pawnStateType.GetMethod("IgnoreTalkResponse", BindingFlags.Public | BindingFlags.Instance);
+                var method = typeof(global::RimTalk.Data.PawnState).GetMethod("IgnoreTalkResponse", BindingFlags.Public | BindingFlags.Instance);
                 
                 if (method == null)
                 {
@@ -368,7 +303,7 @@ namespace RimTalk.TTS.Patch
 
             static MethodBase TargetMethod()
             {
-                return _pawnStateType?.GetMethod("IgnoreTalkResponse", BindingFlags.Public | BindingFlags.Instance);
+                return typeof(global::RimTalk.Data.PawnState).GetMethod("IgnoreTalkResponse", BindingFlags.Public | BindingFlags.Instance);
             }
 
             // Prefix: Capture the dialogue ID before it's removed
@@ -379,35 +314,29 @@ namespace RimTalk.TTS.Patch
                     if (!TTSModule.Instance.IsActive)
                         return;
 
-                    if (__instance == null || _getIdMethod == null)
+                    if (__instance == null)
                         return;
 
-                    // Get TalkResponses field from PawnState instance
-                    var talkResponsesField = _pawnStateType.GetField("TalkResponses", BindingFlags.Public | BindingFlags.Instance);
-                    if (talkResponsesField == null)
-                    {
-                        Log.Warning("[RimTalk.TTS] IgnoreTalkResponse_Patch: TalkResponses field not found");
-                        return;
-                    }
+                    // Get the list of TalkResponse objects from PawnState
+                    var pawnState = __instance as global::RimTalk.Data.PawnState;
+                    if (pawnState == null) return;
 
-                    // Get the list of TalkResponse objects
-                    var talkResponsesList = talkResponsesField.GetValue(__instance) as System.Collections.IList;
+                    var talkResponsesList = pawnState.TalkResponses as System.Collections.IList;
                     if (talkResponsesList == null || talkResponsesList.Count == 0)
                         return;
 
                     // Get the first TalkResponse (the one about to be ignored)
-                    var talkResponse = talkResponsesList[0];
+                    var talkResponse = talkResponsesList[0] as global::RimTalk.Data.TalkResponse;
                     if (talkResponse == null)
                         return;
 
-
-                    var dialogueId = (Guid)_getIdMethod.Invoke(talkResponse, null);
+                    var dialogueId = talkResponse.Id;
                     // Cancel TTS generation or discard generated audio
                     TTSModule.Instance.OnDialogueCancelled(dialogueId);
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"[RimTalk.TTS] IgnoreTalkResponse_Patch error: {ex.Message}\n{ex.StackTrace}");
+                    ErrorUtil.LogException("IgnoreTalkResponse_Patch", ex);
                 }
             }
         }
@@ -421,13 +350,13 @@ namespace RimTalk.TTS.Patch
             static bool Prepare()
             {
                 Log.Message("[RimTalk.TTS] StartedNewGame_Patch.Prepare() called");
-                var type = _talkServiceType?.Assembly.GetType("RimTalk.RimTalk");
+                var type = typeof(global::RimTalk.RimTalk);
                 if (type == null)
                 {
                     Log.Warning("[RimTalk.TTS] StartedNewGame_Patch: RimTalk.RimTalk type not found, skipping patch");
                     return false;
                 }
-                var method = type.GetMethod("StartedNewGame", BindingFlags.Public | BindingFlags.Instance);
+                var method = typeof(global::RimTalk.RimTalk).GetMethod("StartedNewGame", BindingFlags.Public | BindingFlags.Instance);
                 if (method == null)
                 {
                     Log.Warning("[RimTalk.TTS] StartedNewGame_Patch: Method not found, skipping patch");
@@ -440,8 +369,7 @@ namespace RimTalk.TTS.Patch
             static MethodBase TargetMethod()
             {
                 Log.Message("[RimTalk.TTS] StartedNewGame_Patch.TargetMethod() called");
-                var method = _talkServiceType?.Assembly.GetType("RimTalk.RimTalk")
-                    ?.GetMethod("StartedNewGame", BindingFlags.Public | BindingFlags.Instance);
+                var method = typeof(global::RimTalk.RimTalk).GetMethod("StartedNewGame", BindingFlags.Public | BindingFlags.Instance);
                 Log.Message($"[RimTalk.TTS] StartedNewGame_Patch.TargetMethod() returning: {method?.Name ?? "NULL"}");
                 return method;
             }
@@ -459,13 +387,13 @@ namespace RimTalk.TTS.Patch
             static bool Prepare()
             {
                 Log.Message("[RimTalk.TTS] LoadedGame_Patch.Prepare() called");
-                var type = _talkServiceType?.Assembly.GetType("RimTalk.RimTalk");
+                var type = typeof(global::RimTalk.RimTalk);
                 if (type == null)
                 {
                     Log.Warning("[RimTalk.TTS] LoadedGame_Patch: RimTalk.RimTalk type not found, skipping patch");
                     return false;
                 }
-                var method = type.GetMethod("LoadedGame", BindingFlags.Public | BindingFlags.Instance);
+                var method = typeof(global::RimTalk.RimTalk).GetMethod("LoadedGame", BindingFlags.Public | BindingFlags.Instance);
                 if (method == null)
                 {
                     Log.Warning("[RimTalk.TTS] LoadedGame_Patch: Method not found, skipping patch");
@@ -478,8 +406,7 @@ namespace RimTalk.TTS.Patch
             static MethodBase TargetMethod()
             {
                 Log.Message("[RimTalk.TTS] LoadedGame_Patch.TargetMethod() called");
-                var method = _talkServiceType?.Assembly.GetType("RimTalk.RimTalk")
-                    ?.GetMethod("LoadedGame", BindingFlags.Public | BindingFlags.Instance);
+                var method = typeof(global::RimTalk.RimTalk).GetMethod("LoadedGame", BindingFlags.Public | BindingFlags.Instance);
                 Log.Message($"[RimTalk.TTS] LoadedGame_Patch.TargetMethod() returning: {method?.Name ?? "NULL"}");
                 return method;
             }
@@ -517,7 +444,7 @@ namespace RimTalk.TTS.Patch
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"[RimTalk.TTS] PawnDiscard_Patch error: {ex.Message}");
+                    ErrorUtil.LogException("PawnDiscard_Patch", ex);
                 }
             }
         }
@@ -626,34 +553,8 @@ namespace RimTalk.TTS.Patch
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"[RimTalk.TTS] PendingToggleExecutor error: {ex}");
+                    ErrorUtil.LogException("PendingToggleExecutor", ex);
                 }
-            }
-        }
-
-        public static void AddPawnDialogueList(object __instance, Pawn pawn)
-        {
-            try
-            {
-                if (__instance == null || pawn == null)
-                    return;
-
-                var talkResponsesField = _pawnStateType?.GetField("TalkResponses", BindingFlags.Public | BindingFlags.Instance);
-                if (talkResponsesField == null)
-                    return;
-
-                var talkResponsesList = talkResponsesField.GetValue(__instance);
-                if (talkResponsesList == null)
-                    return;
-
-                // Register this list in our map (GetOrCreateValue is idempotent)
-                _listToPawnMap.GetOrCreateValue(talkResponsesList);
-                _listToPawnMap.Remove(talkResponsesList);
-                _listToPawnMap.Add(talkResponsesList, pawn);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning($"[RimTalk.TTS] AddPawnDialogueList (PawnState constructor) error: {ex.Message}");
             }
         }
 
@@ -668,71 +569,149 @@ namespace RimTalk.TTS.Patch
                 if (pawn == null)
                     return;
 
-                if (_talkServiceType == null || _pawnStateType == null)
-                    return;
+                var pawnId = pawn?.thingIDNumber.ToString() ?? "<null>";
+                var pawnName = pawn?.LabelShort ?? pawn?.Name?.ToString() ?? "<unnamed>";
 
                 // Get RimTalk WorldComponent from current game
-                var rimTalkWorldComponentType = _talkServiceType.Assembly.GetType("RimTalk.Data.RimTalkWorldComponent");
-                if (rimTalkWorldComponentType == null)
-                {
-                    Log.Warning("[RimTalk.TTS] AddPawnDialogueList: RimTalkWorldComponent type not found");
-                    return;
-                }
-
-                var worldComp = Current.Game?.World?.GetComponent(rimTalkWorldComponentType);
+                var worldComp = Current.Game?.World?.GetComponent<global::RimTalk.Data.RimTalkWorldComponent>();
                 if (worldComp == null)
                 {
                     Log.Warning("[RimTalk.TTS] AddPawnDialogueList: RimTalkWorldComponent not found in current game");
                     return;
                 }
-
-                // Get PawnStates dictionary from WorldComponent
-                var pawnStatesField = rimTalkWorldComponentType.GetField("PawnStates", BindingFlags.Public | BindingFlags.Instance);
-                if (pawnStatesField == null)
-                {
-                    Log.Warning("[RimTalk.TTS] AddPawnDialogueList: PawnStates field not found");
-                    return;
-                }
-
-                var pawnStates = pawnStatesField.GetValue(worldComp) as System.Collections.IDictionary;
-                if (pawnStates == null)
-                {
-                    Log.Warning("[RimTalk.TTS] AddPawnDialogueList: PawnStates is null or not a dictionary");
-                    return;
-                }
-
-                // Get PawnState for this pawn
-                if (!pawnStates.Contains(pawn))
-                {
-                    // Pawn doesn't have a PawnState yet, this is normal for new pawns
-                    return;
-                }
-
-                var pawnState = pawnStates[pawn];
+                
+                PawnState pawnState = global::RimTalk.Data.Cache.Get(pawn);
                 if (pawnState == null)
+                {
                     return;
+                }
 
                 // Get TalkResponses list from PawnState
-                var talkResponsesField = _pawnStateType.GetField("TalkResponses", BindingFlags.Public | BindingFlags.Instance);
-                if (talkResponsesField == null)
+                var talkResponsesList = pawnState.TalkResponses;
+                if (talkResponsesList == null)
                 {
-                    Log.Warning("[RimTalk.TTS] AddPawnDialogueList: TalkResponses field not found");
                     return;
                 }
-
-                var talkResponsesList = talkResponsesField.GetValue(pawnState);
-                if (talkResponsesList == null)
-                    return;
 
                 // Register this list in our map (remove first if exists, then add)
                 // This ensures the mapping is always up-to-date
                 _listToPawnMap.Remove(talkResponsesList);
                 _listToPawnMap.Add(talkResponsesList, pawn);
+
             }
             catch (Exception ex)
             {
                 Log.Warning($"[RimTalk.TTS] AddPawnDialogueList (1 param) error for pawn '{pawn?.LabelShort}': {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// Register a PawnState's TalkResponses list using the PawnState instance directly.
+        /// This avoids calling into RimTalk's Cache.Get which can construct PawnState and
+        /// trigger recursion when called from the PawnState constructor postfix.
+        /// </summary>
+        public static void AddPawnDialogueListForPawnState(object pawnStateInstance, Pawn pawn)
+        {
+            try
+            {
+                if (pawn == null || pawnStateInstance == null)
+                    return;
+
+                var pawnId = pawn?.thingIDNumber.ToString() ?? "<null>";
+                var pawnName = pawn?.LabelShort ?? pawn?.Name?.ToString() ?? "<unnamed>";
+
+                // Attempt to get TalkResponses from the PawnState instance via reflection
+                object talkResponsesList = null;
+                try
+                {
+                    var type = pawnStateInstance.GetType();
+                    var prop = type.GetProperty("TalkResponses", BindingFlags.Public | BindingFlags.Instance);
+                    if (prop != null)
+                    {
+                        talkResponsesList = prop.GetValue(pawnStateInstance);
+                    }
+                    else
+                    {
+                        var field = type.GetField("TalkResponses", BindingFlags.Public | BindingFlags.Instance);
+                        if (field != null)
+                            talkResponsesList = field.GetValue(pawnStateInstance);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning($"[RimTalk.TTS] AddPawnDialogueListForPawnState: failed to read TalkResponses via reflection for pawn '{pawnName}': {ex.Message}");
+                }
+
+                if (talkResponsesList == null)
+                {
+                    Log.Message($"[RimTalk.TTS] AddPawnDialogueList: exit for pawn '{pawnName}' (id={pawnId}) - talkResponsesList null");
+                    return;
+                }
+
+                _listToPawnMap.Remove(talkResponsesList);
+                _listToPawnMap.Add(talkResponsesList, pawn);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"[RimTalk.TTS] AddPawnDialogueListForPawnState error for pawn '{pawn?.LabelShort}': {ex.Message}");
+            }
+        }
+
+        // [HarmonyPatch]
+        // public static class Overlay_DrawSettingsDropdown_Postfix
+        // {
+        //     // Target the non-public instance method DrawSettingsDropdown on RimTalk.UI.Overlay
+        //     static MethodBase TargetMethod()
+        //     {
+        //         return typeof(global::RimTalk.UI.Overlay).GetMethod("DrawSettingsDropdown", BindingFlags.NonPublic | BindingFlags.Instance);
+        //     }
+
+        //     // Postfix runs after DrawSettingsDropdown; only draw our independent reset UI
+        //     // when the overlay's private _showSettingsDropdown flag is true. This keeps
+        //     // behavior consistent with the overlay's other windows while remaining self-contained.
+        //     static void Postfix(object __instance)
+        //     {
+        //         try
+        //         {
+        //             if (__instance == null) return;
+
+        //             var overlayType = __instance.GetType();
+        //             var showField = overlayType.GetField("_showSettingsDropdown", BindingFlags.NonPublic | BindingFlags.Instance);
+        //             if (showField == null) return;
+
+        //             bool show = false;
+        //             try
+        //             {
+        //                 show = (bool)showField.GetValue(__instance);
+        //             }
+        //             catch
+        //             {
+        //                 // If we can't read the flag treat as not showing
+        //                 return;
+        //             }
+
+        //             if (!show) return;
+
+        //             var rectField = overlayType.GetField("_settingsDropdownRect", BindingFlags.NonPublic | BindingFlags.Instance);
+        //             if (rectField == null) return;
+
+        //             var rect = (Rect)rectField.GetValue(__instance);
+        //             Rect rectReset = new Rect(rect.x, rect.y + rect.height - 10f, rect.width, 50f);
+        //             var resetButtonRect = GenUI.ContractedBy(rectReset, 10f);
+
+        //             Widgets.DrawBoxSolid(rectReset, new Color(0.15f, 0.15f, 0.15f, 0.95f));
+
+        //             if (Widgets.ButtonText(resetButtonRect, "RimTalk.TTS.Reset".Translate()))
+        //             {
+        //                 Messages.Message("RimTalk.TTS.ResetComplete".Translate(), MessageTypeDefOf.TaskCompletion, false);
+        //                 TTSService.StopAll(false);
+        //             }
+        //         }
+        //         catch (Exception ex)
+        //         {
+        //             ErrorUtil.LogException("Overlay_DrawSettingsDropdown_Postfix", ex);
+        //         }
+        //     }
+        // }
     }
 }

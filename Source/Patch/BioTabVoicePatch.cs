@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
+using RimTalk.TTS.Data;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -19,38 +20,9 @@ namespace RimTalk.TTS.Patch
         private static readonly Texture2D VoiceIcon = ContentFinder<Texture2D>.Get("UI/VoiceSettings", reportFailure: false) 
             ?? Texture2D.whiteTexture;
 
-        private static Type _hediffPersonaType;
-        private static MethodInfo _getOrAddNewMethod;
-        private static FieldInfo _voiceModelIdField;
-
         static BioTabVoicePatch()
         {
-            try
-            {
-                // Find RimTalk types via reflection
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    if (assembly.GetName().Name == "RimTalk")
-                    {
-                        _hediffPersonaType = assembly.GetType("RimTalk.Data.Hediff_Persona");
-                        if (_hediffPersonaType != null)
-                        {
-                            _getOrAddNewMethod = _hediffPersonaType.GetMethod("GetOrAddNew", BindingFlags.Public | BindingFlags.Static);
-                            _voiceModelIdField = _hediffPersonaType.GetField("VoiceModelId", BindingFlags.Public | BindingFlags.Instance);
-                        }
-                        break;
-                    }
-                }
-
-                if (_hediffPersonaType == null)
-                {
-                    Log.Warning("[RimTalk.TTS] Could not find RimTalk.Data.Hediff_Persona for voice UI");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"[RimTalk.TTS] BioTabVoicePatch initialization failed: {ex.Message}");
-            }
+            // No runtime reflection needed; Hediff_Persona is available via assembly reference
         }
 
         private static void AddVoiceElement(Pawn pawn)
@@ -76,7 +48,7 @@ namespace RimTalk.TTS.Patch
                     Widgets.DrawOptionBackground(rect, false);
                     Widgets.DrawHighlightIfMouseover(rect);
 
-                    string currentVoice = GetVoiceModelForPawn(pawn);
+                    string currentVoice = PawnVoiceManager.GetVoiceModel(pawn);
                     string displayVoice = string.IsNullOrEmpty(currentVoice) ? "Default" : 
                                          currentVoice == "NONE" ? "None" : currentVoice;
                     
@@ -108,39 +80,9 @@ namespace RimTalk.TTS.Patch
             if (pawn.IsColonist || pawn.IsPrisonerOfColony)
                 return true;
 
-            // Check for vocal link via reflection
-            try
-            {
-                if (_hediffPersonaType != null)
-                {
-                    var hediffDef = DefDatabase<HediffDef>.GetNamedSilentFail("RimTalk_VocalLink");
-                    if (hediffDef != null && pawn.health?.hediffSet?.GetFirstHediffOfDef(hediffDef) != null)
-                        return true;
-                }
-            }
-            catch { }
-
-            return false;
-        }
-
-        private static string GetVoiceModelForPawn(Pawn pawn)
-        {
-            try
-            {
-                if (_getOrAddNewMethod == null || _voiceModelIdField == null)
-                    return "";
-
-                var hediff = _getOrAddNewMethod.Invoke(null, new object[] { pawn });
-                if (hediff != null)
-                {
-                    return (string)_voiceModelIdField.GetValue(hediff) ?? "";
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"[RimTalk.TTS] Failed to get voice model: {ex.Message}");
-            }
-            return "";
+            // Check for vocal link (RimTalk hediff)
+            var hediffDef = DefDatabase<HediffDef>.GetNamedSilentFail("RimTalk_VocalLink");
+            return hediffDef != null && pawn.health?.hediffSet?.GetFirstHediffOfDef(hediffDef) != null;
         }
 
         /// <summary>

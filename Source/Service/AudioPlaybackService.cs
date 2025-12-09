@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RimTalk.TTS.Patch;
+using RimTalk.TTS.Util;
 using UnityEngine;
 using Verse;
 
@@ -23,7 +24,7 @@ public static class AudioPlaybackService
     // === Playback Control ===
     private static bool _isPlaying = false;
     private static readonly object _lock = new object();
-    
+
     /// <summary>
     /// Static constructor - initializes Unity AudioSource on game startup (main thread)
     /// </summary>
@@ -34,6 +35,10 @@ public static class AudioPlaybackService
         _audioSource = _audioPlayerObject.AddComponent<AudioSource>();
         _audioSource.playOnAwake = false;
         _audioSource.spatialBlend = 0f; // 2D sound
+        // _audioSource.minDistance = 100f;
+        // _audioSource.maxDistance = 10f;
+        // _audioSource.rolloffMode = AudioRolloffMode.Logarithmic;
+        _audioSource.dopplerLevel = 0f;
     }
     
     /// <summary>
@@ -75,7 +80,7 @@ public static class AudioPlaybackService
     /// <summary>
     /// Play audio for a dialogue. Waits for previous playback and TTS generation.
     /// </summary>
-    public static async void PlayAudio(Guid dialogueId)
+    public static async void PlayAudio(Guid dialogueId, Pawn pawn)
     {
         if (dialogueId == Guid.Empty) return;
 
@@ -146,7 +151,11 @@ public static class AudioPlaybackService
                 if (clip != null && clip.length > 0)
                 {
                     _audioSource.clip = clip;
+                    // var follower = _audioPlayerObject.GetComponent<FollowPawnBehaviour>() ?? _audioPlayerObject.AddComponent<FollowPawnBehaviour>();
+                    // follower.pawn = pawn;
+                    // follower.verticalOffset = 0.5f;
                     _audioSource.Play();
+                    // follower.pawn = null;
 
                     // Wait for playback to complete based on clip length
                     int playbackDelayMs = (int)(clip.length * 1000) + 100;
@@ -159,12 +168,12 @@ public static class AudioPlaybackService
             }
             catch (Exception ex)
             {
-                Log.Error($"[RimTalk.TTS] Error during audio playback: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+                ErrorUtil.LogException("AudioPlaybackService.PlayAudio - playback", ex);
             }
         }
         catch (Exception ex)
         {
-            Log.Error($"[RimTalk.TTS] Error in PlayAudio: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+            ErrorUtil.LogException("AudioPlaybackService.PlayAudio - outer", ex);
         }
         finally
         {
@@ -254,7 +263,7 @@ public static class AudioPlaybackService
         }
         catch (Exception ex)
         {
-            Log.Error($"AudioPlaybackService: Error parsing WAV data - {ex.Message}");
+            ErrorUtil.LogException("AudioPlaybackService.LoadAudioClipFromWav", ex);
             return null;
         }
     }
@@ -305,6 +314,23 @@ public static class AudioPlaybackService
         lock (_lock)
         {
             _dialogueAudio.Remove(dialogueId);
+        }
+    }
+
+    public class FollowPawnBehaviour : MonoBehaviour
+    {
+        public Pawn pawn;
+        public float verticalOffset = 0.0f;
+
+        void Update()
+        {
+            if (pawn == null || pawn.Destroyed)
+            {
+                return;
+            }
+
+            // 使用 DrawPos 以获得平滑的位置（会随 pawn 移动）
+            transform.position = pawn.DrawPos + Vector3.up * verticalOffset;
         }
     }
 }

@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using UnityEngine;
 using Verse;
 using RimWorld;
@@ -20,32 +18,8 @@ namespace RimTalk.TTS.UI
         private readonly TTSSettings _settings;
         private readonly List<VoiceModel> _voiceModels;
 
-        private static Type _hediffPersonaType;
-        private static MethodInfo _getOrAddNewMethod;
-        private static FieldInfo _voiceModelIdField;
-
         static VoiceSelectionWindow()
         {
-            try
-            {
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    if (assembly.GetName().Name == "RimTalk")
-                    {
-                        _hediffPersonaType = assembly.GetType("RimTalk.Data.Hediff_Persona");
-                        if (_hediffPersonaType != null)
-                        {
-                            _getOrAddNewMethod = _hediffPersonaType.GetMethod("GetOrAddNew", BindingFlags.Public | BindingFlags.Static);
-                            _voiceModelIdField = _hediffPersonaType.GetField("VoiceModelId", BindingFlags.Public | BindingFlags.Instance);
-                        }
-                        break;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"[RimTalk.TTS] VoiceSelectionWindow initialization failed: {ex.Message}");
-            }
         }
 
         public VoiceSelectionWindow(Pawn pawn)

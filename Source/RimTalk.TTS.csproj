@@ -34,4 +34,13 @@
         <PackageReference Include="Lib.Harmony.Ref" Version="2.*" PrivateAssets="All"/>
     </ItemGroup>
 
+    <!-- Reference to RimTalk mod assembly for compilation (provided by game/mod at runtime) -->
+    <ItemGroup>
+        <Reference Include="RimTalk">
+            <HintPath>D:\steam\steamapps\common\RimWorld\RimTalk-main\1.6\Assemblies\RimTalk.dll</HintPath>
+            <!-- Do not copy the assembly into our output; the game loads mod assemblies from its folder. -->
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+
 </Project>

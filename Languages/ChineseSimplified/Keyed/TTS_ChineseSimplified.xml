@@ -81,4 +81,8 @@
     <RimTalk.TTS.Save>保存</RimTalk.TTS.Save>
     <RimTalk.TTS.Cancel>取消</RimTalk.TTS.Cancel>
     <RimTalk.TTS.VoiceUpdated>{0}的语音模型已更新</RimTalk.TTS.VoiceUpdated>
+
+    <!-- Overlay_DrawSettingsDropdown_Transpiler -->
+    <RimTalk.TTS.Reset>TTS清空语音</RimTalk.TTS.Reset>
+    <RimTalk.TTS.ResetComplete>已清空当前所有等待播放/生成的语音</RimTalk.TTS.ResetComplete>
 </LanguageData>

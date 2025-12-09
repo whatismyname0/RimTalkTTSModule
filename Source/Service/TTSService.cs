@@ -1,9 +1,10 @@
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using RimTalk.TTS.Data;
-using RimTalk.TTS.Patch;
+using RimTalkPatches = RimTalk.TTS.Patch.RimTalkPatches;
 using Verse;
 
 namespace RimTalk.TTS.Service
@@ -26,8 +27,7 @@ namespace RimTalk.TTS.Service
             if (_isShuttingDown)
             {
                 Log.Message($"[RimTalk.TTS] DEBUG: Rejected - Shutting down");
-                CleanupFailedDialogue(dialogueId);
-                Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                CleanupAndRelease(dialogueId);
                 return;
             }
                 
@@ -35,8 +35,7 @@ namespace RimTalk.TTS.Service
             if (string.IsNullOrEmpty(settings.FishAudioApiKey))
             {
                 Log.Warning("[RimTalk.TTS] DEBUG: Rejected - Fish Audio API key not configured");
-                CleanupFailedDialogue(dialogueId);
-                Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                CleanupAndRelease(dialogueId);
                 return;
             }
 
@@ -44,8 +43,7 @@ namespace RimTalk.TTS.Service
             if (string.IsNullOrEmpty(text))
             {
                 Log.Message($"[RimTalk.TTS] DEBUG: Rejected - Empty text");
-                CleanupFailedDialogue(dialogueId);
-                Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                CleanupAndRelease(dialogueId);
                 return;
             }
 
@@ -54,26 +52,23 @@ namespace RimTalk.TTS.Service
             if (voiceModelId == VoiceModel.NONE_MODEL_ID)
             {
                 Log.Message($"[RimTalk.TTS] DEBUG: Pawn '{pawn?.LabelShort}' has NONE voice model - setting null audio and releasing block");
-                CleanupFailedDialogue(dialogueId);
-                Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                CleanupAndRelease(dialogueId);
                 return;
             }
 
             // Check if dialogue was cancelled during generation
-            if (Patch.RimTalkPatches.IsTalkIgnored(dialogueId))
+            if (RimTalkPatches.IsTalkIgnored(dialogueId))
             {
                 Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was ignored during generation (discarding audio)");
-                CleanupFailedDialogue(dialogueId);
-                Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                CleanupAndRelease(dialogueId);
                 return;
             }
 
             // Check if TTS Module is still active
-            if (!TTSModule.Instance.IsActive||!settings.isOnButton)
+            if (!IsModuleActiveAndEnabled(settings))
             {
                 Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was cancelled during generation (TTS module off)");
-                CleanupFailedDialogue(dialogueId);
-                Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                CleanupAndRelease(dialogueId);
                 return;
             }
             
@@ -100,51 +95,41 @@ namespace RimTalk.TTS.Service
                 // Translate if configured
                 if (!string.IsNullOrWhiteSpace(settings.TTSTranslationLanguage))
                 {
-                    try
+                    processedText = await TranslationService.TranslateAsync(text, settings.TTSTranslationLanguage, settings);
+                    if (string.IsNullOrWhiteSpace(processedText))
                     {
-                        processedText = await TranslationService.TranslateAsync(text, settings.TTSTranslationLanguage, settings);
-                        // If translation returns empty or null, use original text
-                        if (string.IsNullOrWhiteSpace(processedText))
-                        {
-                            Log.Warning($"[RimTalk.TTS] DEBUG: Translation returned empty result");
-                        }
-                    }
-                    catch (Exception translateEx)
-                    {
-                        Log.Error($"[RimTalk.TTS] DEBUG: Translation failed with exception: {translateEx.Message}");
+                        Log.Warning($"[RimTalk.TTS] DEBUG: Translation failed");
+                        CleanupAndRelease(dialogueId);
+                        return;
                     }
                 }
                 else
                 {
                     Log.Warning($"[RimTalk.TTS] DEBUG: Translation language not configured");
-                    CleanupFailedDialogue(dialogueId);
-                    Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                    CleanupAndRelease(dialogueId);
                     return;
                 }
 
                 if (processedText == text)
                 {
                     Log.Warning($"[RimTalk.TTS] DEBUG: Translation returned invalid result");
-                    CleanupFailedDialogue(dialogueId);
-                    Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                    CleanupAndRelease(dialogueId);
                     return;
                 }
 
                 // Check if dialogue was cancelled during generation
-                if (Patch.RimTalkPatches.IsTalkIgnored(dialogueId))
+                if (RimTalkPatches.IsTalkIgnored(dialogueId))
                 {
                     Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was ignored during generation (discarding audio)");
-                    CleanupFailedDialogue(dialogueId);
-                    Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                    CleanupAndRelease(dialogueId);
                     return;
                 }
 
                 // Check if TTS Module is still active
-                if (!TTSModule.Instance.IsActive||!settings.isOnButton)
+                if (!IsModuleActiveAndEnabled(settings))
                 {
                     Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was cancelled during generation (TTS module off)");
-                    CleanupFailedDialogue(dialogueId);
-                    Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                    CleanupAndRelease(dialogueId);
                     return;
                 }
                 
@@ -159,20 +144,18 @@ namespace RimTalk.TTS.Service
                 );
 
                 // Check if TTS Module is still active
-                if (!TTSModule.Instance.IsActive||!settings.isOnButton)
+                if (!IsModuleActiveAndEnabled(settings))
                 {
                     Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was cancelled during generation (TTS module off)");
-                    CleanupFailedDialogue(dialogueId);
-                    Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                    CleanupAndRelease(dialogueId);
                     return;
                 }
 
                 // Check if dialogue was cancelled during generation
-                if (Patch.RimTalkPatches.IsTalkIgnored(dialogueId))
+                if (RimTalkPatches.IsTalkIgnored(dialogueId))
                 {
                     Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was ignored during generation (discarding audio)");
-                    CleanupFailedDialogue(dialogueId);
-                    Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                    CleanupAndRelease(dialogueId);
                 }
                 else if (audioData != null && audioData.Length > 0)
                 {
@@ -183,26 +166,23 @@ namespace RimTalk.TTS.Service
                     }
                     else
                         AudioPlaybackService.SetAudioResult(dialogueId, audioData);
-                    Patch.RimTalkPatches.ReleaseBlock(dialogueId);
+                    RimTalkPatches.ReleaseBlock(dialogueId);
                 }
                 else
                 {
                     Log.Warning("[RimTalk.TTS] DEBUG: Failed - API returned no audio data");
-                    CleanupFailedDialogue(dialogueId);
-                    Patch.RimTalkPatches.ReleaseBlock(dialogueId); // Release on failure
+                    CleanupAndRelease(dialogueId); // Release on failure
                 }
             }
             catch (OperationCanceledException)
             {
                 Log.Message($"[RimTalk.TTS] DEBUG: Cancelled - Dialogue {dialogueId} generation cancelled");
-                CleanupFailedDialogue(dialogueId);
-                Patch.RimTalkPatches.ReleaseBlock(dialogueId); // Release on cancellation
+                CleanupAndRelease(dialogueId); // Release on cancellation
             }
             catch (Exception ex)
             {
                 Log.Error($"[RimTalk.TTS] DEBUG: Exception - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
-                CleanupFailedDialogue(dialogueId);
-                Patch.RimTalkPatches.ReleaseBlock(dialogueId); // Release on error
+                CleanupAndRelease(dialogueId); // Release on error
             }
         }
 
@@ -212,6 +192,18 @@ namespace RimTalk.TTS.Service
             {
                 AudioPlaybackService.SetAudioResult(dialogueId, null);
             }
+        }
+
+        // Merge common cleanup + release pattern into one helper to simplify call sites
+        private static void CleanupAndRelease(Guid dialogueId)
+        {
+            CleanupFailedDialogue(dialogueId);
+            RimTalkPatches.ReleaseBlock(dialogueId);
+        }
+
+        private static bool IsModuleActiveAndEnabled(TTSSettings settings)
+        {
+            return TTSModule.Instance.IsActive && settings != null && settings.isOnButton;
         }
 
         private static string GetVoiceModelId(Pawn pawn, TTSSettings settings)
@@ -251,14 +243,7 @@ namespace RimTalk.TTS.Service
             // Cancel all pending TTS generation tasks
             foreach (var id in toCancel)
             {
-                try
-                {
-                    CancelDialogue(id);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"[RimTalk.TTS] StopAll: error cancelling dialogue {id}: {ex}");
-                }
+                CancelDialogue(id);
             }
             
             lock (RimTalkPatches.blockedDialogues)
@@ -275,12 +260,7 @@ namespace RimTalk.TTS.Service
             
             if (RimTalkPatches.IsBlocked(dialogueId))
             {
-                try
-                {
-                    CleanupFailedDialogue(dialogueId);
-                    Patch.RimTalkPatches.ReleaseBlock(dialogueId);
-                }
-                catch { /* Ignore cancellation errors */ }
+                CleanupAndRelease(dialogueId);
             }
             else
             {
@@ -291,19 +271,48 @@ namespace RimTalk.TTS.Service
         public static void ReloadMap(Map map)
         {
             if (map == null)
-                return;
-
-            foreach (var pawn in map.mapPawns.AllPawns)
             {
+                Log.Message("[RimTalk.TTS] ReloadMap: called with null map");
+                return;
+            }
+
+            try
+            {
+                int pawnCount = 0;
                 try
                 {
-                    // Ask RimTalkPatches to attempt to locate and register this pawn's PawnState.TalkResponses list
-                    RimTalk.TTS.Patch.RimTalkPatches.AddPawnDialogueList(pawn);
+                    pawnCount = map.mapPawns.AllPawns.Count;
                 }
-                catch (Exception ex)
+                catch (Exception exCount)
                 {
-                    Log.Warning($"[RimTalk.TTS] ReloadMap: failed to register pawn {pawn?.LabelShort}: {ex.Message}");
+                    Log.Warning($"[RimTalk.TTS] ReloadMap: failed to get pawn count for map '{map}': {exCount}");
                 }
+
+                foreach (var pawn in map.mapPawns.AllPawns)
+                {
+                    try
+                    {
+                        RimTalkPatches.AddPawnDialogueList(pawn);
+                    }
+                    catch (Exception exPawn)
+                    {
+                        try
+                        {
+                            var pawnId = pawn?.thingIDNumber.ToString() ?? "<null>";
+                            var pawnName = pawn?.LabelShort ?? pawn?.Name?.ToString() ?? "<unnamed>";
+                            Log.Error($"[RimTalk.TTS] ReloadMap: AddPawnDialogueList failed for pawn '{pawnName}' (id={pawnId}): {exPawn}");
+                        }
+                        catch (Exception exInner)
+                        {
+                            // Best effort logging; avoid throwing from logger
+                            Log.Error($"[RimTalk.TTS] ReloadMap: failed to log pawn exception: {exInner}");
+                        }
+                    }
+                }
+}
+            catch (Exception ex)
+            {
+                Log.Error($"[RimTalk.TTS] ReloadMap: Unexpected error iterating pawns on map '{map?.ToString() ?? "<null>"}': {ex}");
             }
         }
     }

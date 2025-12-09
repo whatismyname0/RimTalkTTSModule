@@ -81,4 +81,8 @@
     <RimTalk.TTS.Save>Save</RimTalk.TTS.Save>
     <RimTalk.TTS.Cancel>Cancel</RimTalk.TTS.Cancel>
     <RimTalk.TTS.VoiceUpdated>Voice model updated for {0}</RimTalk.TTS.VoiceUpdated>
+
+    <!-- Overlay_DrawSettingsDropdown_Transpiler -->
+    <RimTalk.TTS.Reset>TTS Audio clear</RimTalk.TTS.Reset>
+    <RimTalk.TTS.ResetComplete>Cleared all audio waiting to be played/generated</RimTalk.TTS.ResetComplete>
 </LanguageData>

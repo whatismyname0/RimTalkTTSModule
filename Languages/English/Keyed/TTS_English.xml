@@ -89,4 +89,5 @@
     <RimTalk.TTS.GenerateComplete>Generation started</RimTalk.TTS.GenerateComplete>
     <RimTalk.TTS.Ignore>Ignore existing dialogues</RimTalk.TTS.Ignore>
     <RimTalk.TTS.IgnoreComplete>Ignored all existing dialogues</RimTalk.TTS.IgnoreComplete>
+    <RimTalk.TTS.Display>Display next</RimTalk.TTS.Display>
 </LanguageData>

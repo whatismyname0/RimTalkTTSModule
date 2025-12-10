@@ -89,4 +89,5 @@
     <RimTalk.TTS.GenerateComplete>已开始生成新的一组对话</RimTalk.TTS.GenerateComplete>
     <RimTalk.TTS.Ignore>忽略当前所有对话</RimTalk.TTS.Ignore>
     <RimTalk.TTS.IgnoreComplete>已忽略当前所有对话</RimTalk.TTS.IgnoreComplete>
+    <RimTalk.TTS.Display>显示下一条对话</RimTalk.TTS.Display>
 </LanguageData>

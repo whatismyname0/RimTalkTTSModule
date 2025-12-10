@@ -1,6 +1,5 @@
 using HarmonyLib;
 using System;
-using System.Diagnostics;
 using RimWorld;
 using UnityEngine;
 using System.Collections.Generic;
@@ -11,6 +10,7 @@ using Verse;
 using RimTalk.TTS.Service;
 using RimTalk.TTS.Util;
 using RimTalk.Data;
+using RimTalk.Util;
 
 namespace RimTalk.TTS.Patch
 {
@@ -89,6 +89,7 @@ namespace RimTalk.TTS.Patch
             // Prefix: Check if dialogue is blocked (TTS still generating) or audio is playing
             static bool Prefix(Pawn pawn, object talk)
             {
+                
                 try
                 {
                     if (!TTSModule.Instance.IsActive)
@@ -660,6 +661,8 @@ namespace RimTalk.TTS.Patch
         private static Rect resetButtonScreenRect = default;
         private static Rect generateButtonScreenRect = default;
         private static Rect ignoreButtonScreenRect = default;
+        private static Rect displayButtonScreenRect = default;
+        private static bool displayPassport = false;
 
         [HarmonyPatch]
         public static class Overlay_MapComponentOnGUI_Postfix
@@ -687,11 +690,13 @@ namespace RimTalk.TTS.Patch
                     float resetBtnWidth = 120f;
                     float generateBtnWidth = 150f;
                     float ignoreBtnWidth = 150f;
+                    float displayBtnWidth = 150f;
                     float btnHeight = Mathf.Max(gearRect.height, 28f);
                     float padding = 6f;
                     resetButtonScreenRect.Set(gearRect.x - resetBtnWidth - padding, gearRect.y, resetBtnWidth, btnHeight);
                     generateButtonScreenRect.Set(gearRect.x - resetBtnWidth - generateBtnWidth - 2*padding, gearRect.y, generateBtnWidth, btnHeight);
                     ignoreButtonScreenRect.Set(gearRect.x - resetBtnWidth - generateBtnWidth - ignoreBtnWidth - 2*padding, gearRect.y, ignoreBtnWidth, btnHeight);
+                    displayButtonScreenRect.Set(gearRect.x - resetBtnWidth - generateBtnWidth - ignoreBtnWidth - displayBtnWidth - 2*padding, gearRect.y, ignoreBtnWidth, btnHeight);
 
                     if (Widgets.ButtonText(resetButtonScreenRect, "RimTalk.TTS.Reset".Translate()))
                     {
@@ -704,6 +709,10 @@ namespace RimTalk.TTS.Patch
                     if (Widgets.ButtonText(ignoreButtonScreenRect, "RimTalk.TTS.Ignore".Translate()))
                     {
                         ignoreButtonFunc();
+                    }
+                    if (Widgets.ButtonText(displayButtonScreenRect, "RimTalk.TTS.Display".Translate()))
+                    {
+                        displayButtonFunc();
                     }
                 }
                 catch (Exception ex)
@@ -747,6 +756,12 @@ namespace RimTalk.TTS.Patch
                     {
                         currentEvent.Use();
                         ignoreButtonFunc();
+                        return false; // Consume event
+                    }
+                    if (displayButtonScreenRect.Contains(currentEvent.mousePosition))
+                    {
+                        currentEvent.Use();
+                        displayButtonFunc();
                         return false; // Consume event
                     }
                 }
@@ -799,6 +814,7 @@ namespace RimTalk.TTS.Patch
                 }
             }
         }
+
         private static void ignoreButtonFunc()
         {
             Messages.Message("RimTalk.TTS.IgnoreComplete".Translate(), MessageTypeDefOf.TaskCompletion, false);
@@ -806,6 +822,32 @@ namespace RimTalk.TTS.Patch
             foreach (var pawn in global::RimTalk.Data.Cache.GetAll())
             {
                 pawn.IgnoreAllTalkResponses();
+            }
+        }
+        
+        private static void displayButtonFunc()
+        {
+            displayPassport = true;
+            TalkService.DisplayTalk();
+            displayPassport = false;
+        }
+
+        [HarmonyPatch]
+        public static class CommonUtil_HasPassed_Prefix
+        {
+            static MethodBase TargetMethod()
+            {
+                return typeof(CommonUtil).GetMethod("HasPassed", BindingFlags.Public | BindingFlags.Static);
+            }
+
+            static bool Prefix(int pastTick, double seconds, ref bool __result)
+            {
+                if (displayPassport)
+                {
+                    __result = true;
+                    return false;
+                }
+                return true;
             }
         }
     }

@@ -10,7 +10,7 @@ namespace RimTalk.TTS.Service
     /// <summary>
     /// Simple LLM client for TTS text processing - no role concept, just plain text in/out
     /// </summary>
-    public static class SimpleLLMClient
+    public static class InputPreProcessClient
     {
         /// <summary>
         /// Get base URL for the configured provider
@@ -22,7 +22,7 @@ namespace RimTalk.TTS.Service
                 TTSApiProvider.DeepSeek => "https://api.deepseek.com",
                 TTSApiProvider.OpenAI => "https://api.openai.com",
                 TTSApiProvider.Custom => settings.CustomBaseUrl,
-                _ => "https://api.deepseek.com"
+                _ => ""
             };
         }
 
@@ -65,7 +65,7 @@ namespace RimTalk.TTS.Service
             try
             {
                 // Build simple OpenAI-compatible request with single user message
-                string jsonRequest = BuildSimpleRequest(prompt, settings.Model);
+                string jsonRequest = BuildRequest(prompt, settings.Model);
                 
                 Log.Message($"[RimTalk.TTS] Sending LLM request to {settings.ApiProvider}: {prompt}");
 
@@ -102,7 +102,7 @@ namespace RimTalk.TTS.Service
             }
         }
 
-        private static string BuildSimpleRequest(string prompt, string model)
+        private static string BuildRequest(string prompt, string model)
         {
             // Manually build minimal JSON to avoid role concept entirely
             var escapedPrompt = prompt

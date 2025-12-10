@@ -7,16 +7,16 @@ namespace RimTalk.TTS.Service
     /// <summary>
     /// Translation service using TTS module's own LLM API configuration
     /// </summary>
-    public static class TranslationService
+    public static class InputPreProcessService
     {
         /// <summary>
         /// Translate text to target language using configured LLM API
         /// </summary>
-        public static async Task<string> TranslateAsync(string text, string targetLanguage, TTSSettings settings)
+        public static async Task<string> PreProcessAsync(string text, string targetLanguage, TTSSettings settings)
         {
             if (settings == null)
             {
-                Log.Warning("[RimTalk.TTS] Translation settings is null");
+                Log.Warning("[RimTalk.TTS] preprocess settings is null");
                 return text;
             }
 
@@ -31,7 +31,7 @@ namespace RimTalk.TTS.Service
                     .Replace("{text}", text);
 
                 // Call SimpleLLMClient directly with settings
-                var (response, success) = await SimpleLLMClient.QueryAsync(prompt, settings);
+                var (response, success) = await InputPreProcessClient.QueryAsync(prompt, settings);
 
                 if (success && !string.IsNullOrEmpty(response))
                 {
@@ -39,13 +39,13 @@ namespace RimTalk.TTS.Service
                 }
                 else
                 {
-                    Log.Warning("[RimTalk.TTS] Empty response from translation API");
+                    Log.Warning("[RimTalk.TTS] Empty response from preprocess API");
                     return text;
                 }
             }
             catch (System.Exception ex)
             {
-                Log.Error($"[RimTalk.TTS] Translation failed - {ex.Message}");
+                Log.Error($"[RimTalk.TTS] preprocess failed - {ex.Message}");
                 return text; // Return original text on error
             }
         }

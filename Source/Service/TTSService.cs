@@ -95,7 +95,7 @@ namespace RimTalk.TTS.Service
                 // Translate if configured
                 if (!string.IsNullOrWhiteSpace(settings.TTSTranslationLanguage))
                 {
-                    processedText = await TranslationService.TranslateAsync(text, settings.TTSTranslationLanguage, settings);
+                    processedText = await InputPreProcessService.PreProcessAsync(text, settings.TTSTranslationLanguage, settings);
                     if (string.IsNullOrWhiteSpace(processedText))
                     {
                         Log.Warning($"[RimTalk.TTS] DEBUG: Translation failed");

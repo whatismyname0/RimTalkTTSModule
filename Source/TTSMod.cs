@@ -7,10 +7,13 @@ namespace RimTalk.TTS
     /// </summary>
     public class TTSMod : Mod
     {
+        public static System.Diagnostics.Stopwatch AppStopwatch = null;
+
         public TTSMod(ModContentPack content) : base(content)
         {
             // Settings are automatically loaded by Verse framework
             GetSettings<Data.TTSSettings>();
+            AppStopwatch = System.Diagnostics.Stopwatch.StartNew();
         }
 
         public override string SettingsCategory()

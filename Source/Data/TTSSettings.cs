@@ -32,6 +32,9 @@ namespace RimTalk.TTS.Data
         public bool ButtonDisplay = true;
 
         public bool isOnButton = true;
+        
+        // Generate cooldown (seconds) and queue behavior
+        public int GenerateCooldownMiliSeconds = 5000;
 
         public override void ExposeData()
         {
@@ -48,6 +51,7 @@ namespace RimTalk.TTS.Data
             Scribe_Values.Look(ref TTSTemperature, "ttsTemperature", 0.9f);
             Scribe_Values.Look(ref TTSTopP, "ttsTopP", 0.9f);
             Scribe_Values.Look(ref ButtonDisplay, "buttonDisplay", true);
+            Scribe_Values.Look(ref GenerateCooldownMiliSeconds, "generateCooldownMiliSeconds", 5000);
             
             // LLM API configuration
             Scribe_Values.Look<TTSApiProvider>(ref ApiProvider, "apiProvider", TTSApiProvider.DeepSeek);

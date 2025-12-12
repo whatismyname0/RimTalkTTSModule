@@ -10,6 +10,7 @@ using Verse;
 using RimTalk.TTS.Service;
 using RimTalk.TTS.Util;
 using RimTalk.Data;
+using RimTalk.Util;
 
 namespace RimTalk.TTS.Patch
 {
@@ -34,7 +35,7 @@ namespace RimTalk.TTS.Patch
         {
             try
             {
-                return global::RimTalk.Data.TalkHistory.IsTalkIgnored(dialogueId);
+                return TalkHistory.IsTalkIgnored(dialogueId);
             }
             catch (Exception ex)
             {
@@ -91,14 +92,14 @@ namespace RimTalk.TTS.Patch
                 
                 try
                 {
-                    if (!TTSModule.Instance.IsActive)
+                    if (!TTSModuleIsActive())
                         return true;
 
                     if (pawn == null || talk == null)
                         return true;
 
                     // Cast to RimTalk.Data.TalkResponse and read properties directly
-                    var talkResp = talk as global::RimTalk.Data.TalkResponse;
+                    var talkResp = talk as TalkResponse;
                     if (talkResp == null)
                         return true;
 
@@ -157,7 +158,7 @@ namespace RimTalk.TTS.Patch
 
             static void Prefix(Guid id)
             {
-                if (!TTSModule.Instance.IsActive)
+                if (!TTSModuleIsActive())
                     return;
                 try
                 {
@@ -243,7 +244,7 @@ namespace RimTalk.TTS.Patch
             {
                 try
                 {
-                    if (!TTSModule.Instance.IsActive)
+                    if (!TTSModuleIsActive())
                         return;
 
                     if (__instance == null)
@@ -311,7 +312,7 @@ namespace RimTalk.TTS.Patch
             {
                 try
                 {
-                    if (!TTSModule.Instance.IsActive)
+                    if (!TTSModuleIsActive())
                         return;
 
                     if (__instance == null)
@@ -433,8 +434,8 @@ namespace RimTalk.TTS.Patch
         {
             static void Prefix(Pawn __instance, bool silentlyRemoveReferences)
             {
-                if (!TTSModule.Instance.IsActive)
-                    return;
+                // if (!TTSModule.Instance.IsActive)
+                //     return;
                 try
                 {
                     if (__instance != null)
@@ -655,6 +656,12 @@ namespace RimTalk.TTS.Patch
             {
                 Log.Warning($"[RimTalk.TTS] AddPawnDialogueListForPawnState error for pawn '{pawn?.LabelShort}': {ex.Message}");
             }
+        }
+
+        public static bool TTSModuleIsActive()
+        {
+            return !TTSModule.Instance.IsActive
+                &&TTSModule.Instance.Settings.isOnButton;
         }
     }
 }

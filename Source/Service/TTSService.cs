@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,7 +14,9 @@ namespace RimTalk.TTS.Service
     /// </summary>
     public static class TTSService
     {
-        
+        private static int _lastGenerateTimeStampMilisecond = 0;
+        private static int _waitingRequestCount = 0;
+        private static readonly object _waitingRequestLock = new object();
         private static volatile bool _isShuttingDown = false;
 
         /// <summary>
@@ -131,6 +132,26 @@ namespace RimTalk.TTS.Service
                     Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was cancelled during generation (TTS module off)");
                     CleanupAndRelease(dialogueId);
                     return;
+                }
+
+                lock (_waitingRequestLock)
+                {
+                    _waitingRequestCount++;
+                }
+
+                int nowMilisecond = (int)TTSMod.AppStopwatch.Elapsed.TotalMilliseconds;
+                int cooldownMilisecond = settings.GenerateCooldownMiliSeconds;
+                int cooldownEndMilisecond = _waitingRequestCount * cooldownMilisecond + _lastGenerateTimeStampMilisecond;
+
+                if (nowMilisecond < cooldownEndMilisecond)
+                {
+                    await Task.Delay(cooldownEndMilisecond - nowMilisecond);
+                }
+
+                lock (_waitingRequestLock)
+                {
+                    _lastGenerateTimeStampMilisecond = (int)TTSMod.AppStopwatch.Elapsed.TotalMilliseconds;
+                    _waitingRequestCount--;
                 }
                 
                 // Generate speech via Fish Audio API

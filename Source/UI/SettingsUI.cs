@@ -83,6 +83,13 @@ namespace RimTalk.TTS.UI
 
             listing.Gap();
 
+            // Cooldown
+            listing.Label("RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel".Translate(settings.GenerateCooldownMiliSeconds.ToString()));
+            settings.GenerateCooldownMiliSeconds = (int)listing.Slider(settings.GenerateCooldownMiliSeconds, 0, 20000);
+
+            listing.Gap();
+
+
             // Volume
             listing.Label("RimTalk.Settings.TTS.VolumeLabel".Translate(settings.TTSVolume.ToStringPercent()));
             settings.TTSVolume = listing.Slider(settings.TTSVolume, 0f, 1f);

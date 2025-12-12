@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Runtime.Serialization;
 using System.Collections.Generic;
 using Verse;
+using RimTalk.Util;
 
 namespace RimTalk.TTS.Service;
 
@@ -376,6 +377,8 @@ public static class FishAudioTTSClient
             
             // Check cancellation before sending request
             cancellationToken.ThrowIfCancellationRequested();
+
+            Logger.Debug($"FishAudio TTS: Sending request - {text}");
             
             // Send HTTP request
             var response = await _httpClient.PostAsync(ServerUrl, content, cancellationToken);

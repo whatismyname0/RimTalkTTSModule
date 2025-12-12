@@ -16,6 +16,7 @@
     <RimTalk.Settings.TTS.ModelLabel>TTS 模型：{0}</RimTalk.Settings.TTS.ModelLabel>
     <RimTalk.Settings.TTS.ModelHighQuality>fishaudio-1 (v1.6)</RimTalk.Settings.TTS.ModelHighQuality>
     <RimTalk.Settings.TTS.ModelFaster>s1（更快，推荐）</RimTalk.Settings.TTS.ModelFaster>
+    <RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>生成冷却时间(毫秒): {0}</RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>
     <RimTalk.Settings.TTS.VolumeLabel>音量：{0}</RimTalk.Settings.TTS.VolumeLabel>
     <RimTalk.Settings.TTS.TemperatureLabel>温度：{0}</RimTalk.Settings.TTS.TemperatureLabel>
     <RimTalk.Settings.TTS.TopPLabel>Top P：{0}</RimTalk.Settings.TTS.TopPLabel>

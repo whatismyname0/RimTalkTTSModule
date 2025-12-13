@@ -660,8 +660,8 @@ namespace RimTalk.TTS.Patch
 
         public static bool TTSModuleIsActive()
         {
-            return !TTSModule.Instance.IsActive
-                &&TTSModule.Instance.Settings.isOnButton;
+            return TTSModule.Instance.IsActive
+                && TTSModule.Instance.Settings.isOnButton;
         }
     }
 }

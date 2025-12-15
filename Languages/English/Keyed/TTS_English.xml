@@ -20,7 +20,7 @@
     <RimTalk.Settings.TTS.VolumeLabel>Volume: {0}</RimTalk.Settings.TTS.VolumeLabel>
     <RimTalk.Settings.TTS.TemperatureLabel>Temperature: {0}</RimTalk.Settings.TTS.TemperatureLabel>
     <RimTalk.Settings.TTS.TopPLabel>Top P: {0}</RimTalk.Settings.TTS.TopPLabel>
-    <RimTalk.Settings.TTS.TranslationLanguage>Translation Language (must):</RimTalk.Settings.TTS.TranslationLanguage>
+    <RimTalk.Settings.TTS.TranslationLanguage>Voice Language (must):</RimTalk.Settings.TTS.TranslationLanguage>
     <RimTalk.Settings.TTS.TranslationLanguageInfo>Leave empty to disable translation. Enter a language (e.g., "English", "Chinese", "Japanese") to translate all dialogue before TTS.</RimTalk.Settings.TTS.TranslationLanguageInfo>
     <RimTalk.Settings.TTS.ProcessingPromptLabel>TTS Processing Prompt:</RimTalk.Settings.TTS.ProcessingPromptLabel>
     <RimTalk.Settings.TTS.Model>TTS Model</RimTalk.Settings.TTS.Model>
@@ -57,7 +57,7 @@
     <RimTalk.Settings.TTS.NoCustomModels>No custom voice models configured yet.\n\nAdd models in TTS Settings to see them here.</RimTalk.Settings.TTS.NoCustomModels>
 
     <!-- LLM API Settings -->
-    <RimTalk.Settings.TTS.LLMApiConfig>LLM API Configuration</RimTalk.Settings.TTS.LLMApiConfig>
+    <RimTalk.Settings.TTS.LLMApiConfig>Voice text pre-processing LLM API Configuration</RimTalk.Settings.TTS.LLMApiConfig>
     <RimTalk.Settings.TTS.ProviderLabel>API Provider:</RimTalk.Settings.TTS.ProviderLabel>
     <RimTalk.Settings.TTS.CustomProvider>Custom</RimTalk.Settings.TTS.CustomProvider>
     <RimTalk.Settings.TTS.LLMModelLabel>Model:</RimTalk.Settings.TTS.LLMModelLabel>
@@ -91,4 +91,6 @@
     <RimTalk.TTS.Ignore>Ignore existing dialogues</RimTalk.TTS.Ignore>
     <RimTalk.TTS.IgnoreComplete>Ignored all existing dialogues</RimTalk.TTS.IgnoreComplete>
     <RimTalk.TTS.Display>Display next</RimTalk.TTS.Display>
+    <RimTalk.Settings.TTS.TTSSupplier>TTS Provider</RimTalk.Settings.TTS.TTSSupplier>
+    <RimTalk.Settings.TTS.TTSSupplier.FishAudio>Fish Audio</RimTalk.Settings.TTS.TTSSupplier.FishAudio>
 </LanguageData>

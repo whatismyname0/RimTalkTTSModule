@@ -20,7 +20,7 @@
     <RimTalk.Settings.TTS.VolumeLabel>音量：{0}</RimTalk.Settings.TTS.VolumeLabel>
     <RimTalk.Settings.TTS.TemperatureLabel>温度：{0}</RimTalk.Settings.TTS.TemperatureLabel>
     <RimTalk.Settings.TTS.TopPLabel>Top P：{0}</RimTalk.Settings.TTS.TopPLabel>
-    <RimTalk.Settings.TTS.TranslationLanguage>翻译语言（必须填写）：</RimTalk.Settings.TTS.TranslationLanguage>
+    <RimTalk.Settings.TTS.TranslationLanguage>语音语言（必须填写）：</RimTalk.Settings.TTS.TranslationLanguage>
     <RimTalk.Settings.TTS.TranslationLanguageInfo>留空以禁用翻译。输入语言（如"中文"、"English"、"日本語"）以在语音合成前翻译所有对话。</RimTalk.Settings.TTS.TranslationLanguageInfo>
     <RimTalk.Settings.TTS.ProcessingPromptLabel>TTS 处理提示词：</RimTalk.Settings.TTS.ProcessingPromptLabel>
     <RimTalk.Settings.TTS.Model>TTS 模型</RimTalk.Settings.TTS.Model>
@@ -57,7 +57,7 @@
     <RimTalk.Settings.TTS.NoCustomModels>尚未配置自定义语音模型。\n\n在 TTS 设置中添加模型后即可在此看到。</RimTalk.Settings.TTS.NoCustomModels>
 
     <!-- LLM API 设置 -->
-    <RimTalk.Settings.TTS.LLMApiConfig>LLM API 配置</RimTalk.Settings.TTS.LLMApiConfig>
+    <RimTalk.Settings.TTS.LLMApiConfig>语音文本预处理 LLM API 配置</RimTalk.Settings.TTS.LLMApiConfig>
     <RimTalk.Settings.TTS.ProviderLabel>API 提供商：</RimTalk.Settings.TTS.ProviderLabel>
     <RimTalk.Settings.TTS.CustomProvider>自定义</RimTalk.Settings.TTS.CustomProvider>
     <RimTalk.Settings.TTS.LLMModelLabel>模型：</RimTalk.Settings.TTS.LLMModelLabel>
@@ -91,4 +91,6 @@
     <RimTalk.TTS.Ignore>忽略当前所有对话</RimTalk.TTS.Ignore>
     <RimTalk.TTS.IgnoreComplete>已忽略当前所有对话</RimTalk.TTS.IgnoreComplete>
     <RimTalk.TTS.Display>显示下一条对话</RimTalk.TTS.Display>
+    <RimTalk.Settings.TTS.TTSSupplier>语音服务提供商</RimTalk.Settings.TTS.TTSSupplier>
+    <RimTalk.Settings.TTS.TTSSupplier.FishAudio>Fish Audio</RimTalk.Settings.TTS.TTSSupplier.FishAudio>
 </LanguageData>

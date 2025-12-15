@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using Verse;
 using RimTalk.Util;
 
-namespace RimTalk.TTS.Service;
+namespace RimTalk.TTS.Service.FishAudioService;
 
 /// <summary>
 /// Client for Fish Audio TTS API using Python SDK via local HTTP server
@@ -31,7 +31,7 @@ public static class FishAudioTTSClient
                 string assemblyDir = Path.GetDirectoryName(assemblyLocation);
                 if (!string.IsNullOrEmpty(assemblyDir))
                 {
-                    string scriptPath = Path.Combine(assemblyDir, "..", "..", "Source", "Service", "fish_audio_tts.py");
+                    string scriptPath = Path.Combine(assemblyDir, "..", "..", "Source", "Service", "FishAudioService", "fish_audio_tts.py");
                     if (File.Exists(scriptPath))
                     {
                         return scriptPath;
@@ -47,7 +47,7 @@ public static class FishAudioTTSClient
             {
                 if (mod.Name.Contains("RimTalk") || mod.PackageId.Contains("rimtalk"))
                 {
-                    string scriptPath = Path.Combine(mod.RootDir.ToString(), "Source", "Service", "fish_audio_tts.py");
+                    string scriptPath = Path.Combine(mod.RootDir.ToString(), "Source", "Service", "FishAudioService", "fish_audio_tts.py");
                     if (File.Exists(scriptPath))
                     {
                         return scriptPath;

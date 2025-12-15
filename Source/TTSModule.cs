@@ -47,6 +47,13 @@ namespace RimTalk.TTS
                 _settings = new TTSSettings();
             }
 
+            // Apply configured provider implementation
+            try
+            {
+                Service.TTSService.SetProvider(_settings.Supplier);
+            }
+            catch { }
+
             // Output TTS API configuration
             Log.Message("[RimTalk.TTS] ========== TTS API Configuration ==========");
             Log.Message($"[RimTalk.TTS] Provider: {_settings.ApiProvider}");
@@ -100,7 +107,6 @@ namespace RimTalk.TTS
             
             Service.TTSService.StopAll(permanentShutdown: true);
             Service.AudioPlaybackService.FullReset();
-            Service.FishAudioTTSClient.ShutdownServer();
         }
 
         public bool IsActive => _settings?.EnableTTS ?? false;

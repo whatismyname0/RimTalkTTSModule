@@ -18,6 +18,57 @@ namespace RimTalk.TTS.Service
         private static int _waitingRequestCount = 0;
         private static readonly object _waitingRequestLock = new object();
         private static volatile bool _isShuttingDown = false;
+        private static Provider.ITTSProvider _provider = new Provider.NoneProvider();
+
+        private static readonly object _providerLock = new object();
+
+        public static void SetProvider(TTSSettings.TTSSupplier supplier)
+        {
+            lock (_providerLock)
+            {
+                try
+                {
+                    _provider?.Shutdown();
+                }
+                catch { }
+
+                // Reset module runtime state when switching providers to ensure a clean start
+                try
+                {
+                    // Cancel pending tasks, clear audio and blocked dialogues
+                    StopAll(false);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning($"[RimTalk.TTS] Warning: failed to StopAll during provider switch: {ex.Message}");
+                }
+
+                // Clear internal pacing counters
+                try
+                {
+                    _lastGenerateTimeStampMilisecond = 0;
+                    lock (_waitingRequestLock)
+                    {
+                        _waitingRequestCount = 0;
+                    }
+                }
+                catch { }
+
+                switch (supplier)
+                {
+                    case TTSSettings.TTSSupplier.None:
+                        _provider = new Provider.NoneProvider();
+                        break;
+                    case TTSSettings.TTSSupplier.FishAudio:
+                        _provider = new Provider.FishAudioProvider();
+                        break;
+                    default:
+                        _provider = new Provider.NoneProvider();
+                        break;
+                }
+                Log.Message($"[RimTalk.TTS] TTS provider set to {supplier}");
+            }
+        }
 
         /// <summary>
         /// Initiate TTS generation for a dialogue. Runs asynchronously.
@@ -32,10 +83,11 @@ namespace RimTalk.TTS.Service
                 return;
             }
                 
-            // Validate API key
-            if (string.IsNullOrEmpty(settings.FishAudioApiKey))
+            // Validate API key for selected supplier using provider
+            string apiKey = GetApiKeyForSupplier(settings.Supplier, settings);
+            if (!_provider.IsApiKeyValid(apiKey))
             {
-                Log.Warning("[RimTalk.TTS] DEBUG: Rejected - Fish Audio API key not configured");
+                Log.Warning($"[RimTalk.TTS] DEBUG: Rejected - API key not configured or invalid for supplier {settings.Supplier}");
                 CleanupAndRelease(dialogueId);
                 return;
             }
@@ -140,7 +192,7 @@ namespace RimTalk.TTS.Service
                 }
 
                 int nowMilisecond = (int)TTSMod.AppStopwatch.Elapsed.TotalMilliseconds;
-                int cooldownMilisecond = settings.GenerateCooldownMiliSeconds;
+                int cooldownMilisecond = settings.GetSupplierGenerateCooldown(settings.Supplier);
                 int cooldownEndMilisecond = _waitingRequestCount * cooldownMilisecond + _lastGenerateTimeStampMilisecond;
 
                 if (nowMilisecond < cooldownEndMilisecond)
@@ -154,14 +206,18 @@ namespace RimTalk.TTS.Service
                     _waitingRequestCount--;
                 }
                 
-                // Generate speech via Fish Audio API
-                byte[] audioData = await FishAudioTTSClient.GenerateSpeechAsync(
+                // Generate speech via configured provider
+                string modelForSupplier = settings.GetSupplierModel(settings.Supplier);
+                string apiKeyForSupplier = settings.GetSupplierApiKey(settings.Supplier);
+                float temperature = settings.GetSupplierTemperature(settings.Supplier);
+                float topP = settings.GetSupplierTopP(settings.Supplier);
+                byte[] audioData = await _provider.GenerateSpeechAsync(
                     processedText,
-                    settings.FishAudioApiKey,
+                    apiKeyForSupplier,
                     voiceModelId,
-                    settings.TTSModel,
-                    settings.TTSTemperature,
-                    settings.TTSTopP
+                    modelForSupplier,
+                    temperature,
+                    topP
                 );
 
                 // Check if TTS Module is still active
@@ -233,19 +289,22 @@ namespace RimTalk.TTS.Service
             if (pawn != null)
             {
                 string voiceModel = Data.PawnVoiceManager.GetVoiceModel(pawn);
-                if (!string.IsNullOrEmpty(voiceModel))
+                if (!string.IsNullOrEmpty(voiceModel) && settings.GetSupplierVoiceModels(settings.Supplier).Any(vm => vm.ModelId == voiceModel))
                 {
                     return voiceModel;
                 }
             }
 
             // Fallback to default voice model
-            if (!string.IsNullOrEmpty(settings.DefaultVoiceModelId))
-            {
-                return settings.DefaultVoiceModelId;
-            }
+            return settings.GetSupplierDefaultVoiceModelId(settings.Supplier);
+        }
 
-            return "";
+        private static string GetApiKeyForSupplier(TTSSettings.TTSSupplier supplier, TTSSettings settings)
+        {
+            if (settings == null) return string.Empty;
+
+            // Prefer SupplierApiKeys dictionary if present
+            return settings.GetSupplierApiKey(supplier);
         }
 
         public static void StopAll(bool permanentShutdown = false)
@@ -253,6 +312,11 @@ namespace RimTalk.TTS.Service
             if (permanentShutdown)
             {
                 _isShuttingDown = true;
+                try
+                {
+                    _provider?.Shutdown();
+                }
+                catch { }
             }
 
             List<Guid> toCancel;

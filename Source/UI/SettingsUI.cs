@@ -64,48 +64,6 @@ namespace RimTalk.TTS.UI
 
             listing.Gap();
 
-            // Fish Audio API Configuration
-            listing.Label("RimTalk.Settings.TTS.ApiKey".Translate());
-            settings.FishAudioApiKey = listing.TextEntry(settings.FishAudioApiKey);
-
-            listing.Gap();
-
-            // TTS Model Selection
-            listing.Label("RimTalk.Settings.TTS.ModelLabel".Translate(settings.TTSModel));
-            if (listing.RadioButton("RimTalk.Settings.TTS.ModelHighQuality".Translate(), settings.TTSModel == "fishaudio-1"))
-            {
-                settings.TTSModel = "fishaudio-1";
-            }
-            if (listing.RadioButton("RimTalk.Settings.TTS.ModelFaster".Translate(), settings.TTSModel == "s1"))
-            {
-                settings.TTSModel = "s1";
-            }
-
-            listing.Gap();
-
-            // Cooldown
-            listing.Label("RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel".Translate(settings.GenerateCooldownMiliSeconds.ToString()));
-            settings.GenerateCooldownMiliSeconds = (int)listing.Slider(settings.GenerateCooldownMiliSeconds, 0, 20000);
-
-            listing.Gap();
-
-
-            // Volume
-            listing.Label("RimTalk.Settings.TTS.VolumeLabel".Translate(settings.TTSVolume.ToStringPercent()));
-            settings.TTSVolume = listing.Slider(settings.TTSVolume, 0f, 1f);
-
-            listing.Gap();
-
-            // Temperature
-            listing.Label("RimTalk.Settings.TTS.TemperatureLabel".Translate(settings.TTSTemperature.ToString("F2")));
-            settings.TTSTemperature = listing.Slider(settings.TTSTemperature, 0.7f, 1.0f);
-
-            // Top P
-            listing.Label("RimTalk.Settings.TTS.TopPLabel".Translate(settings.TTSTopP.ToString("F2")));
-            settings.TTSTopP = listing.Slider(settings.TTSTopP, 0.7f, 1.0f);
-
-            listing.Gap();
-
             // LLM API Configuration Section
             DrawApiConfigSection(listing, settings);
 
@@ -122,8 +80,95 @@ namespace RimTalk.TTS.UI
 
             listing.Gap();
 
-            // Voice Models Section
-            DrawVoiceModelsSection(listing, settings, viewRect.width);
+            // Supplier selection (TTS backend)
+            listing.Label("RimTalk.Settings.TTS.TTSSupplier".Translate());
+            Rect supplierRect = listing.GetRect(Text.LineHeight);
+            string supplierDisplay = SupplierString(settings.Supplier);
+
+            if (Widgets.ButtonText(supplierRect, supplierDisplay))
+            {
+                var options = new System.Collections.Generic.List<FloatMenuOption>();
+                options.Add(new FloatMenuOption("RimTalk.Settings.TTS.TTSSupplier.FishAudio".Translate(), delegate
+                {
+                    settings.Supplier = TTSSettings.TTSSupplier.FishAudio;
+                    TTSService.SetProvider(settings.Supplier);
+                }));
+                options.Add(new FloatMenuOption("RimTalk.Settings.TTS.None".Translate(), delegate
+                {
+                    settings.Supplier = TTSSettings.TTSSupplier.None;
+                    TTSService.SetProvider(settings.Supplier);
+                }));
+
+                Find.WindowStack.Add(new FloatMenu(options));
+            }
+
+            listing.Gap();
+
+            // Per-supplier API key and model configuration
+            if (settings.Supplier != TTSSettings.TTSSupplier.None)
+            {
+                listing.Label("RimTalk.Settings.TTS.ApiKey".Translate());
+                string currentApiKey = settings.GetSupplierApiKey(settings.Supplier);
+                string newApiKey = listing.TextEntry(currentApiKey ?? "");
+                if (newApiKey != currentApiKey)
+                {
+                    settings.SetSupplierApiKey(settings.Supplier, newApiKey);
+                }
+
+                listing.Gap();
+
+                // TTS Model Selection (example: FishAudio choices)
+                if (settings.Supplier == TTSSettings.TTSSupplier.FishAudio)
+                {
+                    string currentModel = settings.GetSupplierModel(settings.Supplier);
+                    listing.Label("RimTalk.Settings.TTS.ModelLabel".Translate(currentModel));
+                    if (listing.RadioButton("RimTalk.Settings.TTS.ModelHighQuality".Translate(), currentModel == "fishaudio-1"))
+                    {
+                        settings.SetSupplierModel(settings.Supplier, "fishaudio-1");
+                    }
+                    if (listing.RadioButton("RimTalk.Settings.TTS.ModelFaster".Translate(), currentModel == "s1"))
+                    {
+                        settings.SetSupplierModel(settings.Supplier, "s1");
+                    }
+                }
+
+                listing.Gap();
+                
+                int currentCooldown = settings.GetSupplierGenerateCooldown(settings.Supplier);
+                listing.Label("RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel".Translate(currentCooldown.ToString()));
+                int newCooldown = (int)listing.Slider(currentCooldown, 0, 20000);
+                if (newCooldown != currentCooldown)
+                    settings.SetSupplierGenerateCooldown(settings.Supplier, newCooldown);
+
+                listing.Gap();
+
+                float currentVolume = settings.GetSupplierVolume(settings.Supplier);
+                listing.Label("RimTalk.Settings.TTS.VolumeLabel".Translate(currentVolume.ToStringPercent()));
+                float newVolume = listing.Slider(currentVolume, 0f, 1f);
+                if (newVolume != currentVolume)
+                    settings.SetSupplierVolume(settings.Supplier, newVolume);
+
+                listing.Gap();
+
+                float currentTemp = settings.GetSupplierTemperature(settings.Supplier);
+                listing.Label("RimTalk.Settings.TTS.TemperatureLabel".Translate(currentTemp.ToString("F2")));
+                float newTemp = listing.Slider(currentTemp, 0.7f, 1.0f);
+                if (newTemp != currentTemp)
+                    settings.SetSupplierTemperature(settings.Supplier, newTemp);
+
+                // Top P
+                float currentTopP = settings.GetSupplierTopP(settings.Supplier);
+                listing.Label("RimTalk.Settings.TTS.TopPLabel".Translate(currentTopP.ToString("F2")));
+                float newTopP = listing.Slider(currentTopP, 0.7f, 1.0f);
+                if (newTopP != currentTopP)
+                    settings.SetSupplierTopP(settings.Supplier, newTopP);
+
+                listing.Gap();
+
+                // Voice Models Section (per-supplier when a supplier is selected).
+                System.Collections.Generic.List<VoiceModel> currentVoiceModels = settings.GetSupplierVoiceModels(settings.Supplier);
+                DrawVoiceModelsSection(listing, settings, viewRect.width, currentVoiceModels);
+            }
 
             listing.End();
             Widgets.EndScrollView();
@@ -194,21 +239,23 @@ namespace RimTalk.TTS.UI
             }
         }
 
-        private static void DrawVoiceModelsSection(Listing_Standard listing, TTSSettings settings, float width)
+        private static void DrawVoiceModelsSection(Listing_Standard listing, TTSSettings settings, float width, System.Collections.Generic.List<VoiceModel> voiceModels)
         {
             listing.Label("RimTalk.Settings.TTS.VoiceModels".Translate());
 
-            // Default model selector
+            // Default model selector (shows names from current voice model list)
+            string defaultModelId = settings.GetSupplierDefaultVoiceModelId(settings.Supplier);
+
             string currentDefaultName = "RimTalk.Settings.TTS.NotSet".Translate();
-            if (!string.IsNullOrEmpty(settings.DefaultVoiceModelId))
+            if (!string.IsNullOrEmpty(defaultModelId))
             {
-                if (settings.DefaultVoiceModelId == VoiceModel.NONE_MODEL_ID)
+                if (defaultModelId == VoiceModel.NONE_MODEL_ID)
                 {
                     currentDefaultName = "RimTalk.Settings.TTS.NoneModel".Translate();
                 }
-                else if (settings.VoiceModels != null)
+                else if (voiceModels != null)
                 {
-                    var m = settings.VoiceModels.FirstOrDefault(x => x.ModelId == settings.DefaultVoiceModelId);
+                    var m = voiceModels.FirstOrDefault(x => x.ModelId == defaultModelId);
                     if (m != null)
                         currentDefaultName = m.GetDisplayName();
                 }
@@ -219,23 +266,23 @@ namespace RimTalk.TTS.UI
                 var options = new System.Collections.Generic.List<FloatMenuOption>();
                 options.Add(new FloatMenuOption("RimTalk.Settings.TTS.ClearDefault".Translate(), delegate
                 {
-                    settings.DefaultVoiceModelId = "";
+                    settings.SetSupplierDefaultVoiceModelId(settings.Supplier, null);
                 }));
-                
+
                 // Add NONE pseudo-model option
                 options.Add(new FloatMenuOption("RimTalk.Settings.TTS.NoneModel".Translate(), delegate
                 {
-                    settings.DefaultVoiceModelId = VoiceModel.NONE_MODEL_ID;
+                    settings.SetSupplierDefaultVoiceModelId(settings.Supplier, VoiceModel.NONE_MODEL_ID);
                 }));
 
-                if (settings.VoiceModels != null)
+                if (voiceModels != null)
                 {
-                    foreach (var vm in settings.VoiceModels)
+                    foreach (var vm in voiceModels)
                     {
                         var display = vm.GetDisplayName();
                         options.Add(new FloatMenuOption(display, delegate
                         {
-                            settings.DefaultVoiceModelId = vm.ModelId;
+                            settings.SetSupplierDefaultVoiceModelId(settings.Supplier, vm.ModelId);
                         }));
                     }
                 }
@@ -255,17 +302,19 @@ namespace RimTalk.TTS.UI
 
             if (Widgets.ButtonText(addButtonRect, "+"))
             {
-                if (settings.VoiceModels == null)
-                    settings.VoiceModels = new System.Collections.Generic.List<VoiceModel>();
-                settings.VoiceModels.Add(new VoiceModel { ModelName = "", ModelId = "" });
+                if (voiceModels == null)
+                    voiceModels = new System.Collections.Generic.List<VoiceModel>();
+                voiceModels.Add(new VoiceModel { ModelName = "", ModelId = "" });
+                settings.SetSupplierVoiceModels(settings.Supplier, voiceModels);
             }
 
-            GUI.enabled = settings.VoiceModels != null && settings.VoiceModels.Count > 0;
+            GUI.enabled = voiceModels != null && voiceModels.Count > 0;
             if (Widgets.ButtonText(removeButtonRect, "−"))
             {
-                if (settings.VoiceModels != null && settings.VoiceModels.Count > 0)
+                if (voiceModels != null && voiceModels.Count > 0)
                 {
-                    settings.VoiceModels.RemoveAt(settings.VoiceModels.Count - 1);
+                    voiceModels.RemoveAt(voiceModels.Count - 1);
+                    settings.SetSupplierVoiceModels(settings.Supplier, voiceModels);
                 }
             }
             GUI.enabled = true;
@@ -297,11 +346,11 @@ namespace RimTalk.TTS.UI
             listing.Gap(6f);
 
             // Draw each model config row
-            if (settings.VoiceModels != null)
+            if (voiceModels != null)
             {
-                for (int i = 0; i < settings.VoiceModels.Count; i++)
+                for (int i = 0; i < voiceModels.Count; i++)
                 {
-                    DrawModelConfigRow(listing, settings.VoiceModels[i], i, settings.VoiceModels, width);
+                    DrawModelConfigRow(listing, voiceModels[i], i, voiceModels, width);
                 }
             }
         }
@@ -382,6 +431,16 @@ namespace RimTalk.TTS.UI
                 listing.Label("RimTalk.Settings.TTS.CustomBaseUrlLabel".Translate());
                 settings.CustomBaseUrl = listing.TextEntry(settings.CustomBaseUrl ?? "");
             }
+        }
+
+        private static string SupplierString(TTSSettings.TTSSupplier supplier)
+        {
+            return supplier switch
+            {
+                TTSSettings.TTSSupplier.FishAudio => "RimTalk.Settings.TTS.TTSSupplier.FishAudio".Translate(),
+                TTSSettings.TTSSupplier.None => "RimTalk.Settings.TTS.None".Translate(),
+                _ => supplier.ToString(),
+            };
         }
     }
 }

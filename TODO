@@ -1,8 +1,7 @@
 Urgent:
     Support more online TTS service supplier
     {
-        I don't know which to support, and I need professional comment
-        Queued: AzureTTS, edgeTTS
+        Queued: AzureTTS, edgeTTS, Siliconflow
     }
     Support local TTS model
     {

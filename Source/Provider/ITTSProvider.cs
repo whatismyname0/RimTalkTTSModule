@@ -5,7 +5,7 @@ namespace RimTalk.TTS.Provider
 {
     public interface ITTSProvider
     {
-        Task<byte[]> GenerateSpeechAsync(string text, string apiKey, string referenceId, string model, float temperature, float topP, CancellationToken cancellationToken = default);
+        Task<byte[]> GenerateSpeechAsync(string text, string apiKey, string referenceId, string model, float speed, float temperature, float topP, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Perform provider-specific shutdown/cleanup (blocking)

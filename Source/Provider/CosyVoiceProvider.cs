@@ -1,23 +1,22 @@
 using System.Threading;
 using System.Threading.Tasks;
-using RimTalk.TTS.Service.FishAudioService;
 
 namespace RimTalk.TTS.Provider
 {
     /// <summary>
-    /// ITTSProvider implementation that delegates to FishAudioTTSClient
+    /// Provider wrapper for FunAudioLLM/CosyVoice2-0.5B (SiliconFlow-backed)
     /// </summary>
-    public class FishAudioProvider : ITTSProvider
+    public class CosyVoiceProvider : ITTSProvider
     {
         public async Task<byte[]> GenerateSpeechAsync(string text, string apiKey, string referenceId, string model, float speed, float temperature, float topP, CancellationToken cancellationToken = default)
         {
-            return await FishAudioTTSClient.GenerateSpeechAsync(text, apiKey, referenceId, model, speed, temperature, topP, cancellationToken);
+            var resolvedModel = string.IsNullOrWhiteSpace(model) ? "FunAudioLLM/CosyVoice2-0.5B" : model;
+            return await Service.SiliconFlowClient.GenerateSpeechAsync(text, apiKey, referenceId, resolvedModel, speed, temperature, topP, cancellationToken);
         }
 
         public void Shutdown()
         {
-            // Delegate to existing shutdown helper
-            FishAudioTTSClient.ShutdownServer();
+            // No-op for HTTP client
         }
 
         public bool IsApiKeyValid(string apiKey)

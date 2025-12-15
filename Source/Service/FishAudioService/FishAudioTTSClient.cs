@@ -341,6 +341,7 @@ public static class FishAudioTTSClient
         string apiKey, 
         string referenceId, 
         string model, 
+        float speed,
         float temperature, 
         float topP,
         System.Threading.CancellationToken cancellationToken = default)
@@ -367,6 +368,7 @@ public static class FishAudioTTSClient
                 reference_id = referenceId,
                 model = model,
                 latency = "normal",
+                speed = speed,
                 normalize = false,
                 temperature = temperature,
                 top_p = topP
@@ -578,6 +580,9 @@ public static class FishAudioTTSClient
         
         [DataMember(Name = "latency")]
         public string latency { get; set; }
+
+        [DataMember(Name = "speed")]
+        public float speed { get; set; }
         
         [DataMember(Name = "normalize")]
         public bool normalize { get; set; }

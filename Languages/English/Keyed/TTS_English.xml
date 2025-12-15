@@ -12,14 +12,14 @@
     <RimTalk.TTS.OnOffUpdated>Text to Speech Module {0}</RimTalk.TTS.OnOffUpdated>
     <RimTalk.TTS.On>turned on</RimTalk.TTS.On>
     <RimTalk.TTS.Off>turned off</RimTalk.TTS.Off>
-    <RimTalk.Settings.TTS.ApiKey>Fish Audio API Key:</RimTalk.Settings.TTS.ApiKey>
+    <RimTalk.Settings.TTS.ApiKey>API Key:</RimTalk.Settings.TTS.ApiKey>
     <RimTalk.Settings.TTS.ModelLabel>TTS Model: {0}</RimTalk.Settings.TTS.ModelLabel>
     <RimTalk.Settings.TTS.ModelHighQuality>fishaudio-1 (v1.6)</RimTalk.Settings.TTS.ModelHighQuality>
     <RimTalk.Settings.TTS.ModelFaster>s1 (Faster, Recommended)</RimTalk.Settings.TTS.ModelFaster>
     <RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>Generate Cooldown (miliseconds): {0}</RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>
     <RimTalk.Settings.TTS.VolumeLabel>Volume: {0}</RimTalk.Settings.TTS.VolumeLabel>
-    <RimTalk.Settings.TTS.TemperatureLabel>Temperature: {0}</RimTalk.Settings.TTS.TemperatureLabel>
-    <RimTalk.Settings.TTS.TopPLabel>Top P: {0}</RimTalk.Settings.TTS.TopPLabel>
+    <RimTalk.Settings.TTS.TemperatureLabel>Temperature: {0} (Used only by Fish Audio)</RimTalk.Settings.TTS.TemperatureLabel>
+    <RimTalk.Settings.TTS.TopPLabel>Top P: {0} (Used only by Fish Audio)</RimTalk.Settings.TTS.TopPLabel>
     <RimTalk.Settings.TTS.TranslationLanguage>Voice Language (must):</RimTalk.Settings.TTS.TranslationLanguage>
     <RimTalk.Settings.TTS.TranslationLanguageInfo>Leave empty to disable translation. Enter a language (e.g., "English", "Chinese", "Japanese") to translate all dialogue before TTS.</RimTalk.Settings.TTS.TranslationLanguageInfo>
     <RimTalk.Settings.TTS.ProcessingPromptLabel>TTS Processing Prompt:</RimTalk.Settings.TTS.ProcessingPromptLabel>
@@ -93,4 +93,11 @@
     <RimTalk.TTS.Display>Display next</RimTalk.TTS.Display>
     <RimTalk.Settings.TTS.TTSSupplier>TTS Provider</RimTalk.Settings.TTS.TTSSupplier>
     <RimTalk.Settings.TTS.TTSSupplier.FishAudio>Fish Audio</RimTalk.Settings.TTS.TTSSupplier.FishAudio>
+    <RimTalk.Settings.TTS.TTSSupplier.CosyVoice>CosyVoice2</RimTalk.Settings.TTS.TTSSupplier.CosyVoice>
+    <RimTalk.Settings.TTS.TTSSupplier.IndexTTS>IndexTTS2</RimTalk.Settings.TTS.TTSSupplier.IndexTTS>
+    <RimTalk.Settings.TTS.SpeedLabel>Speed: {0}</RimTalk.Settings.TTS.SpeedLabel>
+    <RimTalk.Settings.TTS.ModelLabel.CosyVoice>TTS Model (CosyVoice): {0}</RimTalk.Settings.TTS.ModelLabel.CosyVoice>
+    <RimTalk.Settings.TTS.ModelLabel.IndexTTS>TTS Model (IndexTTS): {0}</RimTalk.Settings.TTS.ModelLabel.IndexTTS>
+    <RimTalk.Settings.TTS.CustomModelIdLabel>Custom model id (optional):</RimTalk.Settings.TTS.CustomModelIdLabel>
+    <RimTalk.Settings.TTS.ResetModelsButton>Restore default models</RimTalk.Settings.TTS.ResetModelsButton>
 </LanguageData>

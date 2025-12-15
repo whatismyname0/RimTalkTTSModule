@@ -27,6 +27,7 @@ class TTSRequestHandler(BaseHTTPRequestHandler):
             reference_id = request_data.get("reference_id")
             model = request_data.get("model", "s1")
             latency = request_data.get("latency", "normal")
+            speed = request_data.get("speed", 1.0)
             normalize = request_data.get("normalize", False)
             temperature = request_data.get("temperature", 0.9)
             top_p = request_data.get("top_p", 0.9)
@@ -44,7 +45,7 @@ class TTSRequestHandler(BaseHTTPRequestHandler):
             )
             
             config = TTSConfig(
-                prosody=Prosody(speed=1.0, volume=0),
+                prosody=Prosody(speed=float(speed), volume=0),
                 reference_id=reference_id,
                 format="wav",
                 latency=latency,

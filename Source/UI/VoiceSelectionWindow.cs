@@ -31,7 +31,7 @@ namespace RimTalk.TTS.UI
             if (modInstance != null)
             {
                 _settings = modInstance.GetSettings<TTSSettings>();
-                _voiceModels = _settings?.VoiceModels ?? new List<VoiceModel>();
+                _voiceModels = _settings != null ? (_settings.GetSupplierVoiceModels(_settings.Supplier) ?? new List<VoiceModel>()) : new List<VoiceModel>();
             }
             else
             {

@@ -10,7 +10,7 @@ namespace RimTalk.TTS.Provider
     /// </summary>
     public class NoneProvider : ITTSProvider
     {
-        public Task<byte[]> GenerateSpeechAsync(string text, string apiKey, string referenceId, string model, float temperature, float topP, CancellationToken cancellationToken = default)
+        public Task<byte[]> GenerateSpeechAsync(string text, string apiKey, string referenceId, string model, float speed, float temperature, float topP, CancellationToken cancellationToken = default)
         {
             Log.Warning("[RimTalk.TTS] No TTS supplier selected - skipping TTS generation");
             return Task.FromResult<byte[]>(null);

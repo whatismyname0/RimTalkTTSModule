@@ -1,8 +1,8 @@
 Urgent:
     Support more online TTS service supplier
     {
-        status: Framework is finished
-        Queued: Siliconflow(finish soon), AzureTTS(in queue), edgeTTS(in queue)
+        status: Siliconflow(CozyVoice & IndexTTS) is supported
+        Queued: AzureTTS(in queue), edgeTTS(in queue)
     }
     Support local TTS model
     {
@@ -30,4 +30,5 @@ Improvement:
         }
 
 Bug fix:
-    working fine :)
+    # working fine :)
+    IndexTTS response: WAV is invalid or length=0

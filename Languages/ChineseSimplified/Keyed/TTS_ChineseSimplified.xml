@@ -12,14 +12,14 @@
     <RimTalk.TTS.OnOffUpdated>语音生成已{0}</RimTalk.TTS.OnOffUpdated>
     <RimTalk.TTS.On>开启</RimTalk.TTS.On>
     <RimTalk.TTS.Off>关闭</RimTalk.TTS.Off>
-    <RimTalk.Settings.TTS.ApiKey>Fish Audio API 密钥：</RimTalk.Settings.TTS.ApiKey>
+    <RimTalk.Settings.TTS.ApiKey>API 密钥：</RimTalk.Settings.TTS.ApiKey>
     <RimTalk.Settings.TTS.ModelLabel>TTS 模型：{0}</RimTalk.Settings.TTS.ModelLabel>
     <RimTalk.Settings.TTS.ModelHighQuality>fishaudio-1 (v1.6)</RimTalk.Settings.TTS.ModelHighQuality>
     <RimTalk.Settings.TTS.ModelFaster>s1（更快，推荐）</RimTalk.Settings.TTS.ModelFaster>
     <RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>生成冷却时间(毫秒): {0}</RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>
     <RimTalk.Settings.TTS.VolumeLabel>音量：{0}</RimTalk.Settings.TTS.VolumeLabel>
-    <RimTalk.Settings.TTS.TemperatureLabel>温度：{0}</RimTalk.Settings.TTS.TemperatureLabel>
-    <RimTalk.Settings.TTS.TopPLabel>Top P：{0}</RimTalk.Settings.TTS.TopPLabel>
+    <RimTalk.Settings.TTS.TemperatureLabel>温度：{0} (仅 Fish Audio 有效)</RimTalk.Settings.TTS.TemperatureLabel>
+    <RimTalk.Settings.TTS.TopPLabel>Top P：{0} (仅 Fish Audio 有效)</RimTalk.Settings.TTS.TopPLabel>
     <RimTalk.Settings.TTS.TranslationLanguage>语音语言（必须填写）：</RimTalk.Settings.TTS.TranslationLanguage>
     <RimTalk.Settings.TTS.TranslationLanguageInfo>留空以禁用翻译。输入语言（如"中文"、"English"、"日本語"）以在语音合成前翻译所有对话。</RimTalk.Settings.TTS.TranslationLanguageInfo>
     <RimTalk.Settings.TTS.ProcessingPromptLabel>TTS 处理提示词：</RimTalk.Settings.TTS.ProcessingPromptLabel>
@@ -93,4 +93,11 @@
     <RimTalk.TTS.Display>显示下一条对话</RimTalk.TTS.Display>
     <RimTalk.Settings.TTS.TTSSupplier>语音服务提供商</RimTalk.Settings.TTS.TTSSupplier>
     <RimTalk.Settings.TTS.TTSSupplier.FishAudio>Fish Audio</RimTalk.Settings.TTS.TTSSupplier.FishAudio>
+    <RimTalk.Settings.TTS.TTSSupplier.CosyVoice>CosyVoice2</RimTalk.Settings.TTS.TTSSupplier.CosyVoice>
+    <RimTalk.Settings.TTS.TTSSupplier.IndexTTS>IndexTTS2</RimTalk.Settings.TTS.TTSSupplier.IndexTTS>
+    <RimTalk.Settings.TTS.SpeedLabel>播放速度：{0}</RimTalk.Settings.TTS.SpeedLabel>
+    <RimTalk.Settings.TTS.ModelLabel.CosyVoice>TTS 模型（CosyVoice）：{0}</RimTalk.Settings.TTS.ModelLabel.CosyVoice>
+    <RimTalk.Settings.TTS.ModelLabel.IndexTTS>TTS 模型（IndexTTS）：{0}</RimTalk.Settings.TTS.ModelLabel.IndexTTS>
+    <RimTalk.Settings.TTS.CustomModelIdLabel>自定义模型 ID（可选）：</RimTalk.Settings.TTS.CustomModelIdLabel>
+    <RimTalk.Settings.TTS.ResetModelsButton>恢复默认模型</RimTalk.Settings.TTS.ResetModelsButton>
 </LanguageData>

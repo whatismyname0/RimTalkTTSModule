@@ -12,19 +12,26 @@ namespace RimTalk.TTS.Data
         public enum TTSSupplier
         {
             None,
-            FishAudio
+            FishAudio,
+            CosyVoice,
+            IndexTTS
         }
+
+        // Default constants (use these instead of deprecated legacy fields)
+        public const float DEFAULT_SUPPLIER_VOLUME = 0.8f;
+        public const float DEFAULT_SUPPLIER_SPEED = 1.0f;
+        public const int DEFAULT_GENERATE_COOLDOWN_MS = 5000;
 
         // Selected TTS supplier implementation
         public TTSSupplier Supplier = TTSSupplier.FishAudio;
 
         // TTS Configuration
         public bool EnableTTS = false;
-        public string FishAudioApiKey = "";
-        public float TTSVolume = 0.8f;
-        public List<VoiceModel> VoiceModels = new();
+        public string FishAudioApiKey = "";//Deprecated
+        public float TTSVolume = 0.8f;//Deprecated
+        public List<VoiceModel> VoiceModels = new();//Deprecated
         public string TTSTranslationLanguage = "";
-        public string DefaultVoiceModelId = "";
+        public string DefaultVoiceModelId = "";//Deprecated
         
         // LLM API Configuration (for text processing/translation)
         public TTSApiProvider ApiProvider = TTSApiProvider.DeepSeek;
@@ -35,16 +42,17 @@ namespace RimTalk.TTS.Data
         // Custom TTS processing prompt (empty = use default from TTSConstant)
         public string CustomTTSProcessingPrompt = "";
         
-        public string TTSModel = "s1"; // fishaudio-1 (v1.6) or s1 (default)
-        public float TTSTemperature = 0.9f; // TTS generation temperature (0.7-1.0)
-        public float TTSTopP = 0.9f; // TTS generation top_p (0.7-1.0)
+        public string TTSModel = "s1"; // fishaudio-1 (v1.6) or s1 (default)//Deprecated
+        public float TTSTemperature = 0.9f; // TTS generation temperature (0.7-1.0)//Deprecated
+        public float TTSTopP = 0.9f; // TTS generation top_p (0.7-1.0)//Deprecated
+        public float TTSSpeed = 1.0f; // TTS playback speed (0.25-4.0)//Deprecated
 
         public bool ButtonDisplay = true;
 
         public bool isOnButton = true;
         
         // Generate cooldown (seconds) and queue behavior
-        public int GenerateCooldownMiliSeconds = 5000;
+        public int GenerateCooldownMiliSeconds = 5000;//Deprecated
 
         // Per-supplier API keys (string key is supplier enum name)
         public System.Collections.Generic.Dictionary<string, string> SupplierApiKeys = new System.Collections.Generic.Dictionary<string, string>();
@@ -56,6 +64,7 @@ namespace RimTalk.TTS.Data
         public System.Collections.Generic.Dictionary<string, float> SupplierVolume = new System.Collections.Generic.Dictionary<string, float>();
         public System.Collections.Generic.Dictionary<string, float> SupplierTemperature = new System.Collections.Generic.Dictionary<string, float>();
         public System.Collections.Generic.Dictionary<string, float> SupplierTopP = new System.Collections.Generic.Dictionary<string, float>();
+        public System.Collections.Generic.Dictionary<string, float> SupplierSpeed = new System.Collections.Generic.Dictionary<string, float>();
         // Per-supplier voice model lists
         public System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceModel>> SupplierVoiceModels = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceModel>>();
         // Per-supplier default voice model id
@@ -75,7 +84,9 @@ namespace RimTalk.TTS.Data
             Scribe_Values.Look(ref TTSModel, "ttsModel", "s1");
             Scribe_Values.Look(ref TTSTemperature, "ttsTemperature", 0.9f);
             Scribe_Values.Look(ref TTSTopP, "ttsTopP", 0.9f);
-            Scribe_Values.Look(ref GenerateCooldownMiliSeconds, "generateCooldownMiliSeconds", 5000);
+            Scribe_Values.Look(ref TTSVolume, "ttsVolume", DEFAULT_SUPPLIER_VOLUME);
+            Scribe_Values.Look(ref TTSSpeed, "ttsSpeed", DEFAULT_SUPPLIER_SPEED);
+            Scribe_Values.Look(ref GenerateCooldownMiliSeconds, "generateCooldownMiliSeconds", DEFAULT_GENERATE_COOLDOWN_MS);
             Scribe_Values.Look(ref ButtonDisplay, "buttonDisplay", true);
             Scribe_Values.Look<TTSSupplier>(ref Supplier, "ttsSupplier", TTSSupplier.None);
             Scribe_Collections.Look(ref SupplierApiKeys, "supplierApiKeys", LookMode.Value, LookMode.Value);
@@ -85,6 +96,7 @@ namespace RimTalk.TTS.Data
             Scribe_Collections.Look(ref SupplierTemperature, "supplierTemperature", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref SupplierTopP, "supplierTopP", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref SupplierVoiceModels, "supplierVoiceModels", LookMode.Value, LookMode.Deep);
+            Scribe_Collections.Look(ref SupplierSpeed, "supplierSpeed", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref SupplierDefaultVoiceModelId, "supplierDefaultVoiceModelId", LookMode.Value, LookMode.Value);
 
             // LLM API configuration
@@ -114,19 +126,25 @@ namespace RimTalk.TTS.Data
             if (SupplierGenerateCooldownMs == null)
             {
                 SupplierGenerateCooldownMs = new System.Collections.Generic.Dictionary<string, int>();
-                SupplierGenerateCooldownMs[TTSSupplier.FishAudio.ToString()] = GenerateCooldownMiliSeconds;
+                SupplierGenerateCooldownMs[TTSSupplier.FishAudio.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
             }
 
             if (SupplierVolume == null)
             {
                 SupplierVolume = new System.Collections.Generic.Dictionary<string, float>();
-                SupplierVolume[TTSSupplier.FishAudio.ToString()] = TTSVolume;
+                SupplierVolume[TTSSupplier.FishAudio.ToString()] = DEFAULT_SUPPLIER_VOLUME;
             }
 
             if (SupplierTemperature == null)
             {
                 SupplierTemperature = new System.Collections.Generic.Dictionary<string, float>();
                 SupplierTemperature[TTSSupplier.FishAudio.ToString()] = TTSTemperature;
+            }
+
+            if (SupplierSpeed == null)
+            {
+                SupplierSpeed = new System.Collections.Generic.Dictionary<string, float>();
+                SupplierSpeed[TTSSupplier.FishAudio.ToString()] = DEFAULT_SUPPLIER_SPEED;
             }
 
             if (SupplierTopP == null)
@@ -139,6 +157,17 @@ namespace RimTalk.TTS.Data
             {
                 SupplierVoiceModels = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceModel>>();
                 SupplierVoiceModels[TTSSupplier.FishAudio.ToString()] = VoiceModels ?? new System.Collections.Generic.List<VoiceModel>();
+            }
+
+            // If supplier-specific voice model lists are missing for new providers, populate with defaults
+            if (!SupplierVoiceModels.ContainsKey(TTSSupplier.CosyVoice.ToString()))
+            {
+                SupplierVoiceModels[TTSSupplier.CosyVoice.ToString()] = GetDefaultVoiceModels(TTSSupplier.CosyVoice);
+            }
+
+            if (!SupplierVoiceModels.ContainsKey(TTSSupplier.IndexTTS.ToString()))
+            {
+                SupplierVoiceModels[TTSSupplier.IndexTTS.ToString()] = GetDefaultVoiceModels(TTSSupplier.IndexTTS);
             }
 
             if (SupplierDefaultVoiceModelId == null)
@@ -226,6 +255,46 @@ namespace RimTalk.TTS.Data
         public void SetSupplierTopP(TTSSupplier supplier, float p)
         {
             SupplierTopP[supplier.ToString()] = p;
+        }
+
+        /// <summary>
+        /// Return a default preset voice model list for the given supplier.
+        /// CosyVoice and IndexTTS have eight system presets (alex, benjamin, charles, david, anna, bella, claire, diana).
+        /// FishAudio has no presets by default.
+        /// </summary>
+        public static System.Collections.Generic.List<VoiceModel> GetDefaultVoiceModels(TTSSupplier supplier)
+        {
+            var presets = new System.Collections.Generic.List<VoiceModel>();
+            string[] names = new[] { "alex", "benjamin", "charles", "david", "anna", "bella", "claire", "diana" };
+
+            switch (supplier)
+            {
+                case TTSSupplier.CosyVoice:
+                    foreach (var n in names)
+                        presets.Add(new VoiceModel($"FunAudioLLM/CosyVoice2-0.5B:{n}", n));
+                    break;
+                case TTSSupplier.IndexTTS:
+                    foreach (var n in names)
+                        presets.Add(new VoiceModel($"IndexTeam/IndexTTS-2:{n}", n));
+                    break;
+                default:
+                    // FishAudio: no presets
+                    break;
+            }
+
+            return presets;
+        }
+
+        public float GetSupplierSpeed(TTSSupplier supplier)
+        {
+            return SupplierSpeed.TryGetValue(supplier.ToString());
+        }
+
+        public void SetSupplierSpeed(TTSSupplier supplier, float s)
+        {
+            SupplierSpeed[supplier.ToString()] = s;
+            if (supplier == TTSSupplier.FishAudio)
+                TTSSpeed = s;
         }
     }
 }

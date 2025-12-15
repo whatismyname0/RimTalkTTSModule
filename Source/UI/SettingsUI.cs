@@ -93,6 +93,16 @@ namespace RimTalk.TTS.UI
                     settings.Supplier = TTSSettings.TTSSupplier.FishAudio;
                     TTSService.SetProvider(settings.Supplier);
                 }));
+                options.Add(new FloatMenuOption("RimTalk.Settings.TTS.TTSSupplier.CosyVoice".Translate(), delegate
+                {
+                    settings.Supplier = TTSSettings.TTSSupplier.CosyVoice;
+                    TTSService.SetProvider(settings.Supplier);
+                }));
+                options.Add(new FloatMenuOption("RimTalk.Settings.TTS.TTSSupplier.IndexTTS".Translate(), delegate
+                {
+                    settings.Supplier = TTSSettings.TTSSupplier.IndexTTS;
+                    TTSService.SetProvider(settings.Supplier);
+                }));
                 options.Add(new FloatMenuOption("RimTalk.Settings.TTS.None".Translate(), delegate
                 {
                     settings.Supplier = TTSSettings.TTSSupplier.None;
@@ -132,6 +142,42 @@ namespace RimTalk.TTS.UI
                     }
                 }
 
+                // CosyVoice model selection
+                if (settings.Supplier == TTSSettings.TTSSupplier.CosyVoice)
+                {
+                    string currentModel = settings.GetSupplierModel(settings.Supplier);
+                    listing.Label("RimTalk.Settings.TTS.ModelLabel.CozyVoice".Translate(currentModel ?? "(not set)"));
+                    if (listing.RadioButton("FunAudioLLM/CosyVoice2-0.5B", currentModel == "FunAudioLLM/CosyVoice2-0.5B"))
+                    {
+                        settings.SetSupplierModel(settings.Supplier, "FunAudioLLM/CosyVoice2-0.5B");
+                    }
+                    listing.Gap(6f);
+                    listing.Label("RimTalk.Settings.TTS.CustomModelIdLabel".Translate());
+                    string customModelCosy = listing.TextEntry(currentModel ?? "");
+                    if (customModelCosy != currentModel)
+                    {
+                        settings.SetSupplierModel(settings.Supplier, customModelCosy);
+                    }
+                }
+
+                // IndexTTS model selection
+                if (settings.Supplier == TTSSettings.TTSSupplier.IndexTTS)
+                {
+                    string currentModel = settings.GetSupplierModel(settings.Supplier);
+                    listing.Label("RimTalk.Settings.TTS.ModelLabel.IndexTTS".Translate(currentModel ?? "(not set)"));
+                    if (listing.RadioButton("IndexTeam/IndexTTS-2", currentModel == "IndexTeam/IndexTTS-2"))
+                    {
+                        settings.SetSupplierModel(settings.Supplier, "IndexTeam/IndexTTS-2");
+                    }
+                    listing.Gap(6f);
+                    listing.Label("RimTalk.Settings.TTS.CustomModelIdLabel".Translate());
+                    string customModelIndex = listing.TextEntry(currentModel ?? "");
+                    if (customModelIndex != currentModel)
+                    {
+                        settings.SetSupplierModel(settings.Supplier, customModelIndex);
+                    }
+                }
+
                 listing.Gap();
                 
                 int currentCooldown = settings.GetSupplierGenerateCooldown(settings.Supplier);
@@ -162,6 +208,15 @@ namespace RimTalk.TTS.UI
                 float newTopP = listing.Slider(currentTopP, 0.7f, 1.0f);
                 if (newTopP != currentTopP)
                     settings.SetSupplierTopP(settings.Supplier, newTopP);
+
+                listing.Gap();
+
+                // Speed slider (0.25 - 4.0)
+                float currentSpeed = settings.GetSupplierSpeed(settings.Supplier);
+                listing.Label("RimTalk.Settings.TTS.SpeedLabel".Translate(currentSpeed.ToString("F2")));
+                float newSpeed = listing.Slider(currentSpeed, 0.25f, 4.0f);
+                if (newSpeed != currentSpeed)
+                    settings.SetSupplierSpeed(settings.Supplier, newSpeed);
 
                 listing.Gap();
 
@@ -353,6 +408,41 @@ namespace RimTalk.TTS.UI
                     DrawModelConfigRow(listing, voiceModels[i], i, voiceModels, width);
                 }
             }
+
+            listing.Gap(6f);
+            // Single Reset Models button placed after the full list
+            Rect resetAllRect = listing.GetRect(30f);
+            if (Widgets.ButtonText(resetAllRect, "RimTalk.Settings.TTS.ResetModelsButton".Translate()))
+            {
+                var presets = TTSSettings.GetDefaultVoiceModels(settings.Supplier);
+                if (presets != null && presets.Count > 0)
+                {
+                    // Merge presets with existing user models: keep presets first, then
+                    // append any custom/empty entries that aren't already in presets.
+                    var merged = new System.Collections.Generic.List<VoiceModel>();
+                    foreach (var p in presets)
+                    {
+                        if (p == null) continue;
+                        merged.Add(new VoiceModel { ModelId = p.ModelId, ModelName = p.ModelName });
+                    }
+
+                    if (voiceModels != null)
+                    {
+                        foreach (var vm in voiceModels)
+                        {
+                            if (vm == null) continue;
+                            // preserve blank/custom entries (no ModelId) and any models not present in presets
+                            if (string.IsNullOrWhiteSpace(vm.ModelId) || !merged.Any(x => x.ModelId == vm.ModelId))
+                            {
+                                merged.Add(new VoiceModel { ModelId = vm.ModelId, ModelName = vm.ModelName });
+                            }
+                        }
+                    }
+
+                    settings.SetSupplierVoiceModels(settings.Supplier, merged);
+                    voiceModels = settings.GetSupplierVoiceModels(settings.Supplier);
+                }
+            }
         }
 
         private static void DrawModelConfigRow(Listing_Standard listing, VoiceModel model, int index, System.Collections.Generic.List<VoiceModel> models, float width)
@@ -438,6 +528,8 @@ namespace RimTalk.TTS.UI
             return supplier switch
             {
                 TTSSettings.TTSSupplier.FishAudio => "RimTalk.Settings.TTS.TTSSupplier.FishAudio".Translate(),
+                TTSSettings.TTSSupplier.CosyVoice => "RimTalk.Settings.TTS.TTSSupplier.CosyVoice".Translate(),
+                TTSSettings.TTSSupplier.IndexTTS => "RimTalk.Settings.TTS.TTSSupplier.IndexTTS".Translate(),
                 TTSSettings.TTSSupplier.None => "RimTalk.Settings.TTS.None".Translate(),
                 _ => supplier.ToString(),
             };

@@ -62,6 +62,12 @@ namespace RimTalk.TTS.Service
                     case TTSSettings.TTSSupplier.FishAudio:
                         _provider = new Provider.FishAudioProvider();
                         break;
+                    case TTSSettings.TTSSupplier.CosyVoice:
+                        _provider = new Provider.CosyVoiceProvider();
+                        break;
+                    case TTSSettings.TTSSupplier.IndexTTS:
+                        _provider = new Provider.IndexTTSProvider();
+                        break;
                     default:
                         _provider = new Provider.NoneProvider();
                         break;
@@ -211,11 +217,13 @@ namespace RimTalk.TTS.Service
                 string apiKeyForSupplier = settings.GetSupplierApiKey(settings.Supplier);
                 float temperature = settings.GetSupplierTemperature(settings.Supplier);
                 float topP = settings.GetSupplierTopP(settings.Supplier);
+                float speed = settings.GetSupplierSpeed(settings.Supplier);
                 byte[] audioData = await _provider.GenerateSpeechAsync(
                     processedText,
                     apiKeyForSupplier,
                     voiceModelId,
                     modelForSupplier,
+                    speed,
                     temperature,
                     topP
                 );

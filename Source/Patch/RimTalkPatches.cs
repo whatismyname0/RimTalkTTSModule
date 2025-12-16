@@ -10,7 +10,6 @@ using Verse;
 using RimTalk.TTS.Service;
 using RimTalk.TTS.Util;
 using RimTalk.Data;
-using RimTalk.Util;
 using RimTalk.TTS.Data;
 
 namespace RimTalk.TTS.Patch

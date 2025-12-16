@@ -28,7 +28,7 @@ RimTalk TTS  ← 此模组
 ```
 
 在游戏内选项中配置：
-- 支持Fish Audio, CozyVoice, IndexTTS作为TTS供应商
+- 支持Fish Audio, CozyVoice(硅基流动), IndexTTS(硅基流动)作为TTS供应商
 - Fish Audio API密钥(https://fish.audio/)或硅基流动API密钥(https://cloud.siliconflow.cn/)
 - 语音模型: 
   Fish Audio: 可在fish audio网站上点击模型的"分享"按钮, 然后删除剪贴板网址中的"https://fish.audio/m/",剩下部分即为模型ID.

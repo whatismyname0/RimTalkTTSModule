@@ -41,7 +41,7 @@
     <RimTalk.Settings.TTS.NotSet>(Not Set)</RimTalk.Settings.TTS.NotSet>
     <RimTalk.Settings.TTS.NoneModel>None (Skip TTS)</RimTalk.Settings.TTS.NoneModel>
     <RimTalk.Settings.TTS.ClearDefault>(Clear Default)</RimTalk.Settings.TTS.ClearDefault>
-    <RimTalk.Settings.TTS.ColumnDescription>Left column: Model Name (for display), Right column: Model ID (for API calls)</RimTalk.Settings.TTS.ColumnDescription>
+    <RimTalk.Settings.TTS.ColumnDescription>Left column: Model Name (for display), Right column: Model ID (for API calls). WARNING: For CosyVoice and IndexTTS, deleting a model also deletes its information stored on SiliconFlow. IRREVERSIBLE!</RimTalk.Settings.TTS.ColumnDescription>
     <RimTalk.Settings.TTS.ColumnModelName>Model Name</RimTalk.Settings.TTS.ColumnModelName>
     <RimTalk.Settings.TTS.ColumnModelID>Model ID</RimTalk.Settings.TTS.ColumnModelID>
     <RimTalk.Settings.TTS.Delete>Delete</RimTalk.Settings.TTS.Delete>
@@ -99,5 +99,21 @@
     <RimTalk.Settings.TTS.ModelLabel.CosyVoice>TTS Model (CosyVoice): {0}</RimTalk.Settings.TTS.ModelLabel.CosyVoice>
     <RimTalk.Settings.TTS.ModelLabel.IndexTTS>TTS Model (IndexTTS): {0}</RimTalk.Settings.TTS.ModelLabel.IndexTTS>
     <RimTalk.Settings.TTS.CustomModelIdLabel>Custom model id (optional):</RimTalk.Settings.TTS.CustomModelIdLabel>
-    <RimTalk.Settings.TTS.ResetModelsButton>Restore default models</RimTalk.Settings.TTS.ResetModelsButton>
+    <RimTalk.Settings.TTS.ResetModelsButton>Synchronize model list</RimTalk.Settings.TTS.ResetModelsButton>
+    <RimTalk.Settings.TTS.UploadUserVoiceLabel>Upload user voice</RimTalk.Settings.TTS.UploadUserVoiceLabel>
+    <RimTalk.Settings.TTS.UploadFilePath>File path (local):</RimTalk.Settings.TTS.UploadFilePath>
+    <RimTalk.Settings.TTS.UploadName>Voice name:</RimTalk.Settings.TTS.UploadName>
+    <RimTalk.Settings.TTS.UploadTextPreview>Reference text (for model):</RimTalk.Settings.TTS.UploadTextPreview>
+    <RimTalk.Settings.TTS.UploadButton>Upload (If nothing happens, click "Synchronize model list" at the bottom)</RimTalk.Settings.TTS.UploadButton>
+
+    <RimTalk.TTS.UploadFailed.LocalFileNotFound>Upload failed: local file not found</RimTalk.TTS.UploadFailed.LocalFileNotFound>
+    <RimTalk.TTS.UploadFailed.NameEmpty>Upload failed: name is empty</RimTalk.TTS.UploadFailed.NameEmpty>
+    <RimTalk.TTS.UploadComplete>Upload complete</RimTalk.TTS.UploadComplete>
+    <RimTalk.TTS.UploadFailed.ServerError>Upload failed: server error</RimTalk.TTS.UploadFailed.ServerError>
+
+    <RimTalk.TTS.DeleteComplete>Delete complete</RimTalk.TTS.DeleteComplete>
+    <RimTalk.TTS.DeleteFailed>Delete failed</RimTalk.TTS.DeleteFailed>
+
+    <RimTalk.TTS.SyncComplete>User voice sync complete</RimTalk.TTS.SyncComplete>
+    <RimTalk.TTS.SyncFailed>User voice sync failed</RimTalk.TTS.SyncFailed>
 </LanguageData>

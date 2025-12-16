@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 using UnityEngine;
 using Verse;
+using RimWorld;
 using RimTalk.TTS.Data;
 using RimTalk.TTS.Service;
 
@@ -11,22 +13,58 @@ namespace RimTalk.TTS.UI
     /// </summary>
     public static class SettingsUI
     {
+        // Thread-safe queue for messages coming from background tasks
+        private static System.Collections.Concurrent.ConcurrentQueue<(string text, MessageTypeDef type)> pendingMessages = new System.Collections.Concurrent.ConcurrentQueue<(string, MessageTypeDef)>();
+
+        private static void EnqueueMessage(string text, MessageTypeDef type)
+        {
+            pendingMessages.Enqueue((text, type));
+        }
+
         private static Vector2 scrollPosition = Vector2.zero;
         private static Vector2 mainScrollPosition = Vector2.zero;
         private static string processingPromptBuffer = "";
         private static bool processingPromptInitialized = false;
+        // Buffers for upload UI
+        private static string uploadPathBuffer = "";
+        private static string uploadNameBuffer = "";
+        private static string uploadTextBuffer = "";
+        // Queue for actions that must run on the main thread (e.g. UI updates)
+        private static System.Collections.Concurrent.ConcurrentQueue<System.Action> pendingActions = new System.Collections.Concurrent.ConcurrentQueue<System.Action>();
+
+        private static void EnqueueMainThreadAction(System.Action a)
+        {
+            if (a == null) return;
+            pendingActions.Enqueue(a);
+        }
 
         public static void DrawTTSSettings(Rect inRect, TTSSettings settings)
         {
-            // Calculate content height dynamically based on voice models count
-            float baseHeight = 1200f;
-            float voiceModelRowHeight = 36f; // Height per voice model row (30f + 6f gap)
-            int voiceModelCount = settings.VoiceModels?.Count ?? 0;
-            float contentHeight = baseHeight + (voiceModelCount * voiceModelRowHeight);
+            // First, run any actions enqueued by background tasks that must execute on the main thread
+            while (pendingActions.TryDequeue(out var act))
+            {
+                act?.Invoke();
+            }
+
+            // Flush any messages enqueued by background tasks on the main thread
+            while (pendingMessages.TryDequeue(out var _m))
+            {
+                Messages.Message(_m.text, _m.type, false);
+            }
+
+            // Calculate content height dynamically based on selected supplier's voice model count
+            float baseHeight = 1280f; // base for other sections
+            float voiceModelRowHeight = 40f; // Height per voice model row (30f + 6f gap + padding)
+            var supplierVoiceModels = settings.GetSupplierVoiceModels(settings.Supplier);
+            int voiceModelCount = supplierVoiceModels?.Count ?? 0;
+            // If supplier supports SiliconFlow uploads, include upload UI height estimate
+            float uploadSectionHeight = (settings.Supplier == TTSSettings.TTSSupplier.CosyVoice || settings.Supplier == TTSSettings.TTSSupplier.IndexTTS) ? 280f : 0f;
+            // Processing prompt area height (text area)
+            float contentHeight = baseHeight + (voiceModelCount * voiceModelRowHeight) + uploadSectionHeight;
             bool isOn = settings.EnableTTS;
             
             Rect viewRect = new Rect(0f, 0f, inRect.width - 20f, contentHeight);
-            
+
             Widgets.BeginScrollView(inRect, ref mainScrollPosition, viewRect);
             
             var listing = new Listing_Standard();
@@ -355,6 +393,58 @@ namespace RimTalk.TTS.UI
 
             Widgets.Label(headerRect, "RimTalk.Settings.TTS.ModelConfigurations".Translate());
 
+            listing.Gap(6f);
+
+            // Upload user voice section (only shown when supplier supports SiliconFlow)
+            if (settings.Supplier == TTSSettings.TTSSupplier.CosyVoice || settings.Supplier == TTSSettings.TTSSupplier.IndexTTS)
+            {
+                listing.Label("RimTalk.Settings.TTS.UploadUserVoiceLabel".Translate());
+                listing.Label("RimTalk.Settings.TTS.UploadFilePath".Translate());
+                uploadPathBuffer = listing.TextEntry(uploadPathBuffer ?? "");
+                listing.Label("RimTalk.Settings.TTS.UploadName".Translate());
+                uploadNameBuffer = listing.TextEntry(uploadNameBuffer ?? "");
+                listing.Label("RimTalk.Settings.TTS.UploadTextPreview".Translate());
+                uploadTextBuffer = listing.TextEntry(uploadTextBuffer ?? "");
+                Rect uploadRect = listing.GetRect(30f);
+                if (Widgets.ButtonText(uploadRect, "RimTalk.Settings.TTS.UploadButton".Translate()))
+                {
+                    // Validate local file
+                    if (string.IsNullOrWhiteSpace(uploadPathBuffer) || !System.IO.File.Exists(uploadPathBuffer))
+                    {
+                        Messages.Message("RimTalk.TTS.UploadFailed.LocalFileNotFound".Translate(), MessageTypeDefOf.RejectInput, false);
+                    }
+                    else if (string.IsNullOrWhiteSpace(uploadNameBuffer))
+                    {
+                        Messages.Message("RimTalk.TTS.UploadFailed.NameEmpty".Translate(), MessageTypeDefOf.RejectInput, false);
+                    }
+                    else
+                    {
+                        // Kick off upload in background
+                        var apiKey = settings.GetSupplierApiKey(settings.Supplier);
+                        var model = settings.GetSupplierModel(settings.Supplier);
+                        System.Threading.Tasks.Task.Run(async () =>
+                        {
+                            var uri = await Service.SiliconFlowClient.UploadUserVoiceAsync(apiKey, model, uploadPathBuffer, uploadNameBuffer, uploadTextBuffer);
+                            if (!string.IsNullOrWhiteSpace(uri))
+                            {
+                                // Defer the Refresh and message to run on the main thread
+                                EnqueueMainThreadAction(() =>
+                                {
+                                    Refresh();
+                                    Messages.Message("RimTalk.TTS.UploadComplete".Translate(), MessageTypeDefOf.TaskCompletion, false);
+                                });
+                            }
+                            else
+                            {
+                                EnqueueMainThreadAction(() => Messages.Message("RimTalk.TTS.UploadFailed.ServerError".Translate(), MessageTypeDefOf.RejectInput, false));
+                            }
+                        });
+                    }
+                }
+
+                listing.Gap(6f);
+            }
+
             if (Widgets.ButtonText(addButtonRect, "+"))
             {
                 if (voiceModels == null)
@@ -398,8 +488,6 @@ namespace RimTalk.TTS.UI
             Rect idHeaderRect = new Rect(x, y, idWidth, height);
             Widgets.Label(idHeaderRect, "RimTalk.Settings.TTS.ColumnModelID".Translate());
 
-            listing.Gap(6f);
-
             // Draw each model config row
             if (voiceModels != null)
             {
@@ -414,34 +502,73 @@ namespace RimTalk.TTS.UI
             Rect resetAllRect = listing.GetRect(30f);
             if (Widgets.ButtonText(resetAllRect, "RimTalk.Settings.TTS.ResetModelsButton".Translate()))
             {
-                var presets = TTSSettings.GetDefaultVoiceModels(settings.Supplier);
-                if (presets != null && presets.Count > 0)
-                {
-                    // Merge presets with existing user models: keep presets first, then
-                    // append any custom/empty entries that aren't already in presets.
-                    var merged = new System.Collections.Generic.List<VoiceModel>();
-                    foreach (var p in presets)
-                    {
-                        if (p == null) continue;
-                        merged.Add(new VoiceModel { ModelId = p.ModelId, ModelName = p.ModelName });
-                    }
+                Refresh();
+            }
+        }
 
-                    if (voiceModels != null)
+        private static void Refresh()
+        {
+            var settings = TTSModule.Instance.GetSettings();
+            var voiceModels = settings.GetSupplierVoiceModels(settings.Supplier);
+            var presets = TTSSettings.GetDefaultVoiceModels(settings.Supplier);
+            if (presets != null && presets.Count > 0)
+            {
+                // Merge presets with existing user models: keep presets first, then
+                // append any custom/empty entries that aren't already in presets.
+                var merged = new System.Collections.Generic.List<VoiceModel>();
+                foreach (var p in presets)
+                {
+                    if (p == null) continue;
+                    merged.Add(new VoiceModel { ModelId = p.ModelId, ModelName = p.ModelName });
+                }
+
+                if (voiceModels != null)
+                {
+                    foreach (var vm in voiceModels)
                     {
-                        foreach (var vm in voiceModels)
+                        if (vm == null) continue;
+                        // preserve blank/custom entries (no ModelId) and any models not present in presets
+                        if (string.IsNullOrWhiteSpace(vm.ModelId) || !merged.Any(x => x.ModelId == vm.ModelId))
                         {
-                            if (vm == null) continue;
-                            // preserve blank/custom entries (no ModelId) and any models not present in presets
-                            if (string.IsNullOrWhiteSpace(vm.ModelId) || !merged.Any(x => x.ModelId == vm.ModelId))
-                            {
-                                merged.Add(new VoiceModel { ModelId = vm.ModelId, ModelName = vm.ModelName });
-                            }
+                            merged.Add(new VoiceModel { ModelId = vm.ModelId, ModelName = vm.ModelName });
                         }
                     }
-
-                    settings.SetSupplierVoiceModels(settings.Supplier, merged);
-                    voiceModels = settings.GetSupplierVoiceModels(settings.Supplier);
                 }
+
+                settings.SetSupplierVoiceModels(settings.Supplier, merged);
+                voiceModels = settings.GetSupplierVoiceModels(settings.Supplier);
+            }
+
+        // Also: when ResetModels is pressed above we attempt to sync user-uploaded voices from SiliconFlow.
+        // The network call is done asynchronously and will merge any returned user voices into the settings.
+        // (This runs when the user pressed ResetModels; the above code already applied system presets.)
+            if (settings.Supplier == TTSSettings.TTSSupplier.CosyVoice || settings.Supplier == TTSSettings.TTSSupplier.IndexTTS)
+            {
+                var apiKey = settings.GetSupplierApiKey(settings.Supplier);
+                var supplier = settings.Supplier;
+                System.Threading.Tasks.Task.Run(async () =>
+                {
+                    var list = await Service.SiliconFlowClient.ListUserVoicesAsync(apiKey);
+                    if (list != null && list.Count > 0)
+                    {
+                        var current = settings.GetSupplierVoiceModels(supplier) ?? new System.Collections.Generic.List<Data.VoiceModel>();
+                        bool changed = false;
+                        foreach (var t in list)
+                        {
+                            if (!current.Exists(x => x.ModelId == t.Item1))
+                            {
+                                current.Add(new Data.VoiceModel(t.Item1, t.Item2));
+                                changed = true;
+                            }
+                        }
+                        if (changed)
+                        {
+                            settings.SetSupplierVoiceModels(supplier, current);
+                        }
+                        // Notify user that sync completed (enqueue to show on main thread)
+                        EnqueueMessage("RimTalk.TTS.SyncComplete".Translate(), MessageTypeDefOf.TaskCompletion);
+                    }
+                });
             }
         }
 
@@ -478,6 +605,34 @@ namespace RimTalk.TTS.UI
             // Model ID field
             Rect idRect = new Rect(x, y, idWidth, height);
             model.ModelId = Widgets.TextField(idRect, model.ModelId ?? "");
+
+            // Delete button for this row
+            Rect delRect = new Rect(idRect.xMax + 5f, y, 24f, height);
+            if (Widgets.ButtonText(delRect, "X"))
+            {
+                // If looks like a SiliconFlow user voice (speech:...), attempt deletion
+                string toDeleteId = model.ModelId ?? "";
+                if (!string.IsNullOrWhiteSpace(toDeleteId) && toDeleteId.StartsWith("speech:"))
+                {
+                    var apiKey = LoadedModManager.GetMod(typeof(TTSMod)) is TTSMod mod ? (mod.GetSettings<TTSSettings>()?.GetSupplierApiKey(mod.GetSettings<TTSSettings>().Supplier) ?? "") : "";
+                    var supplier = LoadedModManager.GetMod(typeof(TTSMod)) is TTSMod _m2 ? _m2.GetSettings<TTSSettings>().Supplier : TTSSettings.TTSSupplier.None;
+                    // Use background task to delete
+                    System.Threading.Tasks.Task.Run(async () =>
+                    {
+                        bool ok = await Service.SiliconFlowClient.DeleteUserVoiceAsync(apiKey, toDeleteId);
+                        if (ok)
+                            EnqueueMessage("RimTalk.TTS.DeleteComplete".Translate(), MessageTypeDefOf.TaskCompletion);
+                        else
+                            EnqueueMessage("RimTalk.TTS.DeleteFailed".Translate(), MessageTypeDefOf.RejectInput);
+                    });
+                }
+
+                // Remove locally regardless (server deletion attempted above)
+                if (models != null && index >= 0 && index < models.Count)
+                {
+                    models.RemoveAt(index);
+                }
+            }
         }
 
         private static void DrawApiConfigSection(Listing_Standard listing, TTSSettings settings)

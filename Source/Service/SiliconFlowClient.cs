@@ -21,6 +21,162 @@ namespace RimTalk.TTS.Service
         private static readonly HttpClient _http = new HttpClient();
         private const string DefaultBaseUrl = "https://api.siliconflow.cn/v1";
 
+        /// <summary>
+        /// Upload a user voice file (multipart/form-data) to SiliconFlow uploads endpoint.
+        /// Returns the returned URI (e.g. speech:...) on success or null on failure.
+        /// </summary>
+        public static async Task<string> UploadUserVoiceAsync(string apiKey, string model, string filePath, string customName, string textPreview = null)
+        {
+            if (string.IsNullOrWhiteSpace(apiKey)) throw new ArgumentException("ApiKey required for SiliconFlowClient");
+            if (string.IsNullOrWhiteSpace(model)) throw new ArgumentException("model required");
+            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath)) throw new ArgumentException("file not found");
+
+            var url = DefaultBaseUrl + "/uploads/audio/voice";
+
+            using var content = new MultipartFormDataContent();
+            var fileBytes = await File.ReadAllBytesAsync(filePath);
+            var fileContent = new ByteArrayContent(fileBytes);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+            content.Add(fileContent, "file", Path.GetFileName(filePath));
+
+            content.Add(new StringContent(model), "model");
+
+            // Sanitize or generate customName to meet SiliconFlow requirements: letters, digits, _ and - only, max 64 chars
+            string SanitizeName(string s)
+            {
+                if (string.IsNullOrWhiteSpace(s)) return null;
+                var cleaned = System.Text.RegularExpressions.Regex.Replace(s, "[^A-Za-z0-9_-]", "_");
+                if (cleaned.Length > 64) cleaned = cleaned.Substring(0, 64);
+                // Trim leading/trailing underscores/hyphens
+                cleaned = cleaned.Trim('_', '-');
+                return string.IsNullOrWhiteSpace(cleaned) ? null : cleaned;
+            }
+
+            string finalName = SanitizeName(customName);
+            if (string.IsNullOrWhiteSpace(finalName))
+            {
+                // Try to derive from file name
+                try
+                {
+                    var baseName = Path.GetFileNameWithoutExtension(filePath) ?? "user_voice";
+                    finalName = SanitizeName(baseName) ?? "user_voice";
+                }
+                catch { finalName = "user_voice"; }
+            }
+
+            if (!string.IsNullOrWhiteSpace(finalName))
+                content.Add(new StringContent(finalName), "customName");
+            if (!string.IsNullOrWhiteSpace(textPreview))
+                content.Add(new StringContent(textPreview), "text");
+
+            using var req = new HttpRequestMessage(HttpMethod.Post, url);
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+            req.Content = content;
+
+            using var resp = await _http.SendAsync(req);
+            var respText = resp.Content != null ? await resp.Content.ReadAsStringAsync() : string.Empty;
+            if (!resp.IsSuccessStatusCode)
+            {
+                Log.Warning($"[RimTalk.TTS] SiliconFlowClient.UploadUserVoiceAsync: API returned {resp.StatusCode}: {respText}");
+                return null;
+            }
+
+            // Try to extract uri from response JSON
+            var uri = ExtractFirstJsonString(respText, "uri");
+            return uri;
+        }
+
+        /// <summary>
+        /// List user uploaded voices. Returns an array of (uri, name) tuples.
+        /// </summary>
+        public static async Task<System.Collections.Generic.List<System.Tuple<string,string>>> ListUserVoicesAsync(string apiKey)
+        {
+            var result = new System.Collections.Generic.List<System.Tuple<string,string>>();
+            try
+            {
+                if (string.IsNullOrWhiteSpace(apiKey)) throw new ArgumentException("ApiKey required for SiliconFlowClient");
+                var url = DefaultBaseUrl + "/audio/voice/list";
+                using var req = new HttpRequestMessage(HttpMethod.Get, url);
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                using var resp = await _http.SendAsync(req);
+                var respText = resp.Content != null ? await resp.Content.ReadAsStringAsync() : string.Empty;
+                if (!resp.IsSuccessStatusCode)
+                {
+                    Log.Warning($"[RimTalk.TTS] SiliconFlowClient.ListUserVoicesAsync: API returned {resp.StatusCode}: {respText}");
+                    return result;
+                }
+
+                // Extract all uri and optional name fields from JSON
+                var uris = ExtractAllJsonStrings(respText, "uri");
+                var names = ExtractAllJsonStrings(respText, "customName");
+                for (int i = 0; i < uris.Count; i++)
+                {
+                    string name = i < names.Count ? names[i] : uris[i];
+                    result.Add(System.Tuple.Create(uris[i], name));
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[RimTalk.TTS] SiliconFlowClient.ListUserVoicesAsync exception: {ex.GetType().Name}: {ex.Message}");
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Delete a user-uploaded voice by uri. Returns true on success.
+        /// </summary>
+        public static async Task<bool> DeleteUserVoiceAsync(string apiKey, string uri)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(apiKey)) throw new ArgumentException("ApiKey required for SiliconFlowClient");
+                if (string.IsNullOrWhiteSpace(uri)) throw new ArgumentException("uri required");
+                var url = DefaultBaseUrl + "/audio/voice/deletions";
+                using var req = new HttpRequestMessage(HttpMethod.Post, url);
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                req.Content = new StringContent("{\"uri\":\"" + uri.Replace("\"","\\\"") + "\"}");
+                req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+                using var resp = await _http.SendAsync(req);
+                var respText = resp.Content != null ? await resp.Content.ReadAsStringAsync() : string.Empty;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[RimTalk.TTS] SiliconFlowClient.DeleteUserVoiceAsync exception: {ex.GetType().Name}: {ex.Message}");
+                return false;
+            }
+        }
+
+        // Helper: extract first JSON string field value by key using regex
+        private static string ExtractFirstJsonString(string json, string key)
+        {
+            try
+            {
+                var pattern = "\"" + System.Text.RegularExpressions.Regex.Escape(key) + "\"\\s*:\\s*\"(.*?)\"";
+                var m = System.Text.RegularExpressions.Regex.Match(json ?? string.Empty, pattern);
+                if (m.Success && m.Groups.Count > 1) return m.Groups[1].Value;
+            }
+            catch { }
+            return null;
+        }
+
+        private static System.Collections.Generic.List<string> ExtractAllJsonStrings(string json, string key)
+        {
+            var list = new System.Collections.Generic.List<string>();
+            try
+            {
+                var pattern = "\"" + System.Text.RegularExpressions.Regex.Escape(key) + "\"\\s*:\\s*\"(.*?)\"";
+                var matches = System.Text.RegularExpressions.Regex.Matches(json ?? string.Empty, pattern);
+                foreach (System.Text.RegularExpressions.Match m in matches)
+                {
+                    if (m.Success && m.Groups.Count > 1) list.Add(m.Groups[1].Value);
+                }
+            }
+            catch { }
+            return list;
+        }
+
         public static async Task<byte[]> GenerateSpeechAsync(TTSRequest request, CancellationToken cancellationToken = default)
         {
             try
@@ -99,7 +255,7 @@ namespace RimTalk.TTS.Service
                 using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 if (!resp.IsSuccessStatusCode)
                 {
-                    string respText = await resp.Content.ReadAsStringAsync();
+                    string respText = resp.Content != null ? await resp.Content.ReadAsStringAsync() : string.Empty;
                     Log.Warning($"[RimTalk.TTS] SiliconFlowClient: API returned {resp.StatusCode}: {respText}");
                     return null;
                 }

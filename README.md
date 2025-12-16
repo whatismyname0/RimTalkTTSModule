@@ -32,7 +32,7 @@ RimTalk TTS  ← 此模组
 - Fish Audio API密钥(https://fish.audio/)或硅基流动API密钥(https://cloud.siliconflow.cn/)
 - 语音模型: 
   Fish Audio: 可在fish audio网站上点击模型的"分享"按钮, 然后删除剪贴板网址中的"https://fish.audio/m/",剩下部分即为模型ID.
-  硅基流动: 参见游戏内模组配置界面
+  硅基流动: 参见游戏内模组配置界面，有八个预设模型，也可添加自定义模型（需实名认证）。
 - 处理输入文本的LLM API(暂时只适配了Deepseek与ChatGPT, 如用其他模型可尝试在自定义选项内输入模型url,模型名称与APIkey)
 - TTS参数(temperature, top_p等，仅对Fish Audio有效)
 

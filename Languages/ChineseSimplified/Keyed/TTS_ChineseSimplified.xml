@@ -41,7 +41,7 @@
     <RimTalk.Settings.TTS.NotSet>(未设置)</RimTalk.Settings.TTS.NotSet>
     <RimTalk.Settings.TTS.NoneModel>无（跳过语音）</RimTalk.Settings.TTS.NoneModel>
     <RimTalk.Settings.TTS.ClearDefault>(清除默认)</RimTalk.Settings.TTS.ClearDefault>
-    <RimTalk.Settings.TTS.ColumnDescription>左列：模型名称（界面显示），右列：模型 ID（用于 API 调用）</RimTalk.Settings.TTS.ColumnDescription>
+    <RimTalk.Settings.TTS.ColumnDescription>左列：模型名称（界面显示），右列：模型 ID（用于 API 调用）。警告：对于CosyVoice、IndexTTS，删除模型时也会删除硅基流动上存储的对应内容，不可撤销！</RimTalk.Settings.TTS.ColumnDescription>
     <RimTalk.Settings.TTS.ColumnModelName>模型名称</RimTalk.Settings.TTS.ColumnModelName>
     <RimTalk.Settings.TTS.ColumnModelID>模型 ID</RimTalk.Settings.TTS.ColumnModelID>
     <RimTalk.Settings.TTS.Delete>删除</RimTalk.Settings.TTS.Delete>
@@ -99,5 +99,21 @@
     <RimTalk.Settings.TTS.ModelLabel.CosyVoice>TTS 模型（CosyVoice）：{0}</RimTalk.Settings.TTS.ModelLabel.CosyVoice>
     <RimTalk.Settings.TTS.ModelLabel.IndexTTS>TTS 模型（IndexTTS）：{0}</RimTalk.Settings.TTS.ModelLabel.IndexTTS>
     <RimTalk.Settings.TTS.CustomModelIdLabel>自定义模型 ID（可选）：</RimTalk.Settings.TTS.CustomModelIdLabel>
-    <RimTalk.Settings.TTS.ResetModelsButton>恢复默认模型</RimTalk.Settings.TTS.ResetModelsButton>
+    <RimTalk.Settings.TTS.ResetModelsButton>同步模型列表</RimTalk.Settings.TTS.ResetModelsButton>
+    <RimTalk.Settings.TTS.UploadUserVoiceLabel>上传用户预置音色</RimTalk.Settings.TTS.UploadUserVoiceLabel>
+    <RimTalk.Settings.TTS.UploadFilePath>文件路径（本地）：</RimTalk.Settings.TTS.UploadFilePath>
+    <RimTalk.Settings.TTS.UploadName>音色名称：</RimTalk.Settings.TTS.UploadName>
+    <RimTalk.Settings.TTS.UploadTextPreview>参考文本（用于训练/识别）：</RimTalk.Settings.TTS.UploadTextPreview>
+    <RimTalk.Settings.TTS.UploadButton>上传（如果没有反应，点击最下方的“同步模型列表”）</RimTalk.Settings.TTS.UploadButton>
+
+    <RimTalk.TTS.UploadFailed.LocalFileNotFound>上传失败：未找到本地文件</RimTalk.TTS.UploadFailed.LocalFileNotFound>
+    <RimTalk.TTS.UploadFailed.NameEmpty>上传失败：名称不能为空</RimTalk.TTS.UploadFailed.NameEmpty>
+    <RimTalk.TTS.UploadComplete>上传成功</RimTalk.TTS.UploadComplete>
+    <RimTalk.TTS.UploadFailed.ServerError>上传失败：服务器返回错误</RimTalk.TTS.UploadFailed.ServerError>
+
+    <RimTalk.TTS.DeleteComplete>删除成功</RimTalk.TTS.DeleteComplete>
+    <RimTalk.TTS.DeleteFailed>删除失败</RimTalk.TTS.DeleteFailed>
+
+    <RimTalk.TTS.SyncComplete>用户音色同步完成</RimTalk.TTS.SyncComplete>
+    <RimTalk.TTS.SyncFailed>用户音色同步失败</RimTalk.TTS.SyncFailed>
 </LanguageData>

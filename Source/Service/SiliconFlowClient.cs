@@ -19,17 +19,18 @@ namespace RimTalk.TTS.Service
         private static readonly HttpClient _http = new HttpClient();
         private const string DefaultBaseUrl = "https://api.siliconflow.cn/v1";
 
-        public static async Task<byte[]> GenerateSpeechAsync(string text, string apiKey, string referenceId, string model, float speed, float temperature, float topP, CancellationToken cancellationToken = default)
+        public static async Task<byte[]> GenerateSpeechAsync(TTSRequest request, CancellationToken cancellationToken = default)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(apiKey))
-                    throw new ArgumentException("apiKey required for SiliconFlowClient");
+                if (request == null) throw new ArgumentNullException(nameof(request));
+                if (string.IsNullOrWhiteSpace(request.ApiKey))
+                    throw new ArgumentException("ApiKey required for SiliconFlowClient");
 
                 var url = DefaultBaseUrl + "/audio/speech";
 
                 using var req = new HttpRequestMessage(HttpMethod.Post, url);
-                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", request.ApiKey);
                 req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/octet-stream"));
 
                 // Build a minimal request body following documented fields (manual JSON to avoid System.Text.Json dependency)
@@ -59,11 +60,37 @@ namespace RimTalk.TTS.Service
                     return sb.ToString();
                 }
 
-                string modelEsc = JsonEscape(model ?? "");
-                string inputEsc = JsonEscape(text ?? "");
-                string voicePart = string.IsNullOrWhiteSpace(referenceId) ? "null" : "\"" + JsonEscape(referenceId) + "\"";
+                string modelEsc = JsonEscape(request.Model);
+                string inputEsc = JsonEscape(request.Input);
+                string voiceValue = request.Voice ?? string.Empty; // empty indicates dynamic references per docs
+                string voicePart = "\"" + JsonEscape(voiceValue) + "\"";
                 // include speed and enforce wav response format
-                string json = "{\"model\":\"" + modelEsc + "\",\"input\":\"" + inputEsc + "\",\"voice\":" + voicePart + ",\"speed\":" + speed.ToString(System.Globalization.CultureInfo.InvariantCulture) + ",\"response_format\":\"wav\"}";
+                var sb = new StringBuilder();
+                sb.Append("{");
+                sb.Append("\"model\":\"").Append(modelEsc).Append("\",");
+                sb.Append("\"input\":\"").Append(inputEsc).Append("\",");
+                sb.Append("\"voice\":").Append(voicePart).Append(",");
+                sb.Append("\"speed\":").Append(request.Speed.ToString(System.Globalization.CultureInfo.InvariantCulture)).Append(",");
+                sb.Append("\"response_format\":\"wav\"");
+
+                // optional references -> include as extra_body.references if provided
+                if (request.References != null && request.References.Count > 0)
+                {
+                    sb.Append(",\"extra_body\":{\"references\":[");
+                    for (int i = 0; i < request.References.Count; i++)
+                    {
+                        var r = request.References[i];
+                        if (i > 0) sb.Append(',');
+                        sb.Append('{');
+                        sb.Append("\"audio\":\"").Append(JsonEscape(r.Audio)).Append("\",");
+                        sb.Append("\"text\":\"").Append(JsonEscape(r.Text)).Append("\"");
+                        sb.Append('}');
+                    }
+                    sb.Append("]}");
+                }
+
+                sb.Append('}');
+                string json = sb.ToString();
                 req.Content = new StringContent(json);
                 req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
@@ -76,7 +103,7 @@ namespace RimTalk.TTS.Service
                 }
 
                 var bytes = await resp.Content.ReadAsByteArrayAsync();
-                return bytes?.Length > 0 ? bytes : null;
+                return bytes;
             }
             catch (OperationCanceledException)
             {

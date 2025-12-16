@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using RimTalk.TTS.Service;
 using Verse;
 
 namespace RimTalk.TTS.Provider
@@ -10,7 +11,7 @@ namespace RimTalk.TTS.Provider
     /// </summary>
     public class NoneProvider : ITTSProvider
     {
-        public Task<byte[]> GenerateSpeechAsync(string text, string apiKey, string referenceId, string model, float speed, float temperature, float topP, CancellationToken cancellationToken = default)
+        public Task<byte[]> GenerateSpeechAsync(TTSRequest request, CancellationToken cancellationToken = default)
         {
             Log.Warning("[RimTalk.TTS] No TTS supplier selected - skipping TTS generation");
             return Task.FromResult<byte[]>(null);

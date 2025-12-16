@@ -218,15 +218,19 @@ namespace RimTalk.TTS.Service
                 float temperature = settings.GetSupplierTemperature(settings.Supplier);
                 float topP = settings.GetSupplierTopP(settings.Supplier);
                 float speed = settings.GetSupplierSpeed(settings.Supplier);
-                byte[] audioData = await _provider.GenerateSpeechAsync(
-                    processedText,
-                    apiKeyForSupplier,
-                    voiceModelId,
-                    modelForSupplier,
-                    speed,
-                    temperature,
-                    topP
-                );
+                var ttsRequest = new Service.TTSRequest
+                {
+                    ApiKey = apiKeyForSupplier,
+                    Model = modelForSupplier,
+                    Input = processedText,
+                    Voice = voiceModelId,
+                    Speed = speed,
+                    Temperature = temperature,
+                    TopP = topP
+                };
+
+                // All members of ttsRequest are initialized above per requirement
+                byte[] audioData = await _provider.GenerateSpeechAsync(ttsRequest);
 
                 // Check if TTS Module is still active
                 if (!IsModuleActiveAndEnabled(settings))

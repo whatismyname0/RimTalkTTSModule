@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using RimTalk.TTS.Service;
 using RimTalk.TTS.Service.FishAudioService;
 
 namespace RimTalk.TTS.Provider
@@ -9,9 +10,12 @@ namespace RimTalk.TTS.Provider
     /// </summary>
     public class FishAudioProvider : ITTSProvider
     {
-        public async Task<byte[]> GenerateSpeechAsync(string text, string apiKey, string referenceId, string model, float speed, float temperature, float topP, CancellationToken cancellationToken = default)
+        public async Task<byte[]> GenerateSpeechAsync(TTSRequest request, CancellationToken cancellationToken = default)
         {
-            return await FishAudioTTSClient.GenerateSpeechAsync(text, apiKey, referenceId, model, speed, temperature, topP, cancellationToken);
+            // Delegate to existing FishAudio client which accepts parameter list
+            return await FishAudioTTSClient.GenerateSpeechAsync(
+                request,
+                cancellationToken);
         }
 
         public void Shutdown()

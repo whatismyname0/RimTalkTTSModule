@@ -8,6 +8,7 @@ using System.Runtime.Serialization;
 using System.Collections.Generic;
 using Verse;
 using RimTalk.Util;
+using RimTalk.TTS.Service;
 
 namespace RimTalk.TTS.Service.FishAudioService;
 
@@ -329,24 +330,13 @@ public static class FishAudioTTSClient
     /// Generate speech from text using Fish Audio TTS API via Python SDK
     /// Supports concurrent requests through HTTP server
     /// </summary>
-    /// <param name="text">Text to convert to speech</param>
-    /// <param name="apiKey">Fish Audio API key</param>
-    /// <param name="referenceId">Voice reference ID</param>
-    /// <param name="model">TTS model to use (fishaudio-1 = v1.6, s1 = faster)</param>
-    /// <param name="temperature">Generation temperature (0.7-1.0)</param>
-    /// <param name="topP">Top-p sampling parameter (0.7-1.0)</param>
+    /// <param name="request">TTSRequest containing all parameters</param>
     /// <param name="cancellationToken">Cancellation token to cancel the request</param>
     public static async Task<byte[]> GenerateSpeechAsync(
-        string text, 
-        string apiKey, 
-        string referenceId, 
-        string model, 
-        float speed,
-        float temperature, 
-        float topP,
+        TTSRequest request,
         System.Threading.CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(apiKey))
+        if (request == null || string.IsNullOrEmpty(request.Input) || string.IsNullOrEmpty(request.ApiKey))
         {
             Log.Warning("FishAudio TTS: Text or API key is empty");
             return null;
@@ -360,18 +350,18 @@ public static class FishAudioTTSClient
                 return null;
             }
             
-            // Build request object
+            // Build request object mapping from TTSRequest
             var requestData = new PythonTTSRequest
             {
-                api_key = apiKey,
-                text = text,
-                reference_id = referenceId,
-                model = model,
+                api_key = request.ApiKey,
+                text = request.Input,
+                reference_id = request.Voice,
+                model = request.Model,
                 latency = "normal",
-                speed = speed,
+                speed = request.Speed,
                 normalize = false,
-                temperature = temperature,
-                top_p = topP
+                temperature = request.Temperature,
+                top_p = request.TopP
             };
             
             string jsonContent =Util.JsonUtil.SerializeToJson(requestData);
@@ -380,7 +370,7 @@ public static class FishAudioTTSClient
             // Check cancellation before sending request
             cancellationToken.ThrowIfCancellationRequested();
 
-            Logger.Debug($"FishAudio TTS: Sending request - {text}");
+            Logger.Debug($"FishAudio TTS: Sending request - {request.Input}");
             
             // Send HTTP request
             var response = await _httpClient.PostAsync(ServerUrl, content, cancellationToken);

@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using RimTalk.TTS.Service;
 
 namespace RimTalk.TTS.Provider
 {
@@ -8,10 +9,10 @@ namespace RimTalk.TTS.Provider
     /// </summary>
     public class CosyVoiceProvider : ITTSProvider
     {
-        public async Task<byte[]> GenerateSpeechAsync(string text, string apiKey, string referenceId, string model, float speed, float temperature, float topP, CancellationToken cancellationToken = default)
+        public async Task<byte[]> GenerateSpeechAsync(TTSRequest request, CancellationToken cancellationToken = default)
         {
-            var resolvedModel = string.IsNullOrWhiteSpace(model) ? "FunAudioLLM/CosyVoice2-0.5B" : model;
-            return await Service.SiliconFlowClient.GenerateSpeechAsync(text, apiKey, referenceId, resolvedModel, speed, temperature, topP, cancellationToken);
+            // Providers assume request is fully initialized by caller
+            return await Service.SiliconFlowClient.GenerateSpeechAsync(request, cancellationToken);
         }
 
         public void Shutdown()

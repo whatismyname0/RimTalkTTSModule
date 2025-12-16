@@ -126,13 +126,17 @@ namespace RimTalk.TTS.Data
             if (SupplierGenerateCooldownMs == null)
             {
                 SupplierGenerateCooldownMs = new System.Collections.Generic.Dictionary<string, int>();
-                SupplierGenerateCooldownMs[TTSSupplier.FishAudio.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
+                SupplierGenerateCooldownMs[TTSSupplier.FishAudio.ToString()] = GenerateCooldownMiliSeconds;
+                SupplierGenerateCooldownMs[TTSSupplier.CosyVoice.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
+                SupplierGenerateCooldownMs[TTSSupplier.IndexTTS.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
             }
 
             if (SupplierVolume == null)
             {
                 SupplierVolume = new System.Collections.Generic.Dictionary<string, float>();
-                SupplierVolume[TTSSupplier.FishAudio.ToString()] = DEFAULT_SUPPLIER_VOLUME;
+                SupplierVolume[TTSSupplier.FishAudio.ToString()] = TTSVolume;
+                SupplierVolume[TTSSupplier.CosyVoice.ToString()] = DEFAULT_SUPPLIER_VOLUME;
+                SupplierVolume[TTSSupplier.IndexTTS.ToString()] = DEFAULT_SUPPLIER_VOLUME;
             }
 
             if (SupplierTemperature == null)
@@ -145,6 +149,8 @@ namespace RimTalk.TTS.Data
             {
                 SupplierSpeed = new System.Collections.Generic.Dictionary<string, float>();
                 SupplierSpeed[TTSSupplier.FishAudio.ToString()] = DEFAULT_SUPPLIER_SPEED;
+                SupplierSpeed[TTSSupplier.CosyVoice.ToString()] = DEFAULT_SUPPLIER_SPEED;
+                SupplierSpeed[TTSSupplier.IndexTTS.ToString()] = DEFAULT_SUPPLIER_SPEED;
             }
 
             if (SupplierTopP == null)
@@ -157,16 +163,7 @@ namespace RimTalk.TTS.Data
             {
                 SupplierVoiceModels = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceModel>>();
                 SupplierVoiceModels[TTSSupplier.FishAudio.ToString()] = VoiceModels ?? new System.Collections.Generic.List<VoiceModel>();
-            }
-
-            // If supplier-specific voice model lists are missing for new providers, populate with defaults
-            if (!SupplierVoiceModels.ContainsKey(TTSSupplier.CosyVoice.ToString()))
-            {
                 SupplierVoiceModels[TTSSupplier.CosyVoice.ToString()] = GetDefaultVoiceModels(TTSSupplier.CosyVoice);
-            }
-
-            if (!SupplierVoiceModels.ContainsKey(TTSSupplier.IndexTTS.ToString()))
-            {
                 SupplierVoiceModels[TTSSupplier.IndexTTS.ToString()] = GetDefaultVoiceModels(TTSSupplier.IndexTTS);
             }
 
@@ -174,6 +171,8 @@ namespace RimTalk.TTS.Data
             {
                 SupplierDefaultVoiceModelId = new System.Collections.Generic.Dictionary<string, string>();
                 SupplierDefaultVoiceModelId[TTSSupplier.FishAudio.ToString()] = DefaultVoiceModelId ?? "";
+                SupplierDefaultVoiceModelId[TTSSupplier.CosyVoice.ToString()] = VoiceModel.NONE_MODEL_ID;
+                SupplierDefaultVoiceModelId[TTSSupplier.IndexTTS.ToString()] = VoiceModel.NONE_MODEL_ID;
             }
         }
 

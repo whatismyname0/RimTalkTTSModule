@@ -11,6 +11,7 @@ using RimTalk.TTS.Service;
 using RimTalk.TTS.Util;
 using RimTalk.Data;
 using RimTalk.Util;
+using RimTalk.TTS.Data;
 
 namespace RimTalk.TTS.Patch
 {
@@ -269,41 +270,8 @@ namespace RimTalk.TTS.Patch
                     var dialogueId = item.Id;
                     var text = item.Text;
 
-                    // If pawn's selected voice model is explicit NONE, or the selected model
-                    // is not present in the current supplier's model list, skip TTS generation.
-                    try
-                    {
-                        string selectedVoice = Data.PawnVoiceManager.GetVoiceModel(pawn);
-                        // If explicitly NONE, do not generate
-                        if (selectedVoice == Data.VoiceModel.NONE_MODEL_ID)
-                        {
-                            return;
-                        }
-
-                        var settings = TTSModule.Instance.GetSettings();
-                        var supplierModels = settings?.GetSupplierVoiceModels(settings.Supplier);
-                        bool found = false;
-                        if (supplierModels != null)
-                        {
-                            foreach (var m in supplierModels)
-                            {
-                                if (m != null && m.ModelId == selectedVoice)
-                                {
-                                    found = true;
-                                    break;
-                                }
-                            }
-                        }
-                        // If a voice is selected but it's not in the supplier list, skip generation
-                        if (!string.IsNullOrEmpty(selectedVoice) && !found)
-                        {
-                            return;
-                        }
-                    }
-                    catch (Exception)
-                    {
+                    if (PawnVoiceManager.GetVoiceModel(pawn) == VoiceModel.NONE_MODEL_ID)
                         return;
-                    }
 
                     // Immediately mark dialogue as "generating" to block display
                     RequestBlock(dialogueId);

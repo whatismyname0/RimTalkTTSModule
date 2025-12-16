@@ -369,7 +369,6 @@ namespace RimTalk.TTS.Service
         {
             if (map == null)
             {
-                Log.Message("[RimTalk.TTS] ReloadMap: called with null map");
                 return;
             }
 

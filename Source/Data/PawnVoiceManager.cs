@@ -20,7 +20,17 @@ namespace RimTalk.TTS.Data
         {
             if (pawn == null) return null;
             _pawnVoiceMap.TryGetValue(pawn.thingIDNumber, out string voiceId);
-            return voiceId;
+            var settings = TTSModule.Instance.GetSettings();
+            var supplierModels = settings?.GetSupplierVoiceModels(settings.Supplier);
+
+            if (voiceId == null)
+                return settings.GetSupplierDefaultVoiceModelId(TTSModule.Instance.Settings.Supplier);
+
+            foreach (var m in supplierModels)
+                if (m.ModelId == voiceId)
+                    return voiceId;
+
+            return settings.GetSupplierDefaultVoiceModelId(TTSModule.Instance.Settings.Supplier);
         }
 
         /// <summary>
@@ -33,7 +43,7 @@ namespace RimTalk.TTS.Data
             
             if (string.IsNullOrEmpty(voiceModelId))
             {
-                _pawnVoiceMap.Remove(pawn.thingIDNumber);
+                _pawnVoiceMap[pawn.thingIDNumber] = VoiceModel.NONE_MODEL_ID;
             }
             else
             {

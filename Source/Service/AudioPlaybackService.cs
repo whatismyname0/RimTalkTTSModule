@@ -209,24 +209,91 @@ public static class AudioPlaybackService
     {
         try
         {
-            // Parse WAV header
-            int channels = BitConverter.ToInt16(wavData, 22);
-            int sampleRate = BitConverter.ToInt32(wavData, 24);
-            int bitsPerSample = BitConverter.ToInt16(wavData, 34);
+            // Basic header/logging to help debug malformed WAVs
+            int totalLen = wavData?.Length ?? 0;
 
-            // Find data chunk
-            int dataPos = 36;
-            while (dataPos < wavData.Length - 4)
+            // Parse WAV header (best-effort; some files may have extra chunks before fmt/data)
+            int channels = -1;
+            int sampleRate = -1;
+            int bitsPerSample = -1;
+
+            try
             {
-                string chunkId = System.Text.Encoding.ASCII.GetString(wavData, dataPos, 4);
-                int chunkSize = BitConverter.ToInt32(wavData, dataPos + 4);
+                if (wavData.Length >= 36)
+                {
+                    channels = BitConverter.ToInt16(wavData, 22);
+                    sampleRate = BitConverter.ToInt32(wavData, 24);
+                    bitsPerSample = BitConverter.ToInt16(wavData, 34);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"[RimTalk.TTS] AudioPlaybackService: Failed to read basic header fields: {ex.GetType().Name}: {ex.Message}");
+            }
+
+            // Find data chunk safely
+            int dataPos = 12; // start after RIFF header
+            while (dataPos + 8 <= wavData.Length)
+            {
+                // read chunk id and size safely
+                string chunkId;
+                try
+                {
+                    chunkId = System.Text.Encoding.ASCII.GetString(wavData, dataPos, 4);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"[RimTalk.TTS] AudioPlaybackService: Failed to read chunk id at pos {dataPos}: {ex.GetType().Name}: {ex.Message}");
+                    return null;
+                }
+
+                int chunkSize = 0;
+                try
+                {
+                    if (dataPos + 8 <= wavData.Length)
+                        chunkSize = BitConverter.ToInt32(wavData, dataPos + 4);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"[RimTalk.TTS] AudioPlaybackService: Failed to read chunk size for '{chunkId}' at pos {dataPos}: {ex.GetType().Name}: {ex.Message}");
+                    return null;
+                }
+
+                if (chunkId == "fmt ")
+                {
+                    // attempt to parse fmt chunk for reliable format info
+                    try
+                    {
+                        int fmtPos = dataPos + 8;
+                        if (fmtPos + 16 <= wavData.Length)
+                        {
+                            // audio format (2 bytes), channels (2), sampleRate (4), byteRate (4), blockAlign (2), bitsPerSample (2)
+                            int audioFormat = BitConverter.ToInt16(wavData, fmtPos);
+                            channels = BitConverter.ToInt16(wavData, fmtPos + 2);
+                            sampleRate = BitConverter.ToInt32(wavData, fmtPos + 4);
+                            bitsPerSample = BitConverter.ToInt16(wavData, fmtPos + 14);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning($"[RimTalk.TTS] AudioPlaybackService: Failed to parse fmt chunk: {ex.GetType().Name}: {ex.Message}");
+                    }
+                }
 
                 if (chunkId == "data")
                 {
                     dataPos += 8;
                     break;
                 }
-                dataPos += 8 + chunkSize;
+
+                // advance to next chunk with bounds check
+                long nextPos = (long)dataPos + 8 + chunkSize;
+                if (nextPos <= dataPos || nextPos > wavData.Length)
+                {
+                    Log.Error($"[RimTalk.TTS] AudioPlaybackService: Invalid chunk size leading to overflow: chunkId='{chunkId}', chunkSize={chunkSize}, pos={dataPos}, len={wavData.Length}");
+                    return null;
+                }
+                dataPos = (int)nextPos;
             }
 
             if (dataPos >= wavData.Length)

@@ -306,8 +306,18 @@ public static class FishAudioTTSClient
             {
                 _serverProcess = process;
                 // Use InfiniteTimeSpan - timeout is controlled per-request via CancellationToken
-                // This prevents shared HttpClient timeout from affecting concurrent requests
-                _httpClient = new HttpClient { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
+                // Create HttpClient with cookies disabled to avoid Mono/Win32 cookie/container codepaths
+                try
+                {
+                    var handler = new HttpClientHandler { UseCookies = false };
+                    _httpClient = new HttpClient(handler) { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
+                }
+                catch (Exception ex)
+                {
+                    // Fallback to default HttpClient if handler creation fails for any reason
+                    Log.Warning($"FishAudio TTS: Failed to create cookie-less HttpClient handler - {ex.Message}. Falling back to default HttpClient.");
+                    _httpClient = new HttpClient { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
+                }
             }
             return true;
         }
@@ -509,16 +519,24 @@ public static class FishAudioTTSClient
                 string jsonContent = Util.JsonUtil.SerializeToJson(shutdownRequest);
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 
-                // Use short timeout for shutdown command
-                using (var timeoutClient = new HttpClient { Timeout = TimeSpan.FromSeconds(2) })
+                // Use short timeout for shutdown command and disable cookies to avoid native cookie/container calls
+                try
                 {
-                    var task = timeoutClient.PostAsync(ServerUrl, content);
-                    task.Wait(TimeSpan.FromSeconds(2));
-                    
-                    if (task.IsCompleted && task.Result.IsSuccessStatusCode)
+                    var shortHandler = new HttpClientHandler { UseCookies = false };
+                    using (var timeoutClient = new HttpClient(shortHandler) { Timeout = TimeSpan.FromSeconds(2) })
                     {
-                        Log.Message("FishAudio TTS: Server shutdown command sent successfully");
+                        var task = timeoutClient.PostAsync(ServerUrl, content);
+                        task.Wait(TimeSpan.FromSeconds(2));
+
+                        if (task.IsCompleted && task.Result.IsSuccessStatusCode)
+                        {
+                            Log.Message("FishAudio TTS: Server shutdown command sent successfully");
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning($"FishAudio TTS: Failed to send shutdown via cookie-less HttpClient - {ex.Message}");
                 }
             }
             catch (Exception ex)

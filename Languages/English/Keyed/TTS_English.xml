@@ -100,7 +100,7 @@
     <RimTalk.Settings.TTS.ModelLabel.IndexTTS>TTS Model (IndexTTS): {0}</RimTalk.Settings.TTS.ModelLabel.IndexTTS>
     <RimTalk.Settings.TTS.CustomModelIdLabel>Custom model id (optional):</RimTalk.Settings.TTS.CustomModelIdLabel>
     <RimTalk.Settings.TTS.ResetModelsButton>Synchronize model list</RimTalk.Settings.TTS.ResetModelsButton>
-    <RimTalk.Settings.TTS.UploadUserVoiceLabel>Upload user voice</RimTalk.Settings.TTS.UploadUserVoiceLabel>
+    <RimTalk.Settings.TTS.UploadUserVoiceLabel>Upload user voice (only required when uploading):</RimTalk.Settings.TTS.UploadUserVoiceLabel>
     <RimTalk.Settings.TTS.UploadFilePath>File path (local):</RimTalk.Settings.TTS.UploadFilePath>
     <RimTalk.Settings.TTS.UploadName>Voice name:</RimTalk.Settings.TTS.UploadName>
     <RimTalk.Settings.TTS.UploadTextPreview>Reference text (for model):</RimTalk.Settings.TTS.UploadTextPreview>

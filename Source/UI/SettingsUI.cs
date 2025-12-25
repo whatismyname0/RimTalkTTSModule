@@ -497,12 +497,15 @@ namespace RimTalk.TTS.UI
                 }
             }
 
-            listing.Gap(6f);
-            // Single Reset Models button placed after the full list
-            Rect resetAllRect = listing.GetRect(30f);
-            if (Widgets.ButtonText(resetAllRect, "RimTalk.Settings.TTS.ResetModelsButton".Translate()))
+            if (settings.Supplier == TTSSettings.TTSSupplier.CosyVoice || settings.Supplier == TTSSettings.TTSSupplier.IndexTTS)
             {
-                Refresh();
+                listing.Gap(6f);
+                // Single Reset Models button placed after the full list
+                Rect resetAllRect = listing.GetRect(30f);
+                if (Widgets.ButtonText(resetAllRect, "RimTalk.Settings.TTS.ResetModelsButton".Translate()))
+                {
+                    Refresh();
+                }
             }
         }
 

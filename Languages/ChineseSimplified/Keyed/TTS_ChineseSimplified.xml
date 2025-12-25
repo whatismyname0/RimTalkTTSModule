@@ -100,7 +100,7 @@
     <RimTalk.Settings.TTS.ModelLabel.IndexTTS>TTS 模型（IndexTTS）：{0}</RimTalk.Settings.TTS.ModelLabel.IndexTTS>
     <RimTalk.Settings.TTS.CustomModelIdLabel>自定义模型 ID（可选）：</RimTalk.Settings.TTS.CustomModelIdLabel>
     <RimTalk.Settings.TTS.ResetModelsButton>同步模型列表</RimTalk.Settings.TTS.ResetModelsButton>
-    <RimTalk.Settings.TTS.UploadUserVoiceLabel>上传用户预置音色</RimTalk.Settings.TTS.UploadUserVoiceLabel>
+    <RimTalk.Settings.TTS.UploadUserVoiceLabel>上传用户预置音色(只有上传时需填写)</RimTalk.Settings.TTS.UploadUserVoiceLabel>
     <RimTalk.Settings.TTS.UploadFilePath>文件路径（本地）：</RimTalk.Settings.TTS.UploadFilePath>
     <RimTalk.Settings.TTS.UploadName>音色名称：</RimTalk.Settings.TTS.UploadName>
     <RimTalk.Settings.TTS.UploadTextPreview>参考文本（用于训练/识别）：</RimTalk.Settings.TTS.UploadTextPreview>

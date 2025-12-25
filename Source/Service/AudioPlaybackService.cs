@@ -158,7 +158,7 @@ public static class AudioPlaybackService
                     // follower.pawn = null;
 
                     // Wait for playback to complete based on clip length
-                    int playbackDelayMs = (int)(clip.length * 1000) + 100;
+                    int playbackDelayMs = (int)(clip.length * 1000f);
                     await Task.Delay(playbackDelayMs);
                 }
                 else

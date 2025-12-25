@@ -220,6 +220,7 @@ namespace RimTalk.TTS.Service
 
                 string modelEsc = JsonEscape(request.Model);
                 string inputEsc = JsonEscape(request.Input);
+                string instructEsc = JsonEscape(request.InstructText);
                 string voiceValue = request.Voice ?? string.Empty; // empty indicates dynamic references per docs
                 string voicePart = "\"" + JsonEscape(voiceValue) + "\"";
                 // include speed and enforce wav response format
@@ -227,6 +228,7 @@ namespace RimTalk.TTS.Service
                 sb.Append("{");
                 sb.Append("\"model\":\"").Append(modelEsc).Append("\",");
                 sb.Append("\"input\":\"").Append(inputEsc).Append("\",");
+                sb.Append("\"instruct_text\":\"").Append(instructEsc).Append("\",");
                 sb.Append("\"voice\":").Append(voicePart).Append(",");
                 sb.Append("\"speed\":").Append(request.Speed.ToString(System.Globalization.CultureInfo.InvariantCulture)).Append(",");
                 sb.Append("\"response_format\":\"wav\"");

@@ -149,15 +149,23 @@ namespace RimTalk.TTS.Service
                 string voiceModelId = GetVoiceModelId(pawn, settings);
 
                 // Process text
-                string processedText = null;
+                string finalInputText = text;
+                string finalInstructText = null;
 
                 // Translate if configured
                 if (!string.IsNullOrWhiteSpace(settings.TTSTranslationLanguage))
                 {
-                    processedText = await InputPreProcessService.PreProcessAsync(text, settings.TTSTranslationLanguage, settings);
-                    if (string.IsNullOrWhiteSpace(processedText))
+                    // 调用修改后的 PreProcessAsync，获取包含 Text 和 Emotion 的对象
+                    var preProcessResult = await InputPreProcessService.PreProcessAsync(text, settings.TTSTranslationLanguage, settings);
+                    
+                    if (preProcessResult != null && !string.IsNullOrEmpty(preProcessResult.Text))
                     {
-                        Log.Warning($"[RimTalk.TTS] DEBUG: Translation failed");
+                        finalInputText = preProcessResult.Text;
+                        finalInstructText = preProcessResult.Emotion;
+                    }
+                    else
+                    {
+                        Log.Warning($"[RimTalk.TTS] DEBUG: Translation/PreProcess returned empty result");
                         CleanupAndRelease(dialogueId);
                         return;
                     }
@@ -165,13 +173,6 @@ namespace RimTalk.TTS.Service
                 else
                 {
                     Log.Warning($"[RimTalk.TTS] DEBUG: Translation language not configured");
-                    CleanupAndRelease(dialogueId);
-                    return;
-                }
-
-                if (processedText == text)
-                {
-                    Log.Warning($"[RimTalk.TTS] DEBUG: Translation returned invalid result");
                     CleanupAndRelease(dialogueId);
                     return;
                 }
@@ -222,7 +223,8 @@ namespace RimTalk.TTS.Service
                 {
                     ApiKey = apiKeyForSupplier,
                     Model = modelForSupplier,
-                    Input = processedText,
+                    Input = finalInputText,
+                    InstructText = finalInstructText,
                     Voice = voiceModelId,
                     Speed = speed,
                     Temperature = temperature,

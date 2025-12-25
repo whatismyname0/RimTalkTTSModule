@@ -184,7 +184,7 @@ namespace RimTalk.TTS.UI
                 if (settings.Supplier == TTSSettings.TTSSupplier.CosyVoice)
                 {
                     string currentModel = settings.GetSupplierModel(settings.Supplier);
-                    listing.Label("RimTalk.Settings.TTS.ModelLabel.CozyVoice".Translate(currentModel ?? "(not set)"));
+                    listing.Label("RimTalk.Settings.TTS.ModelLabel.CosyVoice".Translate(currentModel ?? "(not set)"));
                     if (listing.RadioButton("FunAudioLLM/CosyVoice2-0.5B", currentModel == "FunAudioLLM/CosyVoice2-0.5B"))
                     {
                         settings.SetSupplierModel(settings.Supplier, "FunAudioLLM/CosyVoice2-0.5B");
@@ -286,49 +286,48 @@ namespace RimTalk.TTS.UI
             Rect tipRect = listing.GetRect(Text.LineHeight);
             Widgets.Label(tipRect, "RimTalk.Settings.TTS.ProcessingPromptTip".Translate());
             GUI.color = Color.white;
-            
-            // Show current status (default or custom)
-            Rect statusRect = listing.GetRect(Text.LineHeight);
-            string statusText = string.IsNullOrWhiteSpace(settings.CustomTTSProcessingPrompt)
-                ? "RimTalk.Settings.TTS.UsingDefaultPrompt".Translate()
-                : "RimTalk.Settings.TTS.UsingCustomPrompt".Translate();
-            GUI.color = string.IsNullOrWhiteSpace(settings.CustomTTSProcessingPrompt) ? Color.yellow : Color.green;
-            Widgets.Label(statusRect, statusText);
-            GUI.color = Color.white;
             Text.Font = GameFont.Small;
             listing.Gap(6f);
 
             // Text area for prompt - display buffer which contains either custom or default
             float textAreaHeight = 120f;
             Rect textAreaRect = listing.GetRect(textAreaHeight);
-            string displayPrompt = string.IsNullOrWhiteSpace(settings.CustomTTSProcessingPrompt)
-                ? Data.TTSConstant.DefaultTTSProcessingPrompt
-                : processingPromptBuffer;
+            string displayPrompt = processingPromptBuffer;
             string newPrompt = Widgets.TextArea(textAreaRect, displayPrompt);
 
             // Only save if user actually modified the content
             if (newPrompt != displayPrompt)
             {
                 processingPromptBuffer = newPrompt.Replace("\\n", "\n");
-                // Mark as custom if it differs from default
-                if (processingPromptBuffer != Data.TTSConstant.DefaultTTSProcessingPrompt)
-                {
-                    settings.CustomTTSProcessingPrompt = processingPromptBuffer;
-                }
-                else
-                {
-                    settings.CustomTTSProcessingPrompt = "";
-                }
+                settings.CustomTTSProcessingPrompt = processingPromptBuffer;
             }
 
             listing.Gap(6f);
 
-            // Reset button
-            Rect resetButtonRect = listing.GetRect(30f);
-            if (Widgets.ButtonText(resetButtonRect, "RimTalk.Settings.TTS.ResetPrompt".Translate()))
+            // Reset buttons
+            Rect resetButtonsRect = listing.GetRect(30f);
+            float gap = 4f;
+            float btnW = (resetButtonsRect.width - gap * 2) / 3f;
+            Rect fishRect = new Rect(resetButtonsRect.x, resetButtonsRect.y, btnW, resetButtonsRect.height);
+            Rect cosyRect = new Rect(resetButtonsRect.x + btnW + gap, resetButtonsRect.y, btnW, resetButtonsRect.height);
+            Rect indexRect = new Rect(resetButtonsRect.x + (btnW + gap) * 2f, resetButtonsRect.y, btnW, resetButtonsRect.height);
+
+            if (Widgets.ButtonText(fishRect, "RimTalk.Settings.TTS.ResetPrompt.FishAudio".Translate()))
             {
                 settings.CustomTTSProcessingPrompt = "";
                 processingPromptBuffer = Data.TTSConstant.DefaultTTSProcessingPrompt;
+            }
+
+            if (Widgets.ButtonText(cosyRect, "RimTalk.Settings.TTS.ResetPrompt.CosyVoice".Translate()))
+            {
+                settings.CustomTTSProcessingPrompt = Data.TTSConstant.DefaultTTSProcessingPrompt_CosyVoice;
+                processingPromptBuffer = Data.TTSConstant.DefaultTTSProcessingPrompt_CosyVoice;
+            }
+
+            if (Widgets.ButtonText(indexRect, "RimTalk.Settings.TTS.ResetPrompt.IndexTTS".Translate()))
+            {
+                settings.CustomTTSProcessingPrompt = Data.TTSConstant.DefaultTTSProcessingPrompt_IndexTTS;
+                processingPromptBuffer = Data.TTSConstant.DefaultTTSProcessingPrompt_IndexTTS;
             }
         }
 

@@ -1,3 +1,4 @@
+using System.Text;
 using System.Threading.Tasks;
 using RimTalk.TTS.Data;
 using Verse;
@@ -12,12 +13,12 @@ namespace RimTalk.TTS.Service
         /// <summary>
         /// Translate text to target language using configured LLM API
         /// </summary>
-        public static async Task<string> PreProcessAsync(string text, string targetLanguage, TTSSettings settings)
+        public static async Task<PreProcessResult> PreProcessAsync(string text, string targetLanguage, TTSSettings settings)
         {
             if (settings == null)
             {
                 Log.Warning("[RimTalk.TTS] preprocess settings is null");
-                return text;
+                return null;
             }
 
             try
@@ -27,27 +28,45 @@ namespace RimTalk.TTS.Service
                 
                 // Build translation prompt
                 string prompt = promptTemplate
-                    .Replace("{language}", targetLanguage)
-                    .Replace("{text}", text);
+                    .Replace("{language}", targetLanguage);
 
                 // Call SimpleLLMClient directly with settings
-                var (response, success) = await InputPreProcessClient.QueryAsync(prompt, settings);
+                var (response, success) = await InputPreProcessClient.QueryAsync(prompt, text, settings);
+                response.Text = CleanText(response.Text);
 
-                if (success && !string.IsNullOrEmpty(response))
+                if (success && !string.IsNullOrEmpty(response.Text))
                 {
-                    return response.Trim();
+                    return response;
                 }
                 else
                 {
                     Log.Warning("[RimTalk.TTS] Empty response from preprocess API");
-                    return text;
+                    return null;
                 }
             }
             catch (System.Exception ex)
             {
                 Log.Error($"[RimTalk.TTS] preprocess failed - {ex.Message}");
-                return text; // Return original text on error
+                return null;
             }
+        }
+        private static string CleanText(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+
+            text = System.Text.RegularExpressions.Regex.Replace(
+                        System.Text.RegularExpressions.Regex.Replace(
+                            text.Normalize(NormalizationForm.FormKC), @"\([^)]*\)", ""
+                        )
+                        , @"\s+", " "
+                    ).Trim();
+
+            if (TTSModule.Instance.GetSettings().Supplier  == TTSSettings.TTSSupplier.FishAudio)
+            {
+                text = text.Replace("[","(").Replace("]",")");
+            }
+
+            return text;
         }
     }
 }

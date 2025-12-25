@@ -2,11 +2,25 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 using RimTalk.TTS.Data;
+using RimTalk.TTS.Util;
 using UnityEngine.Networking;
 using Verse;
 
 namespace RimTalk.TTS.Service
 {
+    //给 TTSService 返回结构化数据的辅助类
+    public class PreProcessResult
+    {
+        public string Text;
+        public string Emotion;
+    }
+
+    [Serializable]
+    public class PreProcessResultJson
+    {
+        public string text;
+        public string emotion;
+    }
     /// <summary>
     /// Simple LLM client for TTS text processing - no role concept, just plain text in/out
     /// </summary>
@@ -29,83 +43,88 @@ namespace RimTalk.TTS.Service
         /// <summary>
         /// Send a simple text query and get text response (no role/conversation context)
         /// </summary>
-        public static async Task<(string response, bool success)> QueryAsync(string prompt, TTSSettings settings)
+        public static async Task<(PreProcessResult response, bool success)> QueryAsync(string prompt, string text, TTSSettings settings)
         {
             if (settings == null)
             {
                 Log.Warning("[RimTalk.TTS] SimpleLLMClient: settings is null");
-                return ("", false);
+                return (null, false);
             }
 
             if (string.IsNullOrWhiteSpace(settings.ApiKey))
             {
                 Log.Warning("[RimTalk.TTS] SimpleLLMClient: API key not configured");
-                return ("", false);
+                return (null, false);
             }
 
             if (string.IsNullOrWhiteSpace(settings.Model))
             {
                 Log.Warning("[RimTalk.TTS] SimpleLLMClient: Model not configured");
-                return ("", false);
+                return (null, false);
             }
 
             if (string.IsNullOrWhiteSpace(prompt))
             {
                 Log.Warning("[RimTalk.TTS] Empty prompt provided to SimpleLLMClient");
-                return ("", false);
+                return (null, false);
             }
 
             string baseUrl = GetBaseUrl(settings);
             if (string.IsNullOrWhiteSpace(baseUrl))
             {
                 Log.Warning("[RimTalk.TTS] SimpleLLMClient: Base URL is empty");
-                return ("", false);
+                return (null, false);
             }
 
             try
             {
                 // Build simple OpenAI-compatible request with single user message
-                string jsonRequest = BuildRequest(prompt, settings.Model);
+                string jsonRequest = BuildRequest(prompt, text, settings.Model);
                 
                 Log.Message($"[RimTalk.TTS] Sending LLM request to {settings.ApiProvider}: {prompt}");
 
                 // Send HTTP request
                 var (responseJson, success) = await SendHttpRequestAsync(jsonRequest, baseUrl, settings.ApiKey);
-                
+
                 if (!success)
                 {
                     Log.Warning("[RimTalk.TTS] LLM HTTP request failed");
-                    return ("", false);
+                    return (null, false);
                 }
-                
+
                 if (string.IsNullOrEmpty(responseJson))
                 {
                     Log.Warning("[RimTalk.TTS] LLM returned empty response");
-                    return ("", false);
+                    return (null, false);
                 }
 
-                // Extract content from response
-                string content = ExtractContentFromResponse(responseJson);
-                
-                if (string.IsNullOrEmpty(content))
+                // Extract structured PreProcessResult from response
+                PreProcessResult result = ExtractContentFromResponse(responseJson);
+
+                if (result == null)
                 {
                     Log.Warning("[RimTalk.TTS] Failed to extract content from LLM response");
-                    return ("", false);
+                    return (null, false);
                 }
 
-                return (content, true);
+                return (result, true);
             }
             catch (Exception ex)
             {
                 Log.Error($"[RimTalk.TTS] SimpleLLMClient.QueryAsync error: {ex.Message}\n{ex.StackTrace}");
-                return ("", false);
+                return (null, false);
             }
         }
 
-        private static string BuildRequest(string prompt, string model)
+        private static string BuildRequest(string prompt, string text, string model)
         {
-            // Manually build minimal JSON to avoid role concept entirely
             var escapedPrompt = prompt
+                .Replace("\\", "\\\\")
+                .Replace("\"", "\\\"")
+                .Replace("\n", "\\n")
+                .Replace("\r", "\\r")
+                .Replace("\t", "\\t");
+            var escapedText = text
                 .Replace("\\", "\\\\")
                 .Replace("\"", "\\\"")
                 .Replace("\n", "\\n")
@@ -116,10 +135,15 @@ namespace RimTalk.TTS.Service
   ""model"": ""{model}"",
   ""messages"": [
     {{
-      ""role"": ""user"",
+      ""role"": ""system"",
       ""content"": ""{escapedPrompt}""
+    }},
+    {{
+      ""role"": ""user"",
+      ""content"": ""{escapedText}""
     }}
-  ]
+  ],
+  ""response_format"":{{""type"":""json_object""}} 
 }}";
         }
 
@@ -161,7 +185,7 @@ namespace RimTalk.TTS.Service
                 // Wait for completion
                 while (!asyncOperation.isDone)
                 {
-                    if (Current.Game == null) return ("", false);
+                    if (Current.Game == null) return (null, false);
                     await Task.Delay(50);
                 }
 
@@ -170,7 +194,7 @@ namespace RimTalk.TTS.Service
                 {
                     Log.Error($"[RimTalk.TTS] HTTP request failed: {webRequest.responseCode} {webRequest.error}");
                     Log.Error($"[RimTalk.TTS] Response: {webRequest.downloadHandler?.text}");
-                    return ("", false);
+                    return (null, false);
                 }
 
                 string responseText = webRequest.downloadHandler.text;
@@ -184,7 +208,7 @@ namespace RimTalk.TTS.Service
             }
         }
 
-        private static string ExtractContentFromResponse(string jsonResponse)
+        private static PreProcessResult ExtractContentFromResponse(string jsonResponse)
         {
             try
             {
@@ -213,7 +237,7 @@ namespace RimTalk.TTS.Service
                 if (endQuote >= jsonResponse.Length) return null;
 
                 string content = jsonResponse.Substring(startQuote, endQuote - startQuote);
-                
+
                 // Unescape JSON string
                 content = content
                     .Replace("\\n", "\n")
@@ -222,7 +246,8 @@ namespace RimTalk.TTS.Service
                     .Replace("\\\"", "\"")
                     .Replace("\\\\", "\\");
 
-                return content;
+                var parsed = JsonUtil.DeserializeFromJson<PreProcessResultJson>(content);
+                return new PreProcessResult { Text = parsed.text, Emotion = parsed.emotion };
             }
             catch (Exception ex)
             {

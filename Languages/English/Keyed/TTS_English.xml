@@ -28,7 +28,7 @@
     <RimTalk.Settings.TTS.Temperature>Temperature (The lower the stabler, the higher the more emotional)</RimTalk.Settings.TTS.Temperature>
     <RimTalk.Settings.TTS.TopP>Top P (Consistency control, the lower the more consistent, also more rigid)</RimTalk.Settings.TTS.TopP>
     <RimTalk.Settings.TTS.ProcessingPrompt>TTS Processing Prompt</RimTalk.Settings.TTS.ProcessingPrompt>
-    <RimTalk.Settings.TTS.ProcessingPromptInfo>Use {language} for target language and {text} for the dialogue text. This prompt is used to process text before sending to TTS API.</RimTalk.Settings.TTS.ProcessingPromptInfo>
+    <RimTalk.Settings.TTS.ProcessingPromptInfo>Use {language} for target language. This prompt is used to process text before sending to TTS API.</RimTalk.Settings.TTS.ProcessingPromptInfo>
     <RimTalk.Settings.TTS.Volume>Volume</RimTalk.Settings.TTS.Volume>
     <RimTalk.Settings.TTS.VoiceModels>Voice Models</RimTalk.Settings.TTS.VoiceModels>
     <RimTalk.Settings.TTS.DefaultVoiceModel>Default Voice Model</RimTalk.Settings.TTS.DefaultVoiceModel>
@@ -51,8 +51,9 @@
     <RimTalk.Settings.TTS.AddModelButton>Add Model</RimTalk.Settings.TTS.AddModelButton>
     <RimTalk.Settings.TTS.ProcessingPromptTip>Use {language} for target language and {text} for dialogue text. External editor recommended for complex prompts.</RimTalk.Settings.TTS.ProcessingPromptTip>
     <RimTalk.Settings.TTS.ResetPrompt>Reset Prompt</RimTalk.Settings.TTS.ResetPrompt>
-    <RimTalk.Settings.TTS.UsingDefaultPrompt>Status: Using Default Prompt</RimTalk.Settings.TTS.UsingDefaultPrompt>
-    <RimTalk.Settings.TTS.UsingCustomPrompt>Status: Using Custom Prompt</RimTalk.Settings.TTS.UsingCustomPrompt>
+    <RimTalk.Settings.TTS.ResetPrompt.FishAudio>Use Default FishAudio Prompt</RimTalk.Settings.TTS.ResetPrompt.FishAudio>
+    <RimTalk.Settings.TTS.ResetPrompt.CosyVoice>Use Default CosyVoice Prompt</RimTalk.Settings.TTS.ResetPrompt.CosyVoice>
+    <RimTalk.Settings.TTS.ResetPrompt.IndexTTS>Use Default IndexTTS Prompt</RimTalk.Settings.TTS.ResetPrompt.IndexTTS>
     <RimTalk.Settings.TTS.ModelConfigurations>Voice Model Configurations</RimTalk.Settings.TTS.ModelConfigurations>
     <RimTalk.Settings.TTS.NoCustomModels>No custom voice models configured yet.\n\nAdd models in TTS Settings to see them here.</RimTalk.Settings.TTS.NoCustomModels>
 

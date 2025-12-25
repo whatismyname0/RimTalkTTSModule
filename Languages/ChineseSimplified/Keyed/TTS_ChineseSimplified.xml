@@ -49,10 +49,11 @@
     <RimTalk.Settings.TTS.NameLabel>名称：</RimTalk.Settings.TTS.NameLabel>
     <RimTalk.Settings.TTS.IDLabel>ID：</RimTalk.Settings.TTS.IDLabel>
     <RimTalk.Settings.TTS.AddModelButton>添加模型</RimTalk.Settings.TTS.AddModelButton>
-    <RimTalk.Settings.TTS.ProcessingPromptTip>使用 {language} 代表目标语言，{text} 代表对话文本。建议使用外部编辑器编辑复杂提示词。</RimTalk.Settings.TTS.ProcessingPromptTip>
+    <RimTalk.Settings.TTS.ProcessingPromptTip>使用 {language} 代表目标语言. 建议使用外部编辑器编辑复杂提示词。</RimTalk.Settings.TTS.ProcessingPromptTip>
     <RimTalk.Settings.TTS.ResetPrompt>重置提示词</RimTalk.Settings.TTS.ResetPrompt>
-    <RimTalk.Settings.TTS.UsingDefaultPrompt>状态：正在使用默认提示词</RimTalk.Settings.TTS.UsingDefaultPrompt>
-    <RimTalk.Settings.TTS.UsingCustomPrompt>状态：正在使用自定义提示词</RimTalk.Settings.TTS.UsingCustomPrompt>
+    <RimTalk.Settings.TTS.ResetPrompt.FishAudio>使用 FishAudio 默认提示词</RimTalk.Settings.TTS.ResetPrompt.FishAudio>
+    <RimTalk.Settings.TTS.ResetPrompt.CosyVoice>使用 CosyVoice 默认提示词</RimTalk.Settings.TTS.ResetPrompt.CosyVoice>
+    <RimTalk.Settings.TTS.ResetPrompt.IndexTTS>使用 IndexTTS 默认提示词</RimTalk.Settings.TTS.ResetPrompt.IndexTTS>
     <RimTalk.Settings.TTS.ModelConfigurations>语音模型配置</RimTalk.Settings.TTS.ModelConfigurations>
     <RimTalk.Settings.TTS.NoCustomModels>尚未配置自定义语音模型。\n\n在 TTS 设置中添加模型后即可在此看到。</RimTalk.Settings.TTS.NoCustomModels>
 

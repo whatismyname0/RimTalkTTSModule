@@ -8,6 +8,9 @@ namespace RimTalk.TTS.Data
     /// </summary>
     public class TTSSettings : ModSettings
     {
+        // Player reference voice model id (null/empty = use supplier default, VoiceModel.NONE_MODEL_ID = none)
+        public string PlayerReferenceVoiceModelId = VoiceModel.NONE_MODEL_ID;
+
         public enum TTSSupplier
         {
             None,
@@ -97,6 +100,7 @@ namespace RimTalk.TTS.Data
             Scribe_Collections.Look(ref SupplierVoiceModels, "supplierVoiceModels", LookMode.Value, LookMode.Deep);
             Scribe_Collections.Look(ref SupplierSpeed, "supplierSpeed", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref SupplierDefaultVoiceModelId, "supplierDefaultVoiceModelId", LookMode.Value, LookMode.Value);
+            Scribe_Values.Look(ref PlayerReferenceVoiceModelId, "playerReferenceVoiceModelId", VoiceModel.NONE_MODEL_ID);
 
             // LLM API configuration
             Scribe_Values.Look<TTSApiProvider>(ref ApiProvider, "apiProvider", TTSApiProvider.DeepSeek);

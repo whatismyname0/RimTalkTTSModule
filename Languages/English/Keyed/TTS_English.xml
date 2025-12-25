@@ -38,6 +38,7 @@
     <RimTalk.Settings.TTS.AddVoiceModel>Add Voice Model</RimTalk.Settings.TTS.AddVoiceModel>
     <RimTalk.Settings.TTS.Info>Requires Fish Audio API key and voice reference ID. Text in brackets will be automatically removed before speech synthesis.</RimTalk.Settings.TTS.Info>
     <RimTalk.Settings.TTS.DefaultModel>Default Model: {0}</RimTalk.Settings.TTS.DefaultModel>
+    <RimTalk.Settings.TTS.PlayerVoiceModel>Player Voice Model</RimTalk.Settings.TTS.PlayerVoiceModel>
     <RimTalk.Settings.TTS.NotSet>(Not Set)</RimTalk.Settings.TTS.NotSet>
     <RimTalk.Settings.TTS.NoneModel>None (Skip TTS)</RimTalk.Settings.TTS.NoneModel>
     <RimTalk.Settings.TTS.ClearDefault>(Clear Default)</RimTalk.Settings.TTS.ClearDefault>

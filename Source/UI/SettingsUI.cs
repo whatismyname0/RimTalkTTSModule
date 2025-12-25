@@ -1,10 +1,10 @@
-using System;
 using System.Linq;
 using UnityEngine;
 using Verse;
 using RimWorld;
 using RimTalk.TTS.Data;
 using RimTalk.TTS.Service;
+using RimTalk.TTS.Patch;
 
 namespace RimTalk.TTS.UI
 {
@@ -375,6 +375,52 @@ namespace RimTalk.TTS.UI
                         options.Add(new FloatMenuOption(display, delegate
                         {
                             settings.SetSupplierDefaultVoiceModelId(settings.Supplier, vm.ModelId);
+                        }));
+                    }
+                }
+
+                Find.WindowStack.Add(new FloatMenu(options));
+            }
+
+            // Player reference voice selection (single-line dropdown using supplier voice models)
+            listing.Gap(6f);
+            listing.Label("RimTalk.Settings.TTS.PlayerVoiceModel".Translate());
+            Rect playerRect = listing.GetRect(Text.LineHeight);
+
+            string currentPlayerSelectionName;
+            var playerModelId = settings.PlayerReferenceVoiceModelId;
+            if (playerModelId == VoiceModel.NONE_MODEL_ID)
+            {
+                currentPlayerSelectionName = "RimTalk.Settings.TTS.NoneModel".Translate();
+            }
+            else
+            {
+                var vm = settings.GetSupplierVoiceModels(settings.Supplier)?.FirstOrDefault(x => x.ModelId == playerModelId);
+                currentPlayerSelectionName = vm?.GetDisplayName() ?? playerModelId;
+            }
+
+            if (Widgets.ButtonText(playerRect, currentPlayerSelectionName))
+            {
+                var options = new System.Collections.Generic.List<FloatMenuOption>();
+
+                // None
+                options.Add(new FloatMenuOption("RimTalk.Settings.TTS.NoneModel".Translate(), delegate
+                {
+                    settings.PlayerReferenceVoiceModelId = VoiceModel.NONE_MODEL_ID;
+                    RimTalkPatches.UpdatePlayerPawnVoice();
+                }));
+
+                var list = settings.GetSupplierVoiceModels(settings.Supplier);
+                if (list != null)
+                {
+                    foreach (var vm in list)
+                    {
+                        var display = vm.GetDisplayName();
+                        var id = vm.ModelId ?? "";
+                        options.Add(new FloatMenuOption(display, delegate
+                        {
+                            settings.PlayerReferenceVoiceModelId = id;
+                            RimTalkPatches.UpdatePlayerPawnVoice();
                         }));
                     }
                 }

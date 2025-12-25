@@ -32,6 +32,7 @@
     <RimTalk.Settings.TTS.Volume>音量</RimTalk.Settings.TTS.Volume>
     <RimTalk.Settings.TTS.VoiceModels>语音模型</RimTalk.Settings.TTS.VoiceModels>
     <RimTalk.Settings.TTS.DefaultVoiceModel>默认语音模型</RimTalk.Settings.TTS.DefaultVoiceModel>
+    <RimTalk.Settings.TTS.PlayerVoiceModel>玩家语音模型</RimTalk.Settings.TTS.PlayerVoiceModel>
     <RimTalk.Settings.TTS.None>无（跳过语音）</RimTalk.Settings.TTS.None>
     <RimTalk.Settings.TTS.ModelID>模型 ID</RimTalk.Settings.TTS.ModelID>
     <RimTalk.Settings.TTS.ModelName>自定义名称</RimTalk.Settings.TTS.ModelName>

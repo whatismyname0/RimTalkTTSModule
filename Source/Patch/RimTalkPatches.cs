@@ -666,5 +666,38 @@ namespace RimTalk.TTS.Patch
             return TTSModule.Instance.IsActive
                 && TTSModule.Instance.Settings.isOnButton;
         }
+
+        [HarmonyPatch]
+        public static class Cache_InitializePlayerPawn_Patch
+        {
+            static bool Prepare()
+            {
+                var method = typeof(global::RimTalk.Data.Cache).GetMethod("InitializePlayerPawn", BindingFlags.Public | BindingFlags.Static);
+                if (method == null)
+                {
+                    Log.Message("[RimTalk.TTS] Cache.InitializePlayerPawn not found, skipping patch");
+                    return false;
+                }
+                return true;
+            }
+
+            static MethodBase TargetMethod()
+            {
+                return typeof(global::RimTalk.Data.Cache).GetMethod("InitializePlayerPawn", BindingFlags.Public | BindingFlags.Static);
+            }
+
+            static void Postfix()
+            {
+                UpdatePlayerPawnVoice();
+            }
+        }
+
+        public static void UpdatePlayerPawnVoice()
+        {
+            var pawn = global::RimTalk.Data.Cache.GetPlayer();
+            var settings = TTSModule.Instance.GetSettings();
+
+            Data.PawnVoiceManager.SetVoiceModel(pawn, settings.PlayerReferenceVoiceModelId);
+        }
     }
 }

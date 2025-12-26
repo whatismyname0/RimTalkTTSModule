@@ -44,6 +44,9 @@ namespace RimTalk.TTS.Data
         // Custom TTS processing prompt (empty = use default from TTSConstant)
         public string CustomTTSProcessingPrompt = "";
         
+        // Remove bracketed content during preprocessing
+        public bool RemoveBracketsInPreProcess = false;
+        
         public string TTSModel = "s1"; // fishaudio-1 (v1.6) or s1 (default)//Deprecated
         public float TTSTemperature = 0.9f; // TTS generation temperature (0.7-1.0)//Deprecated
         public float TTSTopP = 0.9f; // TTS generation top_p (0.7-1.0)//Deprecated
@@ -107,6 +110,7 @@ namespace RimTalk.TTS.Data
             Scribe_Values.Look(ref ApiKey, "apiKey", "");
             Scribe_Values.Look(ref Model, "model", "deepseek-chat");
             Scribe_Values.Look(ref CustomBaseUrl, "customBaseUrl", "");
+            Scribe_Values.Look(ref RemoveBracketsInPreProcess, "removeBracketsInPreProcess", false);
 
             LoadOldSettings();
         }

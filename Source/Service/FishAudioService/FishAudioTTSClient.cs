@@ -373,7 +373,7 @@ public static class FishAudioTTSClient
                 top_p = request.TopP
             };
             
-            string jsonContent =Util.JsonUtil.SerializeToJson(requestData);
+            string jsonContent = JsonUtil.SerializeToJson(requestData);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
             
             // Check cancellation before sending request
@@ -394,7 +394,7 @@ public static class FishAudioTTSClient
             }
             
             // Parse response
-            var result = Util.JsonUtil.DeserializeFromJson<PythonTTSResponse>(responseText);
+            var result = JsonUtil.DeserializeFromJson<PythonTTSResponse>(responseText);
             
             if (result == null)
             {
@@ -465,7 +465,7 @@ public static class FishAudioTTSClient
     {
         try
         {
-            var errorResponse = Util.JsonUtil.DeserializeFromJson<PythonTTSResponse>(responseText);
+            var errorResponse = JsonUtil.DeserializeFromJson<PythonTTSResponse>(responseText);
             
             if (errorResponse != null && !string.IsNullOrEmpty(errorResponse.error))
             {
@@ -516,7 +516,7 @@ public static class FishAudioTTSClient
                     command = "shutdown"
                 };
                 
-                string jsonContent = Util.JsonUtil.SerializeToJson(shutdownRequest);
+                string jsonContent = JsonUtil.SerializeToJson(shutdownRequest);
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 
                 // Use short timeout for shutdown command and disable cookies to avoid native cookie/container calls

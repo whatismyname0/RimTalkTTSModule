@@ -30,7 +30,7 @@
     <RimTalk.Settings.TTS.ProcessingPrompt>TTS Processing Prompt</RimTalk.Settings.TTS.ProcessingPrompt>
     <RimTalk.Settings.TTS.ProcessingPromptInfo>Use {language} for target language. This prompt is used to process text before sending to TTS API.</RimTalk.Settings.TTS.ProcessingPromptInfo>
     <RimTalk.Settings.TTS.Volume>Volume</RimTalk.Settings.TTS.Volume>
-    <RimTalk.Settings.TTS.VoiceModels>Voice Models</RimTalk.Settings.TTS.VoiceModels>
+    <RimTalk.Settings.TTS.VoiceModels>Voice Model configs</RimTalk.Settings.TTS.VoiceModels>
     <RimTalk.Settings.TTS.DefaultVoiceModel>Default Voice Model</RimTalk.Settings.TTS.DefaultVoiceModel>
     <RimTalk.Settings.TTS.None>None (Skip TTS)</RimTalk.Settings.TTS.None>
     <RimTalk.Settings.TTS.ModelID>Model ID</RimTalk.Settings.TTS.ModelID>
@@ -65,6 +65,8 @@
     <RimTalk.Settings.TTS.LLMModelLabel>Model:</RimTalk.Settings.TTS.LLMModelLabel>
     <RimTalk.Settings.TTS.LLMApiKeyLabel>API Key:</RimTalk.Settings.TTS.LLMApiKeyLabel>
     <RimTalk.Settings.TTS.CustomBaseUrlLabel>Custom Base URL:</RimTalk.Settings.TTS.CustomBaseUrlLabel>
+    <RimTalk.Settings.TTS.RemoveBracketsInPreProcess>Exclude bracketed content during preprocessing</RimTalk.Settings.TTS.RemoveBracketsInPreProcess>
+    <RimTalk.Settings.TTS.RemoveBracketsInPreProcessTooltip>When enabled, removes content within brackets (including parentheses, square brackets, asterisks, etc.) from voice text before LLM preprocessing. May slightly reduce emotional tone matching, but eliminates the risk of the TTS reading out various descriptive text</RimTalk.Settings.TTS.RemoveBracketsInPreProcessTooltip>
 
     <!-- PersonaEditorWindow.cs -->
     <RimTalk.PersonaEditor.VoiceModel>Voice Model</RimTalk.PersonaEditor.VoiceModel>
@@ -93,6 +95,7 @@
     <RimTalk.TTS.Ignore>Ignore existing dialogues</RimTalk.TTS.Ignore>
     <RimTalk.TTS.IgnoreComplete>Ignored all existing dialogues</RimTalk.TTS.IgnoreComplete>
     <RimTalk.TTS.Display>Display next</RimTalk.TTS.Display>
+    <RimTalk.Settings.TTS.TTSConfig>TTS Configs</RimTalk.Settings.TTS.TTSConfig>
     <RimTalk.Settings.TTS.TTSSupplier>TTS Provider</RimTalk.Settings.TTS.TTSSupplier>
     <RimTalk.Settings.TTS.TTSSupplier.FishAudio>Fish Audio</RimTalk.Settings.TTS.TTSSupplier.FishAudio>
     <RimTalk.Settings.TTS.TTSSupplier.CosyVoice>CosyVoice2</RimTalk.Settings.TTS.TTSSupplier.CosyVoice>

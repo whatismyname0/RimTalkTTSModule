@@ -1,8 +1,9 @@
 using System;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using RimTalk.TTS.Data;
-using RimTalk.TTS.Util;
+using RimTalk.Util;
 using UnityEngine.Networking;
 using Verse;
 
@@ -78,6 +79,9 @@ namespace RimTalk.TTS.Service
 
             try
             {
+                if (settings.RemoveBracketsInPreProcess)
+                    text = RemoveBrackets(text);
+                
                 // Build simple OpenAI-compatible request with single user message
                 string jsonRequest = BuildRequest(prompt, text, settings.Model);
                 
@@ -186,7 +190,7 @@ namespace RimTalk.TTS.Service
                 while (!asyncOperation.isDone)
                 {
                     if (Current.Game == null) return (null, false);
-                    await Task.Delay(50);
+                    await Task.Delay(250);
                 }
 
                 // Check for errors
@@ -254,6 +258,26 @@ namespace RimTalk.TTS.Service
                 Log.Error($"[RimTalk.TTS] Failed to parse JSON response: {ex.Message}");
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Remove content within various bracket types and replace with ellipsis
+        /// </summary>
+        private static string RemoveBrackets(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+
+            text = Regex.Replace(text, @"\([^()]*\)", "...");  // (content)
+            text = Regex.Replace(text, @"\uff08[^\uff08\uff09]*\uff09", "...");  // （content）full-width
+            text = Regex.Replace(text, @"\[[^\[\]]*\]", "...");  // [content]
+            text = Regex.Replace(text, @"\u3010[^\u3010\u3011]*\u3011", "...");  // 【content】full-width
+            text = Regex.Replace(text, @"\*[^*]*\*", "...");  // *content*
+            text = Regex.Replace(text, @"<[^<>]*>", "...");  // <content>
+            text = Regex.Replace(text, @"/[^/]*/", "...");  // /content/
+            text = Regex.Replace(text, @"\\[^\\]*\\", "...");  // \content\
+            text = Regex.Replace(text, @"#[^#]*#", "...");  // #content#
+
+            return text;
         }
     }
 }

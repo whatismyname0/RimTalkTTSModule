@@ -30,7 +30,7 @@
     <RimTalk.Settings.TTS.ProcessingPrompt>TTS 处理提示词</RimTalk.Settings.TTS.ProcessingPrompt>
     <RimTalk.Settings.TTS.ProcessingPromptInfo>使用 {language} 代表目标语言，{text} 代表对话文本。此提示词用于在发送到 TTS API 前处理文本。</RimTalk.Settings.TTS.ProcessingPromptInfo>
     <RimTalk.Settings.TTS.Volume>音量</RimTalk.Settings.TTS.Volume>
-    <RimTalk.Settings.TTS.VoiceModels>语音模型</RimTalk.Settings.TTS.VoiceModels>
+    <RimTalk.Settings.TTS.VoiceModels>语音模型配置</RimTalk.Settings.TTS.VoiceModels>
     <RimTalk.Settings.TTS.DefaultVoiceModel>默认语音模型</RimTalk.Settings.TTS.DefaultVoiceModel>
     <RimTalk.Settings.TTS.PlayerVoiceModel>玩家语音模型</RimTalk.Settings.TTS.PlayerVoiceModel>
     <RimTalk.Settings.TTS.None>无（跳过语音）</RimTalk.Settings.TTS.None>
@@ -65,6 +65,8 @@
     <RimTalk.Settings.TTS.LLMModelLabel>模型：</RimTalk.Settings.TTS.LLMModelLabel>
     <RimTalk.Settings.TTS.LLMApiKeyLabel>API 密钥：</RimTalk.Settings.TTS.LLMApiKeyLabel>
     <RimTalk.Settings.TTS.CustomBaseUrlLabel>自定义基础 URL：</RimTalk.Settings.TTS.CustomBaseUrlLabel>
+    <RimTalk.Settings.TTS.RemoveBracketsInPreProcess>预处理时不包含原文本括号内容</RimTalk.Settings.TTS.RemoveBracketsInPreProcess>
+    <RimTalk.Settings.TTS.RemoveBracketsInPreProcessTooltip>勾选时，将语音文本交由选定的llm预处理前会去除括号内（包括小括号、中括号、星号等）的文本。可能略微降低语气情感的契合度，但去除了语音生成时念出各种描写的风险</RimTalk.Settings.TTS.RemoveBracketsInPreProcessTooltip>
 
     <!-- PersonaEditorWindow.cs -->
     <RimTalk.PersonaEditor.VoiceModel>语音模型</RimTalk.PersonaEditor.VoiceModel>
@@ -93,6 +95,7 @@
     <RimTalk.TTS.Ignore>忽略当前所有对话</RimTalk.TTS.Ignore>
     <RimTalk.TTS.IgnoreComplete>已忽略当前所有对话</RimTalk.TTS.IgnoreComplete>
     <RimTalk.TTS.Display>显示下一条对话</RimTalk.TTS.Display>
+    <RimTalk.Settings.TTS.TTSConfig>TTS 配置</RimTalk.Settings.TTS.TTSConfig>
     <RimTalk.Settings.TTS.TTSSupplier>语音服务提供商</RimTalk.Settings.TTS.TTSSupplier>
     <RimTalk.Settings.TTS.TTSSupplier.FishAudio>Fish Audio</RimTalk.Settings.TTS.TTSSupplier.FishAudio>
     <RimTalk.Settings.TTS.TTSSupplier.CosyVoice>CosyVoice2</RimTalk.Settings.TTS.TTSSupplier.CosyVoice>

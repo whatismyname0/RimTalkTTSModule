@@ -53,7 +53,7 @@ namespace RimTalk.TTS.UI
             }
 
             // Calculate content height dynamically based on selected supplier's voice model count
-            float baseHeight = 1280f; // base for other sections
+            float baseHeight = 1600f; // base for other sections
             float voiceModelRowHeight = 40f; // Height per voice model row (30f + 6f gap + padding)
             var supplierVoiceModels = settings.GetSupplierVoiceModels(settings.Supplier);
             int voiceModelCount = supplierVoiceModels?.Count ?? 0;

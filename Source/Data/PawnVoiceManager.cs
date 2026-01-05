@@ -23,7 +23,7 @@ namespace RimTalk.TTS.Data
             var settings = TTSModule.Instance.GetSettings();
             var supplierModels = settings?.GetSupplierVoiceModels(settings.Supplier);
 
-            if (voiceId == null)
+            if (voiceId == null || supplierModels == null)
                 return settings.GetSupplierDefaultVoiceModelId(TTSModule.Instance.Settings.Supplier);
 
             foreach (var m in supplierModels)

@@ -156,6 +156,66 @@ public static class FishAudioTTSClient
     }
     
     /// <summary>
+    /// Check if required Python dependencies are installed
+    /// </summary>
+    private static async Task<bool> CheckPythonDependenciesAsync(string pythonExe)
+    {
+        try
+        {
+            string checkScript = Path.Combine(Path.GetDirectoryName(PythonScriptPath), "check_dependencies.py");
+            
+            // If check script doesn't exist, skip the check (backward compatibility)
+            if (!File.Exists(checkScript))
+            {
+                Log.Warning("FishAudio TTS: Dependency check script not found, skipping validation");
+                return true;
+            }
+            
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = pythonExe,
+                Arguments = $"\"{checkScript}\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
+            };
+            
+            using (var process = new Process { StartInfo = processInfo })
+            {
+                process.Start();
+                string output = await process.StandardOutput.ReadToEndAsync();
+                string error = await process.StandardError.ReadToEndAsync();
+                
+                bool exited = process.WaitForExit(5000); // 5 second timeout
+                
+                if (!exited)
+                {
+                    Log.Warning("FishAudio TTS: Dependency check timed out");
+                    process.Kill();
+                    return true; // Don't block if check fails
+                }
+                
+                if (process.ExitCode != 0)
+                {
+                    Log.Error($"FishAudio TTS: Dependency check failed:\n{output}\n{error}");
+                    return false;
+                }
+                
+                Log.Message($"FishAudio TTS: Dependencies verified:\n{output}");
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning($"FishAudio TTS: Failed to check dependencies - {ex.Message}");
+            return true; // Don't block on check failure
+        }
+    }
+    
+    /// <summary>
     /// Start the Python TTS server if not already running
     /// </summary>
     private static async Task<bool> EnsureServerRunningAsync()
@@ -235,6 +295,13 @@ public static class FishAudioTTSClient
                 return false;
             }
             
+            // Check Python dependencies before starting server
+            if (!await CheckPythonDependenciesAsync(pythonExe))
+            {
+                Log.Error("FishAudio TTS: Python dependencies check failed. Please install: pip install fish-audio-sdk");
+                return false;
+            }
+            
             Log.Message("FishAudio TTS: Starting Python server...");
             
             // Get current process ID to pass to Python server
@@ -255,6 +322,9 @@ public static class FishAudioTTSClient
             var process = new Process { StartInfo = processInfo };
             
             bool started = false;
+            bool hasFatalError = false;
+            StringBuilder errorOutput = new StringBuilder();
+            
             process.OutputDataReceived += (sender, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Data))
@@ -271,8 +341,23 @@ public static class FishAudioTTSClient
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
+                    // Collect error output for diagnosis
+                    errorOutput.AppendLine(e.Data);
+                    
+                    // Check for fatal errors that indicate missing dependencies
+                    if (e.Data.Contains("ModuleNotFoundError") || e.Data.Contains("No module named"))
+                    {
+                        hasFatalError = true;
+                        Log.Error($"FishAudio TTS: Python dependency missing - {e.Data}");
+                        Log.Error("FishAudio TTS: Please install fishaudio package: pip install fish-audio-sdk");
+                    }
+                    else if (e.Data.Contains("ImportError"))
+                    {
+                        hasFatalError = true;
+                        Log.Error($"FishAudio TTS: Python import error - {e.Data}");
+                    }
                     // Python server logs HTTP requests to stderr - treat as debug, not error
-                    if (e.Data.Contains("[TTS Server]") || e.Data.Contains("POST /") || e.Data.Contains("GET /"))
+                    else if (e.Data.Contains("[TTS Server]") || e.Data.Contains("POST /") || e.Data.Contains("GET /"))
                     {
                         Log.Message($"FishAudio TTS Server: {e.Data}");
                     }
@@ -287,18 +372,50 @@ public static class FishAudioTTSClient
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
             
-            // Wait for server to be ready (max 5 seconds)
+            // Wait for server to be ready (max 15 seconds - increased for slow systems)
             int waitCount = 0;
-            while (!started && waitCount < 50)
+            while (!started && waitCount < 150)
             {
                 await Task.Delay(100);
                 waitCount++;
+                
+                // Check if process crashed during startup
+                if (process.HasExited)
+                {
+                    Log.Error($"FishAudio TTS: Python process exited during startup with code {process.ExitCode}");
+                    return false;
+                }
             }
             
-            if (!started)
+            if (!started || hasFatalError)
             {
-                Log.Error("FishAudio TTS: Server failed to start within timeout");
-                process.Kill();
+                if (hasFatalError)
+                {
+                    Log.Error("FishAudio TTS: Server startup failed due to fatal error (see above)");
+                    Log.Error("FishAudio TTS: Complete error output:");
+                    Log.Error(errorOutput.ToString());
+                }
+                else
+                {
+                    Log.Error("FishAudio TTS: Server failed to start within 15 seconds timeout");
+                    if (errorOutput.Length > 0)
+                    {
+                        Log.Error("FishAudio TTS: Error output:");
+                        Log.Error(errorOutput.ToString());
+                    }
+                }
+                
+                try
+                {
+                    if (!process.HasExited)
+                    {
+                        process.Kill();
+                    }
+                }
+                catch (Exception killEx)
+                {
+                    Log.Warning($"FishAudio TTS: Failed to kill non-responsive process - {killEx.Message}");
+                }
                 return false;
             }
             
@@ -352,11 +469,37 @@ public static class FishAudioTTSClient
         }
         try
         {
-            // Ensure server is running
-            if (!await EnsureServerRunningAsync())
+            // Ensure server is running, with retry on failure
+            bool serverReady = await EnsureServerRunningAsync();
+            if (!serverReady)
             {
-                Log.Warning("FishAudio TTS: Server not running");
-                return null;
+                Log.Warning("FishAudio TTS: Server failed to start on first attempt, retrying once...");
+                
+                // Reset server state and try once more
+                lock (_lock)
+                {
+                    if (_serverProcess != null && !_serverProcess.HasExited)
+                    {
+                        try
+                        {
+                            _serverProcess.Kill();
+                        }
+                        catch { }
+                    }
+                    _serverProcess = null;
+                    _httpClient?.Dispose();
+                    _httpClient = null;
+                }
+                
+                // Wait a bit before retry
+                await Task.Delay(1000);
+                
+                serverReady = await EnsureServerRunningAsync();
+                if (!serverReady)
+                {
+                    Log.Error("FishAudio TTS: Server failed to start after retry");
+                    return null;
+                }
             }
             
             // Build request object mapping from TTSRequest

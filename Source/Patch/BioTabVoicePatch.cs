@@ -75,13 +75,18 @@ namespace RimTalk.TTS.Patch
         {
             if (pawn == null) return false;
             
-            // Check if pawn is colonist, prisoner, or has vocal link
-            if (pawn.IsColonist || pawn.IsPrisonerOfColony)
-                return true;
-
-            // Check for vocal link (RimTalk hediff)
-            var hediffDef = DefDatabase<HediffDef>.GetNamedSilentFail("RimTalk_VocalLink");
-            return hediffDef != null && pawn.health?.hediffSet?.GetFirstHediffOfDef(hediffDef) != null;
+            // Use RimTalk's own eligibility check by verifying if the pawn has a PawnState
+            // This ensures we only show voice UI for pawns that RimTalk considers eligible for talking
+            try
+            {
+                var pawnState = global::RimTalk.Data.Cache.Get(pawn);
+                return pawnState != null;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"[RimTalk.TTS] Failed to check pawn eligibility for {pawn?.LabelShort}: {ex.Message}");
+                return false;
+            }
         }
 
         /// <summary>

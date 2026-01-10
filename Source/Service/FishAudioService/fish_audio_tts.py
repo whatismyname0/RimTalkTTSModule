@@ -2,6 +2,8 @@ import asyncio
 import json
 import base64
 import sys
+import os
+import time
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from threading import Thread
 from fishaudio import AsyncFishAudio
@@ -55,17 +57,52 @@ class TTSRequestHandler(BaseHTTPRequestHandler):
                 top_p=top_p
             )
             
-            # Convert text to speech with timeout (30 seconds max)
+            # Convert text to speech with timeout (45 seconds max - increased for slow networks)
             try:
                 audio_data = await asyncio.wait_for(
                     client.tts.convert(text=text, config=config),
-                    timeout=30.0
+                    timeout=45.0
                 )
             except asyncio.TimeoutError:
                 return {
                     "success": False,
-                    "error": "TTS generation timed out after 30 seconds"
+                    "error": "TTS generation timed out after 45 seconds. This may be due to slow network or Fish Audio API issues."
                 }
+            except Exception as api_error:
+                # Catch specific API errors
+                error_msg = str(api_error)
+                if "401" in error_msg or "Unauthorized" in error_msg:
+                    return {
+                        "success": False,
+                        "error": "Invalid API key. Please check your Fish Audio API key."
+                    }
+                elif "403" in error_msg or "Forbidden" in error_msg:
+                    return {
+                        "success": False,
+                        "error": "Access forbidden. Your API key may not have permission to use this feature."
+                    }
+                elif "404" in error_msg or "Not Found" in error_msg:
+                    return {
+                        "success": False,
+                        "error": f"Reference voice ID '{reference_id}' not found. Please check the voice ID."
+                    }
+                elif "429" in error_msg or "Too Many Requests" in error_msg:
+                    return {
+                        "success": False,
+                        "error": "Rate limit exceeded. Please wait a moment and try again."
+                    }
+                elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
+                    return {
+                        "success": False,
+                        "error": f"Network timeout: {error_msg}. Check your internet connection."
+                    }
+                elif "connection" in error_msg.lower():
+                    return {
+                        "success": False,
+                        "error": f"Connection error: {error_msg}. Check your internet connection and firewall."
+                    }
+                else:
+                    raise  # Re-raise unknown errors to be caught by outer exception handler
             
             # Collect all chunks if it's a stream
             if hasattr(audio_data, 'collect'):
@@ -165,6 +202,57 @@ class TTSRequestHandler(BaseHTTPRequestHandler):
         # Silently ignore all HTTP request logs
         pass
 
+def monitor_parent_process(parent_pid, server):
+    """Monitor parent process and shutdown server if parent exits"""
+    if parent_pid is None:
+        return
+    
+    sys.stderr.write(f"[TTS Server] Monitoring parent process PID {parent_pid}\n")
+    sys.stderr.flush()
+    
+    while True:
+        try:
+            # Check if parent process is still running
+            if os.name == 'nt':  # Windows
+                # On Windows, try to open the process
+                import ctypes
+                kernel32 = ctypes.windll.kernel32
+                PROCESS_QUERY_INFORMATION = 0x0400
+                handle = kernel32.OpenProcess(PROCESS_QUERY_INFORMATION, False, parent_pid)
+                if handle:
+                    # Process exists, check exit code
+                    exit_code = ctypes.c_ulong()
+                    if kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
+                        kernel32.CloseHandle(handle)
+                        if exit_code.value != 259:  # 259 = STILL_ACTIVE
+                            sys.stderr.write(f"[TTS Server] Parent process {parent_pid} has exited, shutting down\n")
+                            sys.stderr.flush()
+                            server.shutdown()
+                            break
+                    else:
+                        kernel32.CloseHandle(handle)
+                else:
+                    # Failed to open process, assume it's dead
+                    sys.stderr.write(f"[TTS Server] Parent process {parent_pid} is not accessible, shutting down\n")
+                    sys.stderr.flush()
+                    server.shutdown()
+                    break
+            else:  # Unix/Linux
+                # On Unix, use os.kill with signal 0
+                os.kill(parent_pid, 0)
+        except (OSError, AttributeError) as e:
+            # Process doesn't exist or we don't have permission
+            sys.stderr.write(f"[TTS Server] Parent process {parent_pid} is gone, shutting down\n")
+            sys.stderr.flush()
+            server.shutdown()
+            break
+        except Exception as e:
+            sys.stderr.write(f"[TTS Server] Error monitoring parent process: {e}\n")
+            sys.stderr.flush()
+        
+        # Check every 5 seconds
+        time.sleep(5)
+
 def run_server(port=5678, parent_pid=None):
     """
     Start the TTS HTTP server with threading support for concurrent requests
@@ -175,6 +263,11 @@ def run_server(port=5678, parent_pid=None):
     """
     server_address = ('127.0.0.1', port)
     httpd = ThreadingHTTPServer(server_address, TTSRequestHandler)
+    
+    # Start parent process monitor thread
+    if parent_pid is not None:
+        monitor_thread = Thread(target=monitor_parent_process, args=(parent_pid, httpd), daemon=True)
+        monitor_thread.start()
     
     print(json.dumps({
         "status": "ready",
@@ -205,9 +298,17 @@ if __name__ == "__main__":
     port = 5678
     parent_pid = None
     
+    # Log startup information
+    sys.stderr.write("[TTS Server] Starting Fish Audio TTS Server...\n")
+    sys.stderr.write(f"[TTS Server] Python version: {sys.version}\n")
+    sys.stderr.write(f"[TTS Server] Python executable: {sys.executable}\n")
+    sys.stderr.flush()
+    
     if len(sys.argv) > 1:
         try:
             port = int(sys.argv[1])
+            sys.stderr.write(f"[TTS Server] Using port: {port}\n")
+            sys.stderr.flush()
         except ValueError:
             print(json.dumps({
                 "status": "error",
@@ -218,8 +319,25 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         try:
             parent_pid = int(sys.argv[2])
+            sys.stderr.write(f"[TTS Server] Parent process PID: {parent_pid}\n")
+            sys.stderr.flush()
         except ValueError:
             sys.stderr.write(f"[TTS Server] Warning: Invalid parent PID: {sys.argv[2]}\n")
             sys.stderr.flush()
+    
+    # Verify fishaudio package is available
+    try:
+        import fishaudio
+        sys.stderr.write(f"[TTS Server] fishaudio package version: {getattr(fishaudio, '__version__', 'unknown')}\n")
+        sys.stderr.flush()
+    except ImportError as e:
+        print(json.dumps({
+            "status": "error",
+            "error": "fishaudio package not found. Please install: pip install fish-audio-sdk"
+        }), file=sys.stderr)
+        sys.exit(1)
+    
+    sys.stderr.write(f"[TTS Server] Starting HTTP server on 127.0.0.1:{port}\n")
+    sys.stderr.flush()
     
     run_server(port, parent_pid)

@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using RimTalk.TTS.Service;
+using RimTalk.TTS.Service.EdgeTTSService;
 
 namespace RimTalk.TTS.Provider
 {

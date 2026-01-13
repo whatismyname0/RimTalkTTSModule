@@ -645,6 +645,20 @@ namespace RimTalk.TTS.UI
                     Refresh();
                 }
             }
+
+            // Voice library button for AzureTTS/EdgeTTS
+            if (settings.Supplier == TTSSettings.TTSSupplier.AzureTTS || settings.Supplier == TTSSettings.TTSSupplier.EdgeTTS)
+            {
+                listing.Gap(6f);
+                Rect voiceLibraryRect = listing.GetRect(30f);
+                string buttonLabel = settings.Supplier == TTSSettings.TTSSupplier.AzureTTS 
+                    ? "RimTalk.Settings.TTS.AzureVoiceLibrary".Translate() 
+                    : "RimTalk.Settings.TTS.EdgeVoiceLibrary".Translate();
+                if (Widgets.ButtonText(voiceLibraryRect, buttonLabel))
+                {
+                    Find.WindowStack.Add(new VoiceLibraryWindow(settings.Supplier));
+                }
+            }
         }
 
         private static void Refresh()

@@ -113,6 +113,8 @@
     <RimTalk.Settings.TTS.CustomRegionLabel>Custom region (if not in list):</RimTalk.Settings.TTS.CustomRegionLabel>
     <RimTalk.Settings.TTS.CustomModelIdLabel>Custom model id (optional):</RimTalk.Settings.TTS.CustomModelIdLabel>
     <RimTalk.Settings.TTS.ResetModelsButton>Synchronize model list</RimTalk.Settings.TTS.ResetModelsButton>
+    <RimTalk.Settings.TTS.AzureVoiceLibrary>View AzureTTS Voice Library</RimTalk.Settings.TTS.AzureVoiceLibrary>
+    <RimTalk.Settings.TTS.EdgeVoiceLibrary>View EdgeTTS Voice Library</RimTalk.Settings.TTS.EdgeVoiceLibrary>
     <RimTalk.Settings.TTS.UploadUserVoiceLabel>Upload user voice (only required when uploading):</RimTalk.Settings.TTS.UploadUserVoiceLabel>
     <RimTalk.Settings.TTS.UploadFilePath>File path (local):</RimTalk.Settings.TTS.UploadFilePath>
     <RimTalk.Settings.TTS.UploadName>Voice name:</RimTalk.Settings.TTS.UploadName>

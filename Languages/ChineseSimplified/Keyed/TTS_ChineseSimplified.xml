@@ -113,6 +113,8 @@
     <RimTalk.Settings.TTS.CustomRegionLabel>自定义区域（如果不在列表中）：</RimTalk.Settings.TTS.CustomRegionLabel>
     <RimTalk.Settings.TTS.CustomModelIdLabel>自定义模型 ID（可选）：</RimTalk.Settings.TTS.CustomModelIdLabel>
     <RimTalk.Settings.TTS.ResetModelsButton>同步模型列表</RimTalk.Settings.TTS.ResetModelsButton>
+    <RimTalk.Settings.TTS.AzureVoiceLibrary>查看 AzureTTS 音色列表</RimTalk.Settings.TTS.AzureVoiceLibrary>
+    <RimTalk.Settings.TTS.EdgeVoiceLibrary>查看 EdgeTTS 音色列表</RimTalk.Settings.TTS.EdgeVoiceLibrary>
     <RimTalk.Settings.TTS.UploadUserVoiceLabel>上传用户预置音色(只有上传时需填写)</RimTalk.Settings.TTS.UploadUserVoiceLabel>
     <RimTalk.Settings.TTS.UploadFilePath>文件路径（本地）：</RimTalk.Settings.TTS.UploadFilePath>
     <RimTalk.Settings.TTS.UploadName>音色名称：</RimTalk.Settings.TTS.UploadName>

@@ -10,8 +10,8 @@ Improvement:
         Code refactor: always ongoing,
         Support more online TTS service supplier:
         {
-            status: Siliconflow(CozyVoice & IndexTTS) & FishAudio are supported
-            ongoing: AzureTTS, edgeTTS, GeminiTTS
+            status: Siliconflow(CozyVoice & IndexTTS) & FishAudio & edgeTTS are supported
+            ongoing: AzureTTS, GeminiTTS
         }
     }
     Planned:

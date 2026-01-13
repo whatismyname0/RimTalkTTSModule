@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Verse;
 
-namespace RimTalk.TTS.Service
+namespace RimTalk.TTS.Service.EdgeTTSService
 {
     /// <summary>
     /// Client for Edge-TTS (Microsoft Edge's free TTS service)

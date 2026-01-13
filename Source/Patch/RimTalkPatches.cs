@@ -8,7 +8,6 @@ using System.Runtime.CompilerServices;
 using RimTalk.Service;
 using Verse;
 using RimTalk.TTS.Service;
-using RimTalk.TTS.Util;
 using RimTalk.Data;
 using RimTalk.TTS.Data;
 
@@ -39,7 +38,7 @@ namespace RimTalk.TTS.Patch
             }
             catch (Exception ex)
             {
-                ErrorUtil.LogException("IsTalkIgnored", ex);
+                Log.Error($"[RimTalk.TTS] IsTalkIgnored exception: {ex}");
             }
             return false;
         }
@@ -117,13 +116,17 @@ namespace RimTalk.TTS.Patch
                         return false; // Block the original method from executing
                     }
 
+                    // Get volume from settings
+                    var settings = TTSConfig.Settings;
+                    float volume = settings?.GetSupplierVolume(settings.Supplier) ?? 1.0f;
+
                     // Play audio (will wait for TTS generation and previous playback)
-                    Service.AudioPlaybackService.PlayAudio(dialogueId, pawn);
+                    Service.AudioPlaybackService.PlayAudio(dialogueId, pawn, volume);
                     return true; // Allow original method to execute
                 }
                 catch (Exception ex)
                 {
-                    ErrorUtil.LogException("CreateInteraction Prefix", ex);
+                    Log.Error($"[RimTalk.TTS] CreateInteraction Prefix exception: {ex}");
                     return true; // On error, allow execution
                 }
             }
@@ -166,7 +169,7 @@ namespace RimTalk.TTS.Patch
                 }
                 catch (Exception ex)
                 {
-                    ErrorUtil.LogException("AddIgnored_Patch Prefix", ex);
+                    Log.Error($"[RimTalk.TTS] AddIgnored_Patch Prefix exception: {ex}");
                 }
             }
         }
@@ -207,7 +210,7 @@ namespace RimTalk.TTS.Patch
                     }
                     catch (Exception ex)
                     {
-                        ErrorUtil.LogException("PawnStateConstructor_Patch Postfix", ex);
+                        Log.Error($"[RimTalk.TTS] PawnStateConstructor_Patch Postfix exception: {ex}");
                     }
             }
         }
@@ -280,7 +283,7 @@ namespace RimTalk.TTS.Patch
                 }
                 catch (Exception ex)
                 {
-                    ErrorUtil.LogException("TalkResponsesAdd_Patch", ex);
+                    Log.Error($"[RimTalk.TTS] TalkResponsesAdd_Patch exception: {ex}");
                 }
             }
         }
@@ -340,7 +343,7 @@ namespace RimTalk.TTS.Patch
                 }
                 catch (Exception ex)
                 {
-                    ErrorUtil.LogException("IgnoreTalkResponse_Patch", ex);
+                    Log.Error($"[RimTalk.TTS] IgnoreTalkResponse_Patch exception: {ex}");
                 }
             }
         }
@@ -448,7 +451,7 @@ namespace RimTalk.TTS.Patch
                 }
                 catch (Exception ex)
                 {
-                    ErrorUtil.LogException("PawnDiscard_Patch", ex);
+                    Log.Error($"[RimTalk.TTS] PawnDiscard_Patch exception: {ex}");
                 }
             }
         }
@@ -498,13 +501,13 @@ namespace RimTalk.TTS.Patch
 
             public static void Postfix(WidgetRow row, bool worldView)
             {
-                if (!TTSModule.Instance.IsActive)
+                if (!TTSConfig.IsEnabled)
                     return;
 
                 if (worldView || row is null)
                     return;
 
-                var settings = TTSModule.Instance.GetSettings();
+                var settings = TTSConfig.Settings;
 
                 if (settings.ButtonDisplay != true)
                 {
@@ -534,7 +537,7 @@ namespace RimTalk.TTS.Patch
         {
             static void Postfix()
             {
-                if (!TTSModule.Instance.IsActive)
+                if (!TTSConfig.IsEnabled)
                     return;
                 if (!_pendingToggle) return;
                 bool onOff;
@@ -557,7 +560,7 @@ namespace RimTalk.TTS.Patch
                 }
                 catch (Exception ex)
                 {
-                    ErrorUtil.LogException("PendingToggleExecutor", ex);
+                    Log.Error($"[RimTalk.TTS] PendingToggleExecutor exception: {ex}");
                 }
             }
         }
@@ -663,8 +666,8 @@ namespace RimTalk.TTS.Patch
 
         public static bool TTSModuleIsActive()
         {
-            return TTSModule.Instance.IsActive
-                && TTSModule.Instance.Settings.isOnButton;
+            return TTSConfig.IsEnabled
+                && TTSConfig.Settings.isOnButton;
         }
 
         [HarmonyPatch]
@@ -695,7 +698,7 @@ namespace RimTalk.TTS.Patch
         public static void UpdatePlayerPawnVoice()
         {
             var pawn = global::RimTalk.Data.Cache.GetPlayer();
-            var settings = TTSModule.Instance.GetSettings();
+            var settings = TTSConfig.Settings;
 
             Data.PawnVoiceManager.SetVoiceModel(pawn, settings.PlayerReferenceVoiceModelId);
         }

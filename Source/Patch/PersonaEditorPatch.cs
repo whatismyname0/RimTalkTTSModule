@@ -62,7 +62,7 @@ namespace RimTalk.TTS.Patch
         {
             try
             {
-                if (!TTSModule.Instance.IsActive)
+                if (!TTSConfig.IsEnabled)
                     return;
 
                 // Get the pawn from the PersonaEditorWindow instance

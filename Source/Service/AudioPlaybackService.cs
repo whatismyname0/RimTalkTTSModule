@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RimTalk.TTS.Patch;
-using RimTalk.TTS.Util;
 using UnityEngine;
 using Verse;
 
@@ -80,7 +79,7 @@ public static class AudioPlaybackService
     /// <summary>
     /// Play audio for a dialogue. Waits for previous playback and TTS generation.
     /// </summary>
-    public static async void PlayAudio(Guid dialogueId, Pawn pawn)
+    public static async void PlayAudio(Guid dialogueId, Pawn pawn, float volume = 1.0f)
     {
         if (dialogueId == Guid.Empty) return;
 
@@ -147,10 +146,11 @@ public static class AudioPlaybackService
             // Step 5: Play audio and wait for completion
             try
             {
-                AudioClip clip = LoadAudioClipFromWav(wavData);
+                AudioClip clip = await LoadAudioClipFromData(wavData, dialogueId.ToString());
                 if (clip != null && clip.length > 0)
                 {
                     _audioSource.clip = clip;
+                    _audioSource.volume = UnityEngine.Mathf.Clamp01(volume);
                     // var follower = _audioPlayerObject.GetComponent<FollowPawnBehaviour>() ?? _audioPlayerObject.AddComponent<FollowPawnBehaviour>();
                     // follower.pawn = pawn;
                     // follower.verticalOffset = 0.5f;
@@ -163,17 +163,17 @@ public static class AudioPlaybackService
                 }
                 else
                 {
-                    Log.Error("[RimTalk.TTS] Failed to create audio clip from WAV data or clip length is 0");
+                    Log.Error("[RimTalk.TTS] Failed to create audio clip from audio data or clip length is 0");
                 }
             }
             catch (Exception ex)
             {
-                ErrorUtil.LogException("AudioPlaybackService.PlayAudio - playback", ex);
+                Log.Error($"[RimTalk.TTS] AudioPlaybackService.PlayAudio - playback exception: {ex}");
             }
         }
         catch (Exception ex)
         {
-            ErrorUtil.LogException("AudioPlaybackService.PlayAudio - outer", ex);
+            Log.Error($"[RimTalk.TTS] AudioPlaybackService.PlayAudio - outer exception: {ex}");
         }
         finally
         {
@@ -199,6 +199,93 @@ public static class AudioPlaybackService
             
             // Reset all counters and flags
             _isPlaying = false;
+        }
+    }
+
+    /// <summary>
+    /// Load AudioClip from audio data (MP3 or WAV)
+    /// Uses temporary file approach since Unity can't load MP3 from byte array directly
+    /// </summary>
+    private static async Task<AudioClip> LoadAudioClipFromData(byte[] audioData, string dialogueId)
+    {
+        try
+        {
+            // Check if it's WAV or MP3 based on header
+            bool isWav = audioData.Length > 12 && 
+                         System.Text.Encoding.ASCII.GetString(audioData, 0, 4) == "RIFF" &&
+                         System.Text.Encoding.ASCII.GetString(audioData, 8, 4) == "WAVE";
+
+            if (isWav)
+            {
+                // Use existing WAV parser
+                return LoadAudioClipFromWav(audioData);
+            }
+            else
+            {
+                // MP3 - use temporary file approach with UnityWebRequestMultimedia
+                return await LoadAudioClipFromMP3(audioData, dialogueId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"[RimTalk.TTS] AudioPlaybackService.LoadAudioClipFromData exception: {ex.GetType().Name}: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Load AudioClip from MP3 byte array using temporary file
+    /// </summary>
+    private static async Task<AudioClip> LoadAudioClipFromMP3(byte[] mp3Data, string dialogueId)
+    {
+        string tempFile = null;
+        try
+        {
+            // Write to temp file
+            tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"rimtalk_audio_{dialogueId}.mp3");
+            await System.IO.File.WriteAllBytesAsync(tempFile, mp3Data);
+
+            // Load using UnityWebRequestMultimedia on main thread
+            AudioClip clip = null;
+            await Task.Run(async () =>
+            {
+                using (var www = UnityEngine.Networking.UnityWebRequestMultimedia.GetAudioClip("file:///" + tempFile, UnityEngine.AudioType.MPEG))
+                {
+                    var operation = www.SendWebRequest();
+                    while (!operation.isDone)
+                    {
+                        await Task.Delay(10);
+                    }
+
+                    if (www.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+                    {
+                        clip = UnityEngine.Networking.DownloadHandlerAudioClip.GetContent(www);
+                    }
+                    else
+                    {
+                        Log.Error($"[RimTalk.TTS] Failed to load MP3: {www.error}");
+                    }
+                }
+            });
+
+            return clip;
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"[RimTalk.TTS] AudioPlaybackService.LoadAudioClipFromMP3 exception: {ex.GetType().Name}: {ex.Message}");
+            return null;
+        }
+        finally
+        {
+            // Clean up temp file
+            try
+            {
+                if (tempFile != null && System.IO.File.Exists(tempFile))
+                {
+                    System.IO.File.Delete(tempFile);
+                }
+            }
+            catch { /* Ignore cleanup errors */ }
         }
     }
 
@@ -330,7 +417,7 @@ public static class AudioPlaybackService
         }
         catch (Exception ex)
         {
-            ErrorUtil.LogException("AudioPlaybackService.LoadAudioClipFromWav", ex);
+            Log.Error($"[RimTalk.TTS] AudioPlaybackService.LoadAudioClipFromWav exception: {ex}");
             return null;
         }
     }

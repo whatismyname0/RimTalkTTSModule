@@ -16,6 +16,7 @@ namespace RimTalk.TTS.Service
 
         // optional synthesis parameters
         public float Speed { get; set; } = 1.0f;
+        public float Volume { get; set; } = 1.0f;
         public float Temperature { get; set; } = 0f;
         public float TopP { get; set; } = 0f;
 

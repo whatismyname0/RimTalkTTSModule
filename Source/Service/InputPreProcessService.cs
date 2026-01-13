@@ -61,7 +61,7 @@ namespace RimTalk.TTS.Service
                         , @"\s+", " "
                     ).Trim();
 
-            if (TTSModule.Instance.GetSettings().Supplier  == TTSSettings.TTSSupplier.FishAudio)
+            if (TTSConfig.CurrentSupplier == TTSSettings.TTSSupplier.FishAudio)
             {
                 text = text.Replace("[","(").Replace("]",")");
             }

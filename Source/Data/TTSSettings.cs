@@ -123,86 +123,29 @@ namespace RimTalk.TTS.Data
 
         private void LoadOldSettings()
         {
-            // Backwards compatibility: if old FishAudioApiKey exists and no entry in SupplierApiKeys, populate it
-            if (SupplierApiKeys == null)
-            {
-                SupplierApiKeys = new System.Collections.Generic.Dictionary<string, string>();
-                SupplierApiKeys[TTSSupplier.FishAudio.ToString()] = FishAudioApiKey ?? "";
-            }
-            // Backwards compatibility: ensure legacy TTSModel is used for FishAudio if no per-supplier model exists
-            if (SupplierModels == null)
-            {
-                SupplierModels = new System.Collections.Generic.Dictionary<string, string>();
-                SupplierModels[TTSSupplier.FishAudio.ToString()] = TTSModel ?? "s1";
-            }
-            // Backwards compatibility: populate per-supplier basic values from legacy fields if missing
-            if (SupplierGenerateCooldownMs == null)
-            {
-                SupplierGenerateCooldownMs = new System.Collections.Generic.Dictionary<string, int>();
-                SupplierGenerateCooldownMs[TTSSupplier.FishAudio.ToString()] = GenerateCooldownMiliSeconds;
-                SupplierGenerateCooldownMs[TTSSupplier.CosyVoice.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
-                SupplierGenerateCooldownMs[TTSSupplier.IndexTTS.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
-                SupplierGenerateCooldownMs[TTSSupplier.AzureTTS.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
-                SupplierGenerateCooldownMs[TTSSupplier.EdgeTTS.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
-                SupplierGenerateCooldownMs[TTSSupplier.GeminiTTS.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
-            }
-
-            if (SupplierVolume == null)
-            {
-                SupplierVolume = new System.Collections.Generic.Dictionary<string, float>();
-                SupplierVolume[TTSSupplier.FishAudio.ToString()] = TTSVolume;
-                SupplierVolume[TTSSupplier.CosyVoice.ToString()] = DEFAULT_SUPPLIER_VOLUME;
-                SupplierVolume[TTSSupplier.IndexTTS.ToString()] = DEFAULT_SUPPLIER_VOLUME;
-                SupplierVolume[TTSSupplier.AzureTTS.ToString()] = DEFAULT_SUPPLIER_VOLUME;
-                SupplierVolume[TTSSupplier.EdgeTTS.ToString()] = DEFAULT_SUPPLIER_VOLUME;
-                SupplierVolume[TTSSupplier.GeminiTTS.ToString()] = DEFAULT_SUPPLIER_VOLUME;
-            }
-
-            if (SupplierTemperature == null)
-            {
-                SupplierTemperature = new System.Collections.Generic.Dictionary<string, float>();
-                SupplierTemperature[TTSSupplier.FishAudio.ToString()] = TTSTemperature;
-            }
-
-            if (SupplierSpeed == null)
-            {
-                SupplierSpeed = new System.Collections.Generic.Dictionary<string, float>();
-                SupplierSpeed[TTSSupplier.FishAudio.ToString()] = DEFAULT_SUPPLIER_SPEED;
-                SupplierSpeed[TTSSupplier.CosyVoice.ToString()] = DEFAULT_SUPPLIER_SPEED;
-                SupplierSpeed[TTSSupplier.IndexTTS.ToString()] = DEFAULT_SUPPLIER_SPEED;
-                SupplierSpeed[TTSSupplier.AzureTTS.ToString()] = DEFAULT_SUPPLIER_SPEED;
-                SupplierSpeed[TTSSupplier.EdgeTTS.ToString()] = DEFAULT_SUPPLIER_SPEED;
-                SupplierSpeed[TTSSupplier.GeminiTTS.ToString()] = DEFAULT_SUPPLIER_SPEED;
-            }
-
-            if (SupplierTopP == null)
-            {
-                SupplierTopP = new System.Collections.Generic.Dictionary<string, float>();
-                SupplierTopP[TTSSupplier.FishAudio.ToString()] = TTSTopP;
-            }
-
+            // Initialize dictionaries if null (backwards compatibility)
+            InitializeDictionaryIfNull(ref SupplierApiKeys, (s) => s == TTSSupplier.FishAudio ? (FishAudioApiKey ?? "") : "");
+            InitializeDictionaryIfNull(ref SupplierModels, (s) => s == TTSSupplier.FishAudio ? (TTSModel ?? "s1") : "");
+            InitializeDictionaryIfNull(ref SupplierGenerateCooldownMs, (s) => s == TTSSupplier.FishAudio ? GenerateCooldownMiliSeconds : DEFAULT_GENERATE_COOLDOWN_MS);
+            InitializeDictionaryIfNull(ref SupplierVolume, (s) => s == TTSSupplier.FishAudio ? TTSVolume : DEFAULT_SUPPLIER_VOLUME);
+            InitializeDictionaryIfNull(ref SupplierTemperature, (s) => s == TTSSupplier.FishAudio ? TTSTemperature : 0.9f);
+            InitializeDictionaryIfNull(ref SupplierSpeed, (s) => DEFAULT_SUPPLIER_SPEED);
+            InitializeDictionaryIfNull(ref SupplierTopP, (s) => s == TTSSupplier.FishAudio ? TTSTopP : 0.9f);
+            
             if (SupplierVoiceModels == null)
             {
                 SupplierVoiceModels = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceModel>>();
-                SupplierVoiceModels[TTSSupplier.FishAudio.ToString()] = VoiceModels ?? new System.Collections.Generic.List<VoiceModel>();
-                SupplierVoiceModels[TTSSupplier.CosyVoice.ToString()] = GetDefaultVoiceModels(TTSSupplier.CosyVoice);
-                SupplierVoiceModels[TTSSupplier.IndexTTS.ToString()] = GetDefaultVoiceModels(TTSSupplier.IndexTTS);
-                SupplierVoiceModels[TTSSupplier.AzureTTS.ToString()] = GetDefaultVoiceModels(TTSSupplier.AzureTTS);
-                SupplierVoiceModels[TTSSupplier.EdgeTTS.ToString()] = GetDefaultVoiceModels(TTSSupplier.EdgeTTS);
-                SupplierVoiceModels[TTSSupplier.GeminiTTS.ToString()] = GetDefaultVoiceModels(TTSSupplier.GeminiTTS);
+                foreach (TTSSupplier supplier in System.Enum.GetValues(typeof(TTSSupplier)))
+                {
+                    if (supplier == TTSSupplier.None) continue;
+                    SupplierVoiceModels[supplier.ToString()] = supplier == TTSSupplier.FishAudio 
+                        ? (VoiceModels ?? new System.Collections.Generic.List<VoiceModel>())
+                        : GetDefaultVoiceModels(supplier);
+                }
             }
 
-            if (SupplierDefaultVoiceModelId == null)
-            {
-                SupplierDefaultVoiceModelId = new System.Collections.Generic.Dictionary<string, string>();
-                SupplierDefaultVoiceModelId[TTSSupplier.FishAudio.ToString()] = DefaultVoiceModelId ?? "";
-                SupplierDefaultVoiceModelId[TTSSupplier.CosyVoice.ToString()] = VoiceModel.NONE_MODEL_ID;
-                SupplierDefaultVoiceModelId[TTSSupplier.IndexTTS.ToString()] = VoiceModel.NONE_MODEL_ID;
-                SupplierDefaultVoiceModelId[TTSSupplier.AzureTTS.ToString()] = VoiceModel.NONE_MODEL_ID;
-                SupplierDefaultVoiceModelId[TTSSupplier.EdgeTTS.ToString()] = VoiceModel.NONE_MODEL_ID;
-                SupplierDefaultVoiceModelId[TTSSupplier.GeminiTTS.ToString()] = VoiceModel.NONE_MODEL_ID;
-            }
-
+            InitializeDictionaryIfNull(ref SupplierDefaultVoiceModelId, (s) => s == TTSSupplier.FishAudio ? (DefaultVoiceModelId ?? "") : VoiceModel.NONE_MODEL_ID);
+            
             if (SupplierRegion == null)
             {
                 SupplierRegion = new System.Collections.Generic.Dictionary<string, string>();
@@ -210,49 +153,64 @@ namespace RimTalk.TTS.Data
             }
         }
 
+        /// <summary>
+        /// Helper to initialize supplier dictionaries from legacy settings
+        /// </summary>
+        private void InitializeDictionaryIfNull<T>(ref System.Collections.Generic.Dictionary<string, T> dict, System.Func<TTSSupplier, T> getValue)
+        {
+            if (dict != null) return;
+            
+            dict = new System.Collections.Generic.Dictionary<string, T>();
+            foreach (TTSSupplier supplier in System.Enum.GetValues(typeof(TTSSupplier)))
+            {
+                if (supplier == TTSSupplier.None) continue;
+                dict[supplier.ToString()] = getValue(supplier);
+            }
+        }
+
         public string GetSupplierApiKey(TTSSupplier supplier)
         {
-            return SupplierApiKeys.TryGetValue(supplier.ToString());
+            return SupplierApiKeys.TryGetValue(supplier.ToString(), out var value) ? value : string.Empty;
         }
 
         public void SetSupplierApiKey(TTSSupplier supplier, string apiKey)
         {
-            SupplierApiKeys[supplier.ToString()] = string.IsNullOrEmpty(apiKey) ? null : apiKey;
+            SupplierApiKeys[supplier.ToString()] = apiKey ?? string.Empty;
         }
 
         public string GetSupplierModel(TTSSupplier supplier)
         {
-            return SupplierModels.TryGetValue(supplier.ToString());
+            return SupplierModels.TryGetValue(supplier.ToString(), out var value) ? value : string.Empty;
         }
 
         public void SetSupplierModel(TTSSupplier supplier, string model)
         {
-            SupplierModels[supplier.ToString()] = model ?? null;
+            SupplierModels[supplier.ToString()] = model ?? string.Empty;
         }
 
         public System.Collections.Generic.List<VoiceModel> GetSupplierVoiceModels(TTSSupplier supplier)
         {
-            return SupplierVoiceModels.TryGetValue(supplier.ToString());
+            return SupplierVoiceModels.TryGetValue(supplier.ToString(), out var value) ? value : new System.Collections.Generic.List<VoiceModel>();
         }
 
         public void SetSupplierVoiceModels(TTSSupplier supplier, System.Collections.Generic.List<VoiceModel> models)
         {
-            SupplierVoiceModels[supplier.ToString()] = models ?? null;
+            SupplierVoiceModels[supplier.ToString()] = models ?? new System.Collections.Generic.List<VoiceModel>();
         }
 
         public string GetSupplierDefaultVoiceModelId(TTSSupplier supplier)
         {
-            return SupplierDefaultVoiceModelId.TryGetValue(supplier.ToString());
+            return SupplierDefaultVoiceModelId.TryGetValue(supplier.ToString(), out var value) ? value : VoiceModel.NONE_MODEL_ID;
         }
 
         public void SetSupplierDefaultVoiceModelId(TTSSupplier supplier, string modelId)
         {
-            SupplierDefaultVoiceModelId[supplier.ToString()] = string.IsNullOrEmpty(modelId) ? null : modelId;
+            SupplierDefaultVoiceModelId[supplier.ToString()] = string.IsNullOrEmpty(modelId) ? VoiceModel.NONE_MODEL_ID : modelId;
         }
 
         public int GetSupplierGenerateCooldown(TTSSupplier supplier)
         {
-            return SupplierGenerateCooldownMs.TryGetValue(supplier.ToString());
+            return SupplierGenerateCooldownMs.TryGetValue(supplier.ToString(), out var value) ? value : DEFAULT_GENERATE_COOLDOWN_MS;
         }
 
         public void SetSupplierGenerateCooldown(TTSSupplier supplier, int ms)
@@ -262,7 +220,7 @@ namespace RimTalk.TTS.Data
 
         public float GetSupplierVolume(TTSSupplier supplier)
         {
-            return SupplierVolume.TryGetValue(supplier.ToString());
+            return SupplierVolume.TryGetValue(supplier.ToString(), out var value) ? value : DEFAULT_SUPPLIER_VOLUME;
         }
 
         public void SetSupplierVolume(TTSSupplier supplier, float vol)
@@ -272,7 +230,7 @@ namespace RimTalk.TTS.Data
 
         public float GetSupplierTemperature(TTSSupplier supplier)
         {
-            return SupplierTemperature.TryGetValue(supplier.ToString());
+            return SupplierTemperature.TryGetValue(supplier.ToString(), out var value) ? value : 0.9f;
         }
 
         public void SetSupplierTemperature(TTSSupplier supplier, float t)
@@ -282,7 +240,7 @@ namespace RimTalk.TTS.Data
 
         public float GetSupplierTopP(TTSSupplier supplier)
         {
-            return SupplierTopP.TryGetValue(supplier.ToString());
+            return SupplierTopP.TryGetValue(supplier.ToString(), out var value) ? value : 0.9f;
         }
 
         public void SetSupplierTopP(TTSSupplier supplier, float p)
@@ -343,19 +301,17 @@ namespace RimTalk.TTS.Data
 
         public float GetSupplierSpeed(TTSSupplier supplier)
         {
-            return SupplierSpeed.TryGetValue(supplier.ToString());
+            return SupplierSpeed.TryGetValue(supplier.ToString(), out var value) ? value : DEFAULT_SUPPLIER_SPEED;
         }
 
         public void SetSupplierSpeed(TTSSupplier supplier, float s)
         {
             SupplierSpeed[supplier.ToString()] = s;
-            if (supplier == TTSSupplier.FishAudio)
-                TTSSpeed = s;
         }
 
         public string GetSupplierRegion(TTSSupplier supplier)
         {
-            return SupplierRegion.TryGetValue(supplier.ToString()) ?? "eastus";
+            return SupplierRegion.TryGetValue(supplier.ToString(), out var value) ? value : "eastus";
         }
 
         public void SetSupplierRegion(TTSSupplier supplier, string region)

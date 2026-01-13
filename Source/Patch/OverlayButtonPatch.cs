@@ -3,12 +3,12 @@ using HarmonyLib;
 using System.Reflection;
 using Verse;
 using System;
-using RimTalk.TTS.Util;
 using RimWorld;
 using RimTalk.TTS.Service;
 using RimTalk.Service;
 using RimTalk.Data;
 using RimTalk.Util;
+using RimTalk.TTS.Data;
 
 namespace RimTalk.TTS.Patch
 {
@@ -34,7 +34,7 @@ namespace RimTalk.TTS.Patch
                 try
                 {
                     if (__instance == null) return;
-                    if (!TTSModule.Instance.IsActive) return;
+                    if (!TTSConfig.IsEnabled) return;
 
                     var overlayType = __instance.GetType();
 
@@ -73,7 +73,7 @@ namespace RimTalk.TTS.Patch
                 }
                 catch (Exception ex)
                 {
-                    Util.ErrorUtil.LogException("Overlay_DrawSettingsDropdown_Postfix", ex);
+                    Log.Error($"[RimTalk.TTS] Overlay_DrawSettingsDropdown_Postfix exception: {ex}");
                 }
             }
         }
@@ -89,7 +89,7 @@ namespace RimTalk.TTS.Patch
 
             static bool Prefix(object __instance)
             {
-                if (!TTSModule.Instance.IsActive) return true;
+                if (!TTSConfig.IsEnabled) return true;
                 if (__instance == null) return true;
                 
                 Event currentEvent = Event.current;
@@ -157,7 +157,7 @@ namespace RimTalk.TTS.Patch
                     if (pawnState.GetNextTalkRequest() != null)
                     {
                         talkGenerated = TalkService.GenerateTalk(pawnState.GetNextTalkRequest());
-                        if(talkGenerated)
+                        if(talkGenerated && pawnState.TalkRequests.Count > 0)
                             pawnState.TalkRequests.RemoveFirst();
                     }
                 }

@@ -26,68 +26,73 @@ namespace RimTalk.TTS.Service
         {
             lock (_providerLock)
             {
-                try
-                {
-                    _provider?.Shutdown();
-                }
-                catch { }
+                // Shutdown current provider
+                ShutdownCurrentProvider();
 
-                // Reset module runtime state when switching providers to ensure a clean start
-                try
-                {
-                    // Cancel pending tasks, clear audio and blocked dialogues
-                    StopAll(false);
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning($"[RimTalk.TTS] Warning: failed to StopAll during provider switch: {ex.Message}");
-                }
+                // Reset module runtime state when switching providers
+                ResetRuntimeState();
 
-                // Clear internal pacing counters
-                try
-                {
-                    _lastGenerateTimeStampMilisecond = 0;
-                    lock (_waitingRequestLock)
-                    {
-                        _waitingRequestCount = 0;
-                    }
-                }
-                catch { }
-
-                switch (supplier)
-                {
-                    case TTSSettings.TTSSupplier.None:
-                        _provider = new Provider.NoneProvider();
-                        break;
-                    case TTSSettings.TTSSupplier.FishAudio:
-                        _provider = new Provider.FishAudioProvider();
-                        break;
-                    case TTSSettings.TTSSupplier.CosyVoice:
-                        _provider = new Provider.CosyVoiceProvider();
-                        break;
-                    case TTSSettings.TTSSupplier.IndexTTS:
-                        _provider = new Provider.IndexTTSProvider();
-                        break;
-                    case TTSSettings.TTSSupplier.AzureTTS:
-                        var azureProvider = new Provider.AzureTTSProvider();
-                        if (settings != null)
-                        {
-                            string region = settings.GetSupplierRegion(supplier);
-                            azureProvider.SetRegion(region);
-                        }
-                        _provider = azureProvider;
-                        break;
-                    case TTSSettings.TTSSupplier.EdgeTTS:
-                        _provider = new Provider.EdgeTTSProvider();
-                        break;
-                    case TTSSettings.TTSSupplier.GeminiTTS:
-                        _provider = new Provider.GeminiTTSProvider();
-                        break;
-                    default:
-                        _provider = new Provider.NoneProvider();
-                        break;
-                }
+                // Create new provider
+                _provider = CreateProvider(supplier, settings);
+                
                 Log.Message($"[RimTalk.TTS] TTS provider set to {supplier}");
+            }
+        }
+
+        private static void ShutdownCurrentProvider()
+        {
+            try
+            {
+                _provider?.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"[RimTalk.TTS] Error shutting down provider: {ex.Message}");
+            }
+        }
+
+        private static void ResetRuntimeState()
+        {
+            try
+            {
+                StopAll(false);
+                _lastGenerateTimeStampMilisecond = 0;
+                lock (_waitingRequestLock)
+                {
+                    _waitingRequestCount = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"[RimTalk.TTS] Error resetting runtime state: {ex.Message}");
+            }
+        }
+
+        private static Provider.ITTSProvider CreateProvider(TTSSettings.TTSSupplier supplier, TTSSettings settings)
+        {
+            switch (supplier)
+            {
+                case TTSSettings.TTSSupplier.FishAudio:
+                    return new Provider.FishAudioProvider();
+                case TTSSettings.TTSSupplier.CosyVoice:
+                    return new Provider.CosyVoiceProvider();
+                case TTSSettings.TTSSupplier.IndexTTS:
+                    return new Provider.IndexTTSProvider();
+                case TTSSettings.TTSSupplier.AzureTTS:
+                    var azureProvider = new Provider.AzureTTSProvider();
+                    if (settings != null)
+                    {
+                        string region = settings.GetSupplierRegion(supplier);
+                        azureProvider.SetRegion(region);
+                    }
+                    return azureProvider;
+                case TTSSettings.TTSSupplier.EdgeTTS:
+                    return new Provider.EdgeTTSProvider();
+                case TTSSettings.TTSSupplier.GeminiTTS:
+                    return new Provider.GeminiTTSProvider();
+                case TTSSettings.TTSSupplier.None:
+                default:
+                    return new Provider.NoneProvider();
             }
         }
 
@@ -96,52 +101,10 @@ namespace RimTalk.TTS.Service
         /// </summary>
         public static void ProcessDialogue(string text, Pawn pawn, Guid dialogueId, TTSSettings settings)
         {
-            // Early exit: shutting down
-            if (_isShuttingDown)
+            // Perform early validation checks
+            if (!ValidateDialogueRequest(text, pawn, dialogueId, settings, out string reason))
             {
-                Log.Message($"[RimTalk.TTS] DEBUG: Rejected - Shutting down");
-                CleanupAndRelease(dialogueId);
-                return;
-            }
-                
-            // Validate API key for selected supplier using provider
-            string apiKey = GetApiKeyForSupplier(settings.Supplier, settings);
-            if (!_provider.IsApiKeyValid(apiKey))
-            {
-                Log.Warning($"[RimTalk.TTS] DEBUG: Rejected - API key not configured or invalid for supplier {settings.Supplier}");
-                CleanupAndRelease(dialogueId);
-                return;
-            }
-
-            // Early exit: empty text
-            if (string.IsNullOrEmpty(text))
-            {
-                Log.Message($"[RimTalk.TTS] DEBUG: Rejected - Empty text");
-                CleanupAndRelease(dialogueId);
-                return;
-            }
-
-            // Early exit: pawn has "NONE" voice model (skip TTS entirely)
-            string voiceModelId = GetVoiceModelId(pawn, settings);
-            if (voiceModelId == VoiceModel.NONE_MODEL_ID)
-            {
-                Log.Message($"[RimTalk.TTS] DEBUG: Pawn '{pawn?.LabelShort}' has NONE voice model - setting null audio and releasing block");
-                CleanupAndRelease(dialogueId);
-                return;
-            }
-
-            // Check if dialogue was cancelled during generation
-            if (RimTalkPatches.IsTalkIgnored(dialogueId))
-            {
-                Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was ignored during generation (discarding audio)");
-                CleanupAndRelease(dialogueId);
-                return;
-            }
-
-            // Check if TTS Module is still active
-            if (!IsModuleActiveAndEnabled(settings))
-            {
-                Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was cancelled during generation (TTS module off)");
+                Log.Message($"[RimTalk.TTS] Rejected - {reason}");
                 CleanupAndRelease(dialogueId);
                 return;
             }
@@ -154,6 +117,84 @@ namespace RimTalk.TTS.Service
         }
 
         /// <summary>
+        /// Validate if a dialogue request should be processed
+        /// </summary>
+        private static bool ValidateDialogueRequest(string text, Pawn pawn, Guid dialogueId, TTSSettings settings, out string reason)
+        {
+            // Early exit: shutting down
+            if (_isShuttingDown)
+            {
+                reason = "Shutting down";
+                return false;
+            }
+
+            // Validate API key for selected supplier
+            // EdgeTTS doesn't need API key - skip validation
+            if (settings.Supplier != TTSSettings.TTSSupplier.EdgeTTS)
+            {
+                string apiKey = GetApiKeyForSupplier(settings.Supplier, settings);
+                if (!_provider.IsApiKeyValid(apiKey))
+                {
+                    reason = $"API key not configured or invalid for supplier {settings.Supplier}";
+                    return false;
+                }
+            }
+
+            // Early exit: empty text
+            if (string.IsNullOrEmpty(text))
+            {
+                reason = "Empty text";
+                return false;
+            }
+
+            // Early exit: pawn has "NONE" voice model (skip TTS entirely)
+            string voiceModelId = GetVoiceModelId(pawn, settings);
+            if (voiceModelId == VoiceModel.NONE_MODEL_ID)
+            {
+                reason = $"Pawn '{pawn?.LabelShort}' has NONE voice model";
+                return false;
+            }
+
+            // Check if dialogue was cancelled
+            if (RimTalkPatches.IsTalkIgnored(dialogueId))
+            {
+                reason = $"Dialogue {dialogueId} was ignored";
+                return false;
+            }
+
+            // Check if TTS Module is active
+            if (!IsModuleActiveAndEnabled(settings))
+            {
+                reason = "TTS module off";
+                return false;
+            }
+
+            reason = null;
+            return true;
+        }
+
+        /// <summary>
+        /// Check if dialogue should continue processing (used during async operations)
+        /// </summary>
+        private static bool ShouldContinueProcessing(Guid dialogueId, TTSSettings settings, out string reason)
+        {
+            if (RimTalkPatches.IsTalkIgnored(dialogueId))
+            {
+                reason = "Dialogue was ignored during generation";
+                return false;
+            }
+
+            if (!IsModuleActiveAndEnabled(settings))
+            {
+                reason = "TTS module turned off during generation";
+                return false;
+            }
+
+            reason = null;
+            return true;
+        }
+
+        /// <summary>
         /// Async TTS generation pipeline
         /// </summary>
         private static async Task ProcessDialogueAsync(string text, Pawn pawn, Guid dialogueId, TTSSettings settings)
@@ -163,132 +204,148 @@ namespace RimTalk.TTS.Service
                 // Get voice model
                 string voiceModelId = GetVoiceModelId(pawn, settings);
 
-                // Process text
-                string finalInputText = text;
+                // Process and translate text
+                string finalInputText = await ProcessTextAsync(text, dialogueId, settings);
+                if (finalInputText == null)
+                {
+                    CleanupAndRelease(dialogueId);
+                    return;
+                }
+
                 string finalInstructText = null;
 
-                // Translate if configured
-                if (!string.IsNullOrWhiteSpace(settings.TTSTranslationLanguage))
+                // Check if should continue after preprocessing
+                if (!ShouldContinueProcessing(dialogueId, settings, out string reason))
                 {
-                    // 调用修改后的 PreProcessAsync，获取包含 Text 和 Emotion 的对象
-                    var preProcessResult = await InputPreProcessService.PreProcessAsync(text, settings.TTSTranslationLanguage, settings);
-                    
-                    if (preProcessResult != null && !string.IsNullOrEmpty(preProcessResult.Text))
-                    {
-                        finalInputText = preProcessResult.Text;
-                        finalInstructText = preProcessResult.Emotion;
-                    }
-                    else
-                    {
-                        Log.Warning($"[RimTalk.TTS] DEBUG: Translation/PreProcess returned empty result");
-                        CleanupAndRelease(dialogueId);
-                        return;
-                    }
-                }
-                else
-                {
-                    Log.Warning($"[RimTalk.TTS] DEBUG: Translation language not configured");
+                    Log.Message($"[RimTalk.TTS] {reason} (discarding audio)");
                     CleanupAndRelease(dialogueId);
                     return;
                 }
 
-                // Check if dialogue was cancelled during generation
-                if (RimTalkPatches.IsTalkIgnored(dialogueId))
-                {
-                    Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was ignored during generation (discarding audio)");
-                    CleanupAndRelease(dialogueId);
-                    return;
-                }
-
-                // Check if TTS Module is still active
-                if (!IsModuleActiveAndEnabled(settings))
-                {
-                    Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was cancelled during generation (TTS module off)");
-                    CleanupAndRelease(dialogueId);
-                    return;
-                }
-
-                lock (_waitingRequestLock)
-                {
-                    _waitingRequestCount++;
-                }
-
-                int nowMilisecond = (int)TTSMod.AppStopwatch.Elapsed.TotalMilliseconds;
-                int cooldownMilisecond = settings.GetSupplierGenerateCooldown(settings.Supplier);
-                int cooldownEndMilisecond = _waitingRequestCount * cooldownMilisecond + _lastGenerateTimeStampMilisecond;
-
-                if (nowMilisecond < cooldownEndMilisecond)
-                {
-                    await Task.Delay(cooldownEndMilisecond - nowMilisecond);
-                }
-
-                lock (_waitingRequestLock)
-                {
-                    _lastGenerateTimeStampMilisecond = (int)TTSMod.AppStopwatch.Elapsed.TotalMilliseconds;
-                    _waitingRequestCount--;
-                }
+                // Apply cooldown
+                await ApplyCooldownAsync(settings);
                 
-                // Generate speech via configured provider
-                string modelForSupplier = settings.GetSupplierModel(settings.Supplier);
-                string apiKeyForSupplier = settings.GetSupplierApiKey(settings.Supplier);
-                float temperature = settings.GetSupplierTemperature(settings.Supplier);
-                float topP = settings.GetSupplierTopP(settings.Supplier);
-                float speed = settings.GetSupplierSpeed(settings.Supplier);
-                var ttsRequest = new Service.TTSRequest
-                {
-                    ApiKey = apiKeyForSupplier,
-                    Model = modelForSupplier,
-                    Input = finalInputText,
-                    InstructText = finalInstructText,
-                    Voice = voiceModelId,
-                    Speed = speed,
-                    Temperature = temperature,
-                    TopP = topP
-                };
+                // Generate speech
+                byte[] audioData = await GenerateSpeechAsync(voiceModelId, finalInputText, finalInstructText, settings);
 
-                // All members of ttsRequest are initialized above per requirement
-                byte[] audioData = await _provider.GenerateSpeechAsync(ttsRequest);
-
-                // Check if TTS Module is still active
-                if (!IsModuleActiveAndEnabled(settings))
-                {
-                    Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was cancelled during generation (TTS module off)");
-                    CleanupAndRelease(dialogueId);
-                    return;
-                }
-
-                // Check if dialogue was cancelled during generation
-                if (RimTalkPatches.IsTalkIgnored(dialogueId))
-                {
-                    Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} was ignored during generation (discarding audio)");
-                    CleanupAndRelease(dialogueId);
-                }
-                else if (audioData != null && audioData.Length > 0)
-                {
-                    if (!RimTalkPatches.IsBlocked(dialogueId))
-                    {
-                        Log.Message($"[RimTalk.TTS] DEBUG: Dialogue {dialogueId} is no longer blocked after generation (discarding audio)");
-                        CleanupFailedDialogue(dialogueId);
-                    }
-                    else
-                        AudioPlaybackService.SetAudioResult(dialogueId, audioData);
-                    RimTalkPatches.ReleaseBlock(dialogueId);
-                }
-                else
-                {
-                    Log.Warning("[RimTalk.TTS] DEBUG: Failed - API returned no audio data");
-                    CleanupAndRelease(dialogueId); // Release on failure
-                }
+                // Final validation and playback setup
+                HandleGenerationResult(dialogueId, audioData, settings);
             }
             catch (OperationCanceledException)
             {
-                Log.Message($"[RimTalk.TTS] DEBUG: Cancelled - Dialogue {dialogueId} generation cancelled");
-                CleanupAndRelease(dialogueId); // Release on cancellation
+                Log.Message($"[RimTalk.TTS] Dialogue {dialogueId} generation cancelled");
+                CleanupAndRelease(dialogueId);
             }
             catch (Exception ex)
             {
-                Log.Error($"[RimTalk.TTS] DEBUG: Exception - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
-                CleanupAndRelease(dialogueId); // Release on error
+                Log.Error($"[RimTalk.TTS] Exception - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+                CleanupAndRelease(dialogueId);
+            }
+        }
+
+        /// <summary>
+        /// Process and translate text if needed
+        /// </summary>
+        private static async Task<string> ProcessTextAsync(string text, Guid dialogueId, TTSSettings settings)
+        {
+            if (!string.IsNullOrWhiteSpace(settings.TTSTranslationLanguage))
+            {
+                var preProcessResult = await InputPreProcessService.PreProcessAsync(text, settings.TTSTranslationLanguage, settings);
+                
+                if (preProcessResult != null && !string.IsNullOrEmpty(preProcessResult.Text))
+                {
+                    return preProcessResult.Text;
+                }
+                else
+                {
+                    Log.Warning($"[RimTalk.TTS] Translation/PreProcess returned empty result");
+                    return null;
+                }
+            }
+            else
+            {
+                Log.Warning($"[RimTalk.TTS] Translation language not configured");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Apply cooldown between requests
+        /// </summary>
+        private static async Task ApplyCooldownAsync(TTSSettings settings)
+        {
+            lock (_waitingRequestLock)
+            {
+                _waitingRequestCount++;
+            }
+
+            int nowMilisecond = (int)TTSMod.AppStopwatch.Elapsed.TotalMilliseconds;
+            int cooldownMilisecond = settings.GetSupplierGenerateCooldown(settings.Supplier);
+            int cooldownEndMilisecond = _waitingRequestCount * cooldownMilisecond + _lastGenerateTimeStampMilisecond;
+
+            if (nowMilisecond < cooldownEndMilisecond)
+            {
+                await Task.Delay(cooldownEndMilisecond - nowMilisecond);
+            }
+
+            lock (_waitingRequestLock)
+            {
+                _lastGenerateTimeStampMilisecond = (int)TTSMod.AppStopwatch.Elapsed.TotalMilliseconds;
+                _waitingRequestCount--;
+            }
+        }
+
+        /// <summary>
+        /// Generate speech using configured provider
+        /// </summary>
+        private static async Task<byte[]> GenerateSpeechAsync(string voiceModelId, string inputText, string instructText, TTSSettings settings)
+        {
+            var ttsRequest = new Service.TTSRequest
+            {
+                ApiKey = settings.GetSupplierApiKey(settings.Supplier),
+                Model = settings.GetSupplierModel(settings.Supplier),
+                Input = inputText,
+                InstructText = instructText,
+                Voice = voiceModelId,
+                Speed = settings.GetSupplierSpeed(settings.Supplier),
+                Volume = settings.GetSupplierVolume(settings.Supplier),
+                Temperature = settings.GetSupplierTemperature(settings.Supplier),
+                TopP = settings.GetSupplierTopP(settings.Supplier)
+            };
+
+            return await _provider.GenerateSpeechAsync(ttsRequest);
+        }
+
+        /// <summary>
+        /// Handle the result of TTS generation
+        /// </summary>
+        private static void HandleGenerationResult(Guid dialogueId, byte[] audioData, TTSSettings settings)
+        {
+            // Check if should continue
+            if (!ShouldContinueProcessing(dialogueId, settings, out string reason))
+            {
+                Log.Message($"[RimTalk.TTS] {reason} (discarding audio)");
+                CleanupAndRelease(dialogueId);
+                return;
+            }
+
+            if (audioData != null && audioData.Length > 0)
+            {
+                if (!RimTalkPatches.IsBlocked(dialogueId))
+                {
+                    Log.Message($"[RimTalk.TTS] Dialogue {dialogueId} is no longer blocked after generation (discarding audio)");
+                    CleanupFailedDialogue(dialogueId);
+                }
+                else
+                {
+                    AudioPlaybackService.SetAudioResult(dialogueId, audioData);
+                }
+                RimTalkPatches.ReleaseBlock(dialogueId);
+            }
+            else
+            {
+                Log.Warning("[RimTalk.TTS] Failed - API returned no audio data");
+                CleanupAndRelease(dialogueId);
             }
         }
 
@@ -309,7 +366,7 @@ namespace RimTalk.TTS.Service
 
         private static bool IsModuleActiveAndEnabled(TTSSettings settings)
         {
-            return TTSModule.Instance.IsActive && settings != null && settings.isOnButton;
+            return TTSConfig.IsEnabled && settings != null && settings.isOnButton;
         }
 
         private static string GetVoiceModelId(Pawn pawn, TTSSettings settings)

@@ -169,14 +169,6 @@ namespace RimTalk.TTS.Service
                     prosody.Add(new XAttribute("pitch", pitchStr));
                 }
                 
-                // Volume (use TopP as volume modifier: 0.0-1.0 -> 0% to 100%)
-                if (Math.Abs(request.TopP - 0.5f) > 0.01f)
-                {
-                    int volumePercent = (int)(request.TopP * 100);
-                    string volumeStr = $"{volumePercent}%";
-                    prosody.Add(new XAttribute("volume", volumeStr));
-                }
-                
                 prosody.Add(XElement.Parse(processedText));
                 content = prosody;
             }

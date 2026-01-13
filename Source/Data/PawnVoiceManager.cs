@@ -18,19 +18,43 @@ namespace RimTalk.TTS.Data
         /// </summary>
         public static string GetVoiceModel(Pawn pawn)
         {
-            if (pawn == null) return null;
-            _pawnVoiceMap.TryGetValue(pawn.thingIDNumber, out string voiceId);
-            var settings = TTSModule.Instance.GetSettings();
-            var supplierModels = settings?.GetSupplierVoiceModels(settings.Supplier);
-
-            if (voiceId == null || supplierModels == null)
-                return settings.GetSupplierDefaultVoiceModelId(TTSModule.Instance.Settings.Supplier);
-
-            foreach (var m in supplierModels)
-                if (m.ModelId == voiceId)
+            if (pawn == null) 
+                return GetDefaultVoiceModel();
+            
+            // Try to get pawn-specific voice
+            if (_pawnVoiceMap.TryGetValue(pawn.thingIDNumber, out string voiceId) && !string.IsNullOrEmpty(voiceId))
+            {
+                // Validate voice model exists in current supplier's models
+                if (IsVoiceModelValid(voiceId))
                     return voiceId;
+            }
 
-            return settings.GetSupplierDefaultVoiceModelId(TTSModule.Instance.Settings.Supplier);
+            // Return default voice if no valid custom voice found
+            return GetDefaultVoiceModel();
+        }
+
+        /// <summary>
+        /// Check if a voice model ID is valid for the current supplier
+        /// </summary>
+        private static bool IsVoiceModelValid(string voiceModelId)
+        {
+            var settings = TTSConfig.Settings;
+            if (settings == null) return false;
+
+            var supplierModels = settings.GetSupplierVoiceModels(settings.Supplier);
+            if (supplierModels == null) return false;
+
+            // Use LINQ for efficient lookup instead of loop
+            return supplierModels.Exists(m => m.ModelId == voiceModelId);
+        }
+
+        /// <summary>
+        /// Get default voice model for current supplier
+        /// </summary>
+        private static string GetDefaultVoiceModel()
+        {
+            var settings = TTSConfig.Settings;
+            return settings?.GetSupplierDefaultVoiceModelId(settings.Supplier) ?? VoiceModel.NONE_MODEL_ID;
         }
 
         /// <summary>

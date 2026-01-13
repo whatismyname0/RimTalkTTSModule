@@ -176,15 +176,19 @@ namespace RimTalk.TTS.UI
             // Per-supplier API key and model configuration
             if (settings.Supplier != TTSSettings.TTSSupplier.None)
             {
-                listing.Label("RimTalk.Settings.TTS.ApiKey".Translate());
-                string currentApiKey = settings.GetSupplierApiKey(settings.Supplier);
-                string newApiKey = listing.TextEntry(currentApiKey ?? "");
-                if (newApiKey != currentApiKey)
+                // EdgeTTS doesn't need API key - skip it
+                if (settings.Supplier != TTSSettings.TTSSupplier.EdgeTTS)
                 {
-                    settings.SetSupplierApiKey(settings.Supplier, newApiKey);
-                }
+                    listing.Label("RimTalk.Settings.TTS.ApiKey".Translate());
+                    string currentApiKey = settings.GetSupplierApiKey(settings.Supplier);
+                    string newApiKey = listing.TextEntry(currentApiKey ?? "");
+                    if (newApiKey != currentApiKey)
+                    {
+                        settings.SetSupplierApiKey(settings.Supplier, newApiKey);
+                    }
 
-                listing.Gap();
+                    listing.Gap();
+                }
 
                 // TTS Model Selection (example: FishAudio choices)
                 if (settings.Supplier == TTSSettings.TTSSupplier.FishAudio)
@@ -645,7 +649,7 @@ namespace RimTalk.TTS.UI
 
         private static void Refresh()
         {
-            var settings = TTSModule.Instance.GetSettings();
+            var settings = TTSConfig.Settings;
             var voiceModels = settings.GetSupplierVoiceModels(settings.Supplier);
             var presets = TTSSettings.GetDefaultVoiceModels(settings.Supplier);
             if (presets != null && presets.Count > 0)

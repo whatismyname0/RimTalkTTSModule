@@ -654,9 +654,9 @@ public static class FishAudioTTSClient
                 Log.Message("FishAudio TTS: Sending shutdown command to server...");
                 
                 // Try to send shutdown command via HTTP
-                var shutdownRequest = new
+                var shutdownRequest = new Dictionary<string, string>
                 {
-                    command = "shutdown"
+                    { "command", "shutdown" }
                 };
                 
                 string jsonContent = JsonUtil.SerializeToJson(shutdownRequest);

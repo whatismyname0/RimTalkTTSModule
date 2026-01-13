@@ -123,28 +123,20 @@ namespace RimTalk.TTS.Data
             "Wait[break:1s] Are you sure?" -> 1 second pause between sentences
             "Call me at [telephone]555-0123[/telephone]" -> Pronounce phone number correctly
             "The date is [date]2024-01-13[/date]" -> Pronounce date naturally
-            
-            Note: Only use emotion field for speaking style. Add SSML tags directly in text field.
             """;
 
         public static readonly string DefaultTTSProcessingPrompt_EdgeTTS =
             """
-            You are a professional TTS text processor for Microsoft Edge-TTS (free TTS service).
+            You are a professional TTS text processor for Microsoft Edge-TTS.
 
             Rules:
             1. Translate all text into {language}.
-            2. For text inside parentheses: translate only the content, keep parentheses, do not add annotations.
-            3. For text outside parentheses: translate normally (Edge-TTS has limited SSML support).
             4. Never add tags inside parentheses.
             5. Output only JSON:
             {
                 "text": "<fully translated to {language}, all parentheses and their translated content preserved>",
                 "emotion": ""
             }
-
-            Note: Edge-TTS uses the same voice names as Azure TTS but is completely free and doesn't require API key.
-            Basic features: rate (speed) control is supported through SSML prosody tags.
-            Advanced features like speaking styles may not be available for all voices.
             """;
 
         public static readonly string DefaultTTSProcessingPrompt_GeminiTTS =

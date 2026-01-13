@@ -42,7 +42,7 @@
     <RimTalk.Settings.TTS.NotSet>(未设置)</RimTalk.Settings.TTS.NotSet>
     <RimTalk.Settings.TTS.NoneModel>无（跳过语音）</RimTalk.Settings.TTS.NoneModel>
     <RimTalk.Settings.TTS.ClearDefault>(清除默认)</RimTalk.Settings.TTS.ClearDefault>
-    <RimTalk.Settings.TTS.ColumnDescription>左列：模型名称（界面显示），右列：模型 ID（用于 API 调用）。警告：对于CosyVoice、IndexTTS，删除模型时也会删除硅基流动上存储的对应内容，不可撤销！</RimTalk.Settings.TTS.ColumnDescription>
+    <RimTalk.Settings.TTS.ColumnDescription>左列：模型名称（界面显示），右列：模型 ID（用于 API 调用）。Azure自定义语音使用格式"部署ID:语音名称"（如"abc123:MyVoice"）。警告：对于CosyVoice、IndexTTS，删除模型时也会删除硅基流动上存储的对应内容，不可撤销！</RimTalk.Settings.TTS.ColumnDescription>
     <RimTalk.Settings.TTS.ColumnModelName>模型名称</RimTalk.Settings.TTS.ColumnModelName>
     <RimTalk.Settings.TTS.ColumnModelID>模型 ID</RimTalk.Settings.TTS.ColumnModelID>
     <RimTalk.Settings.TTS.Delete>删除</RimTalk.Settings.TTS.Delete>
@@ -55,6 +55,9 @@
     <RimTalk.Settings.TTS.ResetPrompt.FishAudio>使用 FishAudio 默认提示词</RimTalk.Settings.TTS.ResetPrompt.FishAudio>
     <RimTalk.Settings.TTS.ResetPrompt.CosyVoice>使用 CosyVoice 默认提示词</RimTalk.Settings.TTS.ResetPrompt.CosyVoice>
     <RimTalk.Settings.TTS.ResetPrompt.IndexTTS>使用 IndexTTS 默认提示词</RimTalk.Settings.TTS.ResetPrompt.IndexTTS>
+    <RimTalk.Settings.TTS.ResetPrompt.AzureTTS>使用 Azure TTS 默认提示词</RimTalk.Settings.TTS.ResetPrompt.AzureTTS>
+    <RimTalk.Settings.TTS.ResetPrompt.EdgeTTS>使用 Edge-TTS 默认提示词</RimTalk.Settings.TTS.ResetPrompt.EdgeTTS>
+    <RimTalk.Settings.TTS.ResetPrompt.GeminiTTS>使用 Gemini TTS 默认提示词</RimTalk.Settings.TTS.ResetPrompt.GeminiTTS>
     <RimTalk.Settings.TTS.ModelConfigurations>语音模型配置</RimTalk.Settings.TTS.ModelConfigurations>
     <RimTalk.Settings.TTS.NoCustomModels>尚未配置自定义语音模型。\n\n在 TTS 设置中添加模型后即可在此看到。</RimTalk.Settings.TTS.NoCustomModels>
 
@@ -100,9 +103,14 @@
     <RimTalk.Settings.TTS.TTSSupplier.FishAudio>Fish Audio</RimTalk.Settings.TTS.TTSSupplier.FishAudio>
     <RimTalk.Settings.TTS.TTSSupplier.CosyVoice>CosyVoice2</RimTalk.Settings.TTS.TTSSupplier.CosyVoice>
     <RimTalk.Settings.TTS.TTSSupplier.IndexTTS>IndexTTS2</RimTalk.Settings.TTS.TTSSupplier.IndexTTS>
+    <RimTalk.Settings.TTS.TTSSupplier.AzureTTS>Azure TTS</RimTalk.Settings.TTS.TTSSupplier.AzureTTS>
+    <RimTalk.Settings.TTS.TTSSupplier.EdgeTTS>Edge-TTS（免费）</RimTalk.Settings.TTS.TTSSupplier.EdgeTTS>
+    <RimTalk.Settings.TTS.TTSSupplier.GeminiTTS>Gemini TTS</RimTalk.Settings.TTS.TTSSupplier.GeminiTTS>
     <RimTalk.Settings.TTS.SpeedLabel>播放速度：{0}</RimTalk.Settings.TTS.SpeedLabel>
     <RimTalk.Settings.TTS.ModelLabel.CosyVoice>TTS 模型（CosyVoice）：{0}</RimTalk.Settings.TTS.ModelLabel.CosyVoice>
     <RimTalk.Settings.TTS.ModelLabel.IndexTTS>TTS 模型（IndexTTS）：{0}</RimTalk.Settings.TTS.ModelLabel.IndexTTS>
+    <RimTalk.Settings.TTS.AzureRegionLabel>Azure 区域：{0}</RimTalk.Settings.TTS.AzureRegionLabel>
+    <RimTalk.Settings.TTS.CustomRegionLabel>自定义区域（如果不在列表中）：</RimTalk.Settings.TTS.CustomRegionLabel>
     <RimTalk.Settings.TTS.CustomModelIdLabel>自定义模型 ID（可选）：</RimTalk.Settings.TTS.CustomModelIdLabel>
     <RimTalk.Settings.TTS.ResetModelsButton>同步模型列表</RimTalk.Settings.TTS.ResetModelsButton>
     <RimTalk.Settings.TTS.UploadUserVoiceLabel>上传用户预置音色(只有上传时需填写)</RimTalk.Settings.TTS.UploadUserVoiceLabel>

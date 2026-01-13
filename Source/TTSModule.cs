@@ -50,7 +50,7 @@ namespace RimTalk.TTS
             // Apply configured provider implementation
             try
             {
-                Service.TTSService.SetProvider(_settings.Supplier);
+                Service.TTSService.SetProvider(_settings.Supplier, _settings);
             }
             catch { }
 

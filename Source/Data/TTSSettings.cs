@@ -16,7 +16,10 @@ namespace RimTalk.TTS.Data
             None,
             FishAudio,
             CosyVoice,
-            IndexTTS
+            IndexTTS,
+            AzureTTS,
+            EdgeTTS,
+            GeminiTTS
         }
 
         // Default constants (use these instead of deprecated legacy fields)
@@ -74,6 +77,8 @@ namespace RimTalk.TTS.Data
         public System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceModel>> SupplierVoiceModels = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceModel>>();
         // Per-supplier default voice model id
         public System.Collections.Generic.Dictionary<string, string> SupplierDefaultVoiceModelId = new System.Collections.Generic.Dictionary<string, string>();
+        // Per-supplier region (for Azure TTS)
+        public System.Collections.Generic.Dictionary<string, string> SupplierRegion = new System.Collections.Generic.Dictionary<string, string>();
 
         public override void ExposeData()
         {
@@ -103,6 +108,7 @@ namespace RimTalk.TTS.Data
             Scribe_Collections.Look(ref SupplierVoiceModels, "supplierVoiceModels", LookMode.Value, LookMode.Deep);
             Scribe_Collections.Look(ref SupplierSpeed, "supplierSpeed", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref SupplierDefaultVoiceModelId, "supplierDefaultVoiceModelId", LookMode.Value, LookMode.Value);
+            Scribe_Collections.Look(ref SupplierRegion, "supplierRegion", LookMode.Value, LookMode.Value);
             Scribe_Values.Look(ref PlayerReferenceVoiceModelId, "playerReferenceVoiceModelId", VoiceModel.NONE_MODEL_ID);
 
             // LLM API configuration
@@ -136,6 +142,9 @@ namespace RimTalk.TTS.Data
                 SupplierGenerateCooldownMs[TTSSupplier.FishAudio.ToString()] = GenerateCooldownMiliSeconds;
                 SupplierGenerateCooldownMs[TTSSupplier.CosyVoice.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
                 SupplierGenerateCooldownMs[TTSSupplier.IndexTTS.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
+                SupplierGenerateCooldownMs[TTSSupplier.AzureTTS.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
+                SupplierGenerateCooldownMs[TTSSupplier.EdgeTTS.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
+                SupplierGenerateCooldownMs[TTSSupplier.GeminiTTS.ToString()] = DEFAULT_GENERATE_COOLDOWN_MS;
             }
 
             if (SupplierVolume == null)
@@ -144,6 +153,9 @@ namespace RimTalk.TTS.Data
                 SupplierVolume[TTSSupplier.FishAudio.ToString()] = TTSVolume;
                 SupplierVolume[TTSSupplier.CosyVoice.ToString()] = DEFAULT_SUPPLIER_VOLUME;
                 SupplierVolume[TTSSupplier.IndexTTS.ToString()] = DEFAULT_SUPPLIER_VOLUME;
+                SupplierVolume[TTSSupplier.AzureTTS.ToString()] = DEFAULT_SUPPLIER_VOLUME;
+                SupplierVolume[TTSSupplier.EdgeTTS.ToString()] = DEFAULT_SUPPLIER_VOLUME;
+                SupplierVolume[TTSSupplier.GeminiTTS.ToString()] = DEFAULT_SUPPLIER_VOLUME;
             }
 
             if (SupplierTemperature == null)
@@ -158,6 +170,9 @@ namespace RimTalk.TTS.Data
                 SupplierSpeed[TTSSupplier.FishAudio.ToString()] = DEFAULT_SUPPLIER_SPEED;
                 SupplierSpeed[TTSSupplier.CosyVoice.ToString()] = DEFAULT_SUPPLIER_SPEED;
                 SupplierSpeed[TTSSupplier.IndexTTS.ToString()] = DEFAULT_SUPPLIER_SPEED;
+                SupplierSpeed[TTSSupplier.AzureTTS.ToString()] = DEFAULT_SUPPLIER_SPEED;
+                SupplierSpeed[TTSSupplier.EdgeTTS.ToString()] = DEFAULT_SUPPLIER_SPEED;
+                SupplierSpeed[TTSSupplier.GeminiTTS.ToString()] = DEFAULT_SUPPLIER_SPEED;
             }
 
             if (SupplierTopP == null)
@@ -172,6 +187,9 @@ namespace RimTalk.TTS.Data
                 SupplierVoiceModels[TTSSupplier.FishAudio.ToString()] = VoiceModels ?? new System.Collections.Generic.List<VoiceModel>();
                 SupplierVoiceModels[TTSSupplier.CosyVoice.ToString()] = GetDefaultVoiceModels(TTSSupplier.CosyVoice);
                 SupplierVoiceModels[TTSSupplier.IndexTTS.ToString()] = GetDefaultVoiceModels(TTSSupplier.IndexTTS);
+                SupplierVoiceModels[TTSSupplier.AzureTTS.ToString()] = GetDefaultVoiceModels(TTSSupplier.AzureTTS);
+                SupplierVoiceModels[TTSSupplier.EdgeTTS.ToString()] = GetDefaultVoiceModels(TTSSupplier.EdgeTTS);
+                SupplierVoiceModels[TTSSupplier.GeminiTTS.ToString()] = GetDefaultVoiceModels(TTSSupplier.GeminiTTS);
             }
 
             if (SupplierDefaultVoiceModelId == null)
@@ -180,6 +198,15 @@ namespace RimTalk.TTS.Data
                 SupplierDefaultVoiceModelId[TTSSupplier.FishAudio.ToString()] = DefaultVoiceModelId ?? "";
                 SupplierDefaultVoiceModelId[TTSSupplier.CosyVoice.ToString()] = VoiceModel.NONE_MODEL_ID;
                 SupplierDefaultVoiceModelId[TTSSupplier.IndexTTS.ToString()] = VoiceModel.NONE_MODEL_ID;
+                SupplierDefaultVoiceModelId[TTSSupplier.AzureTTS.ToString()] = VoiceModel.NONE_MODEL_ID;
+                SupplierDefaultVoiceModelId[TTSSupplier.EdgeTTS.ToString()] = VoiceModel.NONE_MODEL_ID;
+                SupplierDefaultVoiceModelId[TTSSupplier.GeminiTTS.ToString()] = VoiceModel.NONE_MODEL_ID;
+            }
+
+            if (SupplierRegion == null)
+            {
+                SupplierRegion = new System.Collections.Generic.Dictionary<string, string>();
+                SupplierRegion[TTSSupplier.AzureTTS.ToString()] = "eastus";
             }
         }
 
@@ -266,6 +293,7 @@ namespace RimTalk.TTS.Data
         /// <summary>
         /// Return a default preset voice model list for the given supplier.
         /// CosyVoice and IndexTTS have eight system presets (alex, benjamin, charles, david, anna, bella, claire, diana).
+        /// AzureTTS has common neural voices.
         /// FishAudio has no presets by default.
         /// </summary>
         public static System.Collections.Generic.List<VoiceModel> GetDefaultVoiceModels(TTSSupplier supplier)
@@ -282,6 +310,28 @@ namespace RimTalk.TTS.Data
                 case TTSSupplier.IndexTTS:
                     foreach (var n in names)
                         presets.Add(new VoiceModel($"IndexTeam/IndexTTS-2:{n}", n));
+                    break;
+                case TTSSupplier.AzureTTS:
+                case TTSSupplier.EdgeTTS:
+                    presets.Add(new VoiceModel("en-US-JennyNeural", "Jenny (US, Female)"));
+                    presets.Add(new VoiceModel("en-US-GuyNeural", "Guy (US, Male)"));
+                    presets.Add(new VoiceModel("en-US-AriaNeural", "Aria (US, Female)"));
+                    presets.Add(new VoiceModel("en-US-DavisNeural", "Davis (US, Male)"));
+                    presets.Add(new VoiceModel("en-GB-SoniaNeural", "Sonia (UK, Female)"));
+                    presets.Add(new VoiceModel("en-GB-RyanNeural", "Ryan (UK, Male)"));
+                    presets.Add(new VoiceModel("zh-CN-XiaoxiaoNeural", "Xiaoxiao (CN, Female)"));
+                    presets.Add(new VoiceModel("zh-CN-YunxiNeural", "Yunxi (CN, Male)"));
+                    break;
+                case TTSSupplier.GeminiTTS:
+                    // Gemini TTS: 8 common voices (selected from 30 available)
+                    presets.Add(new VoiceModel("Kore", "Kore (Firm)"));
+                    presets.Add(new VoiceModel("Puck", "Puck (Upbeat)"));
+                    presets.Add(new VoiceModel("Aoede", "Aoede (Breezy)"));
+                    presets.Add(new VoiceModel("Enceladus", "Enceladus (Breathy)"));
+                    presets.Add(new VoiceModel("Charon", "Charon (Informative)"));
+                    presets.Add(new VoiceModel("Fenrir", "Fenrir (Excitable)"));
+                    presets.Add(new VoiceModel("Leda", "Leda (Youthful)"));
+                    presets.Add(new VoiceModel("Callirrhoe", "Callirrhoe (Easy-going)"));
                     break;
                 default:
                     // FishAudio: no presets
@@ -301,6 +351,16 @@ namespace RimTalk.TTS.Data
             SupplierSpeed[supplier.ToString()] = s;
             if (supplier == TTSSupplier.FishAudio)
                 TTSSpeed = s;
+        }
+
+        public string GetSupplierRegion(TTSSupplier supplier)
+        {
+            return SupplierRegion.TryGetValue(supplier.ToString()) ?? "eastus";
+        }
+
+        public void SetSupplierRegion(TTSSupplier supplier, string region)
+        {
+            SupplierRegion[supplier.ToString()] = region ?? "eastus";
         }
     }
 }

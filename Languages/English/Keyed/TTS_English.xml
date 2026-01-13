@@ -42,7 +42,7 @@
     <RimTalk.Settings.TTS.NotSet>(Not Set)</RimTalk.Settings.TTS.NotSet>
     <RimTalk.Settings.TTS.NoneModel>None (Skip TTS)</RimTalk.Settings.TTS.NoneModel>
     <RimTalk.Settings.TTS.ClearDefault>(Clear Default)</RimTalk.Settings.TTS.ClearDefault>
-    <RimTalk.Settings.TTS.ColumnDescription>Left column: Model Name (for display), Right column: Model ID (for API calls). WARNING: For CosyVoice and IndexTTS, deleting a model also deletes its information stored on SiliconFlow. IRREVERSIBLE!</RimTalk.Settings.TTS.ColumnDescription>
+    <RimTalk.Settings.TTS.ColumnDescription>Left column: Model Name (for display), Right column: Model ID (for API calls). For Azure Custom Voice, use format "deploymentId:voiceName" (e.g., "abc123:MyVoice"). WARNING: For CosyVoice and IndexTTS, deleting a model also deletes its information stored on SiliconFlow. IRREVERSIBLE!</RimTalk.Settings.TTS.ColumnDescription>
     <RimTalk.Settings.TTS.ColumnModelName>Model Name</RimTalk.Settings.TTS.ColumnModelName>
     <RimTalk.Settings.TTS.ColumnModelID>Model ID</RimTalk.Settings.TTS.ColumnModelID>
     <RimTalk.Settings.TTS.Delete>Delete</RimTalk.Settings.TTS.Delete>
@@ -55,6 +55,9 @@
     <RimTalk.Settings.TTS.ResetPrompt.FishAudio>Use Default FishAudio Prompt</RimTalk.Settings.TTS.ResetPrompt.FishAudio>
     <RimTalk.Settings.TTS.ResetPrompt.CosyVoice>Use Default CosyVoice Prompt</RimTalk.Settings.TTS.ResetPrompt.CosyVoice>
     <RimTalk.Settings.TTS.ResetPrompt.IndexTTS>Use Default IndexTTS Prompt</RimTalk.Settings.TTS.ResetPrompt.IndexTTS>
+    <RimTalk.Settings.TTS.ResetPrompt.AzureTTS>Use Default Azure TTS Prompt</RimTalk.Settings.TTS.ResetPrompt.AzureTTS>
+    <RimTalk.Settings.TTS.ResetPrompt.EdgeTTS>Use Default Edge-TTS Prompt</RimTalk.Settings.TTS.ResetPrompt.EdgeTTS>
+    <RimTalk.Settings.TTS.ResetPrompt.GeminiTTS>Use Default Gemini TTS Prompt</RimTalk.Settings.TTS.ResetPrompt.GeminiTTS>
     <RimTalk.Settings.TTS.ModelConfigurations>Voice Model Configurations</RimTalk.Settings.TTS.ModelConfigurations>
     <RimTalk.Settings.TTS.NoCustomModels>No custom voice models configured yet.\n\nAdd models in TTS Settings to see them here.</RimTalk.Settings.TTS.NoCustomModels>
 
@@ -100,9 +103,14 @@
     <RimTalk.Settings.TTS.TTSSupplier.FishAudio>Fish Audio</RimTalk.Settings.TTS.TTSSupplier.FishAudio>
     <RimTalk.Settings.TTS.TTSSupplier.CosyVoice>CosyVoice2</RimTalk.Settings.TTS.TTSSupplier.CosyVoice>
     <RimTalk.Settings.TTS.TTSSupplier.IndexTTS>IndexTTS2</RimTalk.Settings.TTS.TTSSupplier.IndexTTS>
+    <RimTalk.Settings.TTS.TTSSupplier.AzureTTS>Azure TTS</RimTalk.Settings.TTS.TTSSupplier.AzureTTS>
+    <RimTalk.Settings.TTS.TTSSupplier.EdgeTTS>Edge-TTS (Free)</RimTalk.Settings.TTS.TTSSupplier.EdgeTTS>
+    <RimTalk.Settings.TTS.TTSSupplier.GeminiTTS>Gemini TTS</RimTalk.Settings.TTS.TTSSupplier.GeminiTTS>
     <RimTalk.Settings.TTS.SpeedLabel>Speed: {0}</RimTalk.Settings.TTS.SpeedLabel>
     <RimTalk.Settings.TTS.ModelLabel.CosyVoice>TTS Model (CosyVoice): {0}</RimTalk.Settings.TTS.ModelLabel.CosyVoice>
     <RimTalk.Settings.TTS.ModelLabel.IndexTTS>TTS Model (IndexTTS): {0}</RimTalk.Settings.TTS.ModelLabel.IndexTTS>
+    <RimTalk.Settings.TTS.AzureRegionLabel>Azure Region: {0}</RimTalk.Settings.TTS.AzureRegionLabel>
+    <RimTalk.Settings.TTS.CustomRegionLabel>Custom region (if not in list):</RimTalk.Settings.TTS.CustomRegionLabel>
     <RimTalk.Settings.TTS.CustomModelIdLabel>Custom model id (optional):</RimTalk.Settings.TTS.CustomModelIdLabel>
     <RimTalk.Settings.TTS.ResetModelsButton>Synchronize model list</RimTalk.Settings.TTS.ResetModelsButton>
     <RimTalk.Settings.TTS.UploadUserVoiceLabel>Upload user voice (only required when uploading):</RimTalk.Settings.TTS.UploadUserVoiceLabel>

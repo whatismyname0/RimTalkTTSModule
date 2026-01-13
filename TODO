@@ -1,22 +1,24 @@
 Urgent:
-    Support local TTS model:
-    {
-        I don't have any experience and the format could be a mess
-        waiting for help
-    }
+{
+
+}
 
 Improvement:
+{
     In Progress:
-        Code refactor,
+    {
+        Code refactor: always ongoing,
+        Support more online TTS service supplier:
+        {
+            status: Siliconflow(CozyVoice & IndexTTS) & FishAudio are supported
+            ongoing: AzureTTS, edgeTTS, GeminiTTS
+        }
+    }
     Planned:
+    {
         cooldown time after TTS generation:
         {
             desc: Add a cooldown time independent of Rimtalk's cooldown time, set when all content of a complete dialogue is generated with its audio all played or skipped, during which, according to user's settings, Rimtalk cannot generate more dialogues, or Rimtalk will still generate dialogues, however, restricted by Rimtalk's cooldown time, and the same time, TTS will not function until TTS module's cooldown time is over.
-        },
-        Support more online TTS service supplier:
-        {
-            status: Siliconflow(CozyVoice & IndexTTS) is supported
-            Queued: AzureTTS(in queue), edgeTTS(in queue)
         },
         Voice source location follows speaking pawn:
         {
@@ -24,14 +26,20 @@ Improvement:
         },
         Status indicator:
         {
-            desc: A color bar below the Rimtalk window displaying status now.
-                Red: Voice of the next response is still not generated nor cancelled.
-                Yellow: Voice of the next response is generated or cancelled, but voices of some of generated responses are still not generated nor cancelled.
-                Green: All voices are generated or cancelled, and there are some responses are still not displayed nor ignored.
-                Gray: All responses are displayed or ignored.
+            desc: "A color bar below the Rimtalk window displaying status now.
+            Red: Voice of the next response is still not generated nor cancelled.
+            Yellow: Voice of the next response is generated or cancelled, but voices of some of generated responses are still not generated nor cancelled.
+            Green: All voices are generated or cancelled, and there are some responses are still not displayed nor ignored.
+            Gray: All responses are displayed or ignored."
         }
-
+        Support local TTS model:
+        {
+            desc: I don't have any experience and the format could be a mess
+            status: waiting for help
+        }
+    }
+}
 
 
 Bug fix:
-    # working fine :)
+    working fine :)

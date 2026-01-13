@@ -22,7 +22,7 @@ namespace RimTalk.TTS.Service
 
         private static readonly object _providerLock = new object();
 
-        public static void SetProvider(TTSSettings.TTSSupplier supplier)
+        public static void SetProvider(TTSSettings.TTSSupplier supplier, TTSSettings settings = null)
         {
             lock (_providerLock)
             {
@@ -67,6 +67,21 @@ namespace RimTalk.TTS.Service
                         break;
                     case TTSSettings.TTSSupplier.IndexTTS:
                         _provider = new Provider.IndexTTSProvider();
+                        break;
+                    case TTSSettings.TTSSupplier.AzureTTS:
+                        var azureProvider = new Provider.AzureTTSProvider();
+                        if (settings != null)
+                        {
+                            string region = settings.GetSupplierRegion(supplier);
+                            azureProvider.SetRegion(region);
+                        }
+                        _provider = azureProvider;
+                        break;
+                    case TTSSettings.TTSSupplier.EdgeTTS:
+                        _provider = new Provider.EdgeTTSProvider();
+                        break;
+                    case TTSSettings.TTSSupplier.GeminiTTS:
+                        _provider = new Provider.GeminiTTSProvider();
                         break;
                     default:
                         _provider = new Provider.NoneProvider();

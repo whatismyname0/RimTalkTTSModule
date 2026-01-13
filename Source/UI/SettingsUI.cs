@@ -59,8 +59,10 @@ namespace RimTalk.TTS.UI
             int voiceModelCount = supplierVoiceModels?.Count ?? 0;
             // If supplier supports SiliconFlow uploads, include upload UI height estimate
             float uploadSectionHeight = (settings.Supplier == TTSSettings.TTSSupplier.CosyVoice || settings.Supplier == TTSSettings.TTSSupplier.IndexTTS) ? 280f : 0f;
+            // ResetModels button height (CosyVoice, IndexTTS, AzureTTS, EdgeTTS)
+            float resetButtonHeight = (settings.Supplier == TTSSettings.TTSSupplier.CosyVoice || settings.Supplier == TTSSettings.TTSSupplier.IndexTTS || settings.Supplier == TTSSettings.TTSSupplier.AzureTTS || settings.Supplier == TTSSettings.TTSSupplier.EdgeTTS) ? 40f : 0f;
             // Processing prompt area height (text area)
-            float contentHeight = baseHeight + (voiceModelCount * voiceModelRowHeight) + uploadSectionHeight;
+            float contentHeight = baseHeight + (voiceModelCount * voiceModelRowHeight) + uploadSectionHeight + resetButtonHeight;
             bool isOn = settings.EnableTTS;
             
             Rect viewRect = new Rect(0f, 0f, inRect.width - 20f, contentHeight);
@@ -133,22 +135,37 @@ namespace RimTalk.TTS.UI
                 options.Add(new FloatMenuOption("RimTalk.Settings.TTS.TTSSupplier.FishAudio".Translate(), delegate
                 {
                     settings.Supplier = TTSSettings.TTSSupplier.FishAudio;
-                    TTSService.SetProvider(settings.Supplier);
+                    TTSService.SetProvider(settings.Supplier, settings);
                 }));
                 options.Add(new FloatMenuOption("RimTalk.Settings.TTS.TTSSupplier.CosyVoice".Translate(), delegate
                 {
                     settings.Supplier = TTSSettings.TTSSupplier.CosyVoice;
-                    TTSService.SetProvider(settings.Supplier);
+                    TTSService.SetProvider(settings.Supplier, settings);
                 }));
                 options.Add(new FloatMenuOption("RimTalk.Settings.TTS.TTSSupplier.IndexTTS".Translate(), delegate
                 {
                     settings.Supplier = TTSSettings.TTSSupplier.IndexTTS;
-                    TTSService.SetProvider(settings.Supplier);
+                    TTSService.SetProvider(settings.Supplier, settings);
+                }));
+                options.Add(new FloatMenuOption("RimTalk.Settings.TTS.TTSSupplier.AzureTTS".Translate(), delegate
+                {
+                    settings.Supplier = TTSSettings.TTSSupplier.AzureTTS;
+                    TTSService.SetProvider(settings.Supplier, settings);
+                }));
+                options.Add(new FloatMenuOption("RimTalk.Settings.TTS.TTSSupplier.EdgeTTS".Translate(), delegate
+                {
+                    settings.Supplier = TTSSettings.TTSSupplier.EdgeTTS;
+                    TTSService.SetProvider(settings.Supplier, settings);
+                }));
+                options.Add(new FloatMenuOption("RimTalk.Settings.TTS.TTSSupplier.GeminiTTS".Translate(), delegate
+                {
+                    settings.Supplier = TTSSettings.TTSSupplier.GeminiTTS;
+                    TTSService.SetProvider(settings.Supplier, settings);
                 }));
                 options.Add(new FloatMenuOption("RimTalk.Settings.TTS.None".Translate(), delegate
                 {
                     settings.Supplier = TTSSettings.TTSSupplier.None;
-                    TTSService.SetProvider(settings.Supplier);
+                    TTSService.SetProvider(settings.Supplier, settings);
                 }));
 
                 Find.WindowStack.Add(new FloatMenu(options));
@@ -217,6 +234,45 @@ namespace RimTalk.TTS.UI
                     if (customModelIndex != currentModel)
                     {
                         settings.SetSupplierModel(settings.Supplier, customModelIndex);
+                    }
+                }
+
+                // AzureTTS region configuration
+                if (settings.Supplier == TTSSettings.TTSSupplier.AzureTTS)
+                {
+                    string currentRegion = settings.GetSupplierRegion(settings.Supplier);
+                    listing.Label("RimTalk.Settings.TTS.AzureRegionLabel".Translate(currentRegion ?? "eastus"));
+                    listing.Gap(6f);
+                    
+                    // Common Azure regions for TTS
+                    var regionOptions = new[] { "eastus", "westus", "westus2", "eastus2", "westeurope", "northeurope", 
+                                               "southeastasia", "eastasia", "australiaeast", "japaneast", "canadacentral" };
+                    
+                    Rect regionRect = listing.GetRect(30f);
+                    string regionDisplay = currentRegion ?? "eastus";
+                    if (Widgets.ButtonText(regionRect, regionDisplay))
+                    {
+                        var options = new System.Collections.Generic.List<FloatMenuOption>();
+                        foreach (var region in regionOptions)
+                        {
+                            options.Add(new FloatMenuOption(region, delegate
+                            {
+                                settings.SetSupplierRegion(settings.Supplier, region);
+                                // Update provider with new region
+                                TTSService.SetProvider(settings.Supplier, settings);
+                            }));
+                        }
+                        Find.WindowStack.Add(new FloatMenu(options));
+                    }
+                    
+                    listing.Gap(6f);
+                    listing.Label("RimTalk.Settings.TTS.CustomRegionLabel".Translate());
+                    string customRegion = listing.TextEntry(currentRegion ?? "eastus");
+                    if (customRegion != currentRegion)
+                    {
+                        settings.SetSupplierRegion(settings.Supplier, customRegion);
+                        // Update provider with new region
+                        TTSService.SetProvider(settings.Supplier, settings);
                     }
                 }
 
@@ -308,13 +364,13 @@ namespace RimTalk.TTS.UI
 
             listing.Gap(6f);
 
-            // Reset buttons
-            Rect resetButtonsRect = listing.GetRect(30f);
+            // Reset buttons - First row: FishAudio, CosyVoice, IndexTTS
+            Rect resetButtonsRect1 = listing.GetRect(30f);
             float gap = 4f;
-            float btnW = (resetButtonsRect.width - gap * 2) / 3f;
-            Rect fishRect = new Rect(resetButtonsRect.x, resetButtonsRect.y, btnW, resetButtonsRect.height);
-            Rect cosyRect = new Rect(resetButtonsRect.x + btnW + gap, resetButtonsRect.y, btnW, resetButtonsRect.height);
-            Rect indexRect = new Rect(resetButtonsRect.x + (btnW + gap) * 2f, resetButtonsRect.y, btnW, resetButtonsRect.height);
+            float btnW = (resetButtonsRect1.width - gap * 2) / 3f;
+            Rect fishRect = new Rect(resetButtonsRect1.x, resetButtonsRect1.y, btnW, resetButtonsRect1.height);
+            Rect cosyRect = new Rect(resetButtonsRect1.x + btnW + gap, resetButtonsRect1.y, btnW, resetButtonsRect1.height);
+            Rect indexRect = new Rect(resetButtonsRect1.x + (btnW + gap) * 2f, resetButtonsRect1.y, btnW, resetButtonsRect1.height);
 
             if (Widgets.ButtonText(fishRect, "RimTalk.Settings.TTS.ResetPrompt.FishAudio".Translate()))
             {
@@ -332,6 +388,31 @@ namespace RimTalk.TTS.UI
             {
                 settings.CustomTTSProcessingPrompt = Data.TTSConstant.DefaultTTSProcessingPrompt_IndexTTS;
                 processingPromptBuffer = Data.TTSConstant.DefaultTTSProcessingPrompt_IndexTTS;
+            }
+
+            // Reset buttons - Second row: AzureTTS, EdgeTTS, GeminiTTS
+            listing.Gap(6f);
+            Rect resetButtonsRect2 = listing.GetRect(30f);
+            Rect azureRect = new Rect(resetButtonsRect2.x, resetButtonsRect2.y, btnW, resetButtonsRect2.height);
+            Rect edgeRect = new Rect(resetButtonsRect2.x + btnW + gap, resetButtonsRect2.y, btnW, resetButtonsRect2.height);
+            Rect geminiRect = new Rect(resetButtonsRect2.x + (btnW + gap) * 2f, resetButtonsRect2.y, btnW, resetButtonsRect2.height);
+
+            if (Widgets.ButtonText(azureRect, "RimTalk.Settings.TTS.ResetPrompt.AzureTTS".Translate()))
+            {
+                settings.CustomTTSProcessingPrompt = Data.TTSConstant.DefaultTTSProcessingPrompt_AzureTTS;
+                processingPromptBuffer = Data.TTSConstant.DefaultTTSProcessingPrompt_AzureTTS;
+            }
+
+            if (Widgets.ButtonText(edgeRect, "RimTalk.Settings.TTS.ResetPrompt.EdgeTTS".Translate()))
+            {
+                settings.CustomTTSProcessingPrompt = Data.TTSConstant.DefaultTTSProcessingPrompt_EdgeTTS;
+                processingPromptBuffer = Data.TTSConstant.DefaultTTSProcessingPrompt_EdgeTTS;
+            }
+
+            if (Widgets.ButtonText(geminiRect, "RimTalk.Settings.TTS.ResetPrompt.GeminiTTS".Translate()))
+            {
+                settings.CustomTTSProcessingPrompt = Data.TTSConstant.DefaultTTSProcessingPrompt_GeminiTTS;
+                processingPromptBuffer = Data.TTSConstant.DefaultTTSProcessingPrompt_GeminiTTS;
             }
         }
 
@@ -550,7 +631,7 @@ namespace RimTalk.TTS.UI
                 }
             }
 
-            if (settings.Supplier == TTSSettings.TTSSupplier.CosyVoice || settings.Supplier == TTSSettings.TTSSupplier.IndexTTS)
+            if (settings.Supplier == TTSSettings.TTSSupplier.CosyVoice || settings.Supplier == TTSSettings.TTSSupplier.IndexTTS || settings.Supplier == TTSSettings.TTSSupplier.AzureTTS || settings.Supplier == TTSSettings.TTSSupplier.EdgeTTS || settings.Supplier == TTSSettings.TTSSupplier.GeminiTTS)
             {
                 listing.Gap(6f);
                 // Single Reset Models button placed after the full list
@@ -748,6 +829,9 @@ namespace RimTalk.TTS.UI
                 TTSSettings.TTSSupplier.FishAudio => "RimTalk.Settings.TTS.TTSSupplier.FishAudio".Translate(),
                 TTSSettings.TTSSupplier.CosyVoice => "RimTalk.Settings.TTS.TTSSupplier.CosyVoice".Translate(),
                 TTSSettings.TTSSupplier.IndexTTS => "RimTalk.Settings.TTS.TTSSupplier.IndexTTS".Translate(),
+                TTSSettings.TTSSupplier.AzureTTS => "RimTalk.Settings.TTS.TTSSupplier.AzureTTS".Translate(),
+                TTSSettings.TTSSupplier.EdgeTTS => "RimTalk.Settings.TTS.TTSSupplier.EdgeTTS".Translate(),
+                TTSSettings.TTSSupplier.GeminiTTS => "RimTalk.Settings.TTS.TTSSupplier.GeminiTTS".Translate(),
                 TTSSettings.TTSSupplier.None => "RimTalk.Settings.TTS.None".Translate(),
                 _ => supplier.ToString(),
             };

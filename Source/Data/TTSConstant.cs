@@ -70,6 +70,125 @@ namespace RimTalk.TTS.Data
             }
             """;
 
+        public static readonly string DefaultTTSProcessingPrompt_AzureTTS =
+            """
+            You are a professional TTS text processor for Microsoft Azure Text-to-Speech.
+
+            Rules:
+            1. Translate all text into {language}.
+            2. For text inside parentheses: translate only the content, keep parentheses, do not add annotations.
+            3. For text outside parentheses: translate and add Azure TTS SSML-compatible markup tags.
+            4. Never add tags inside parentheses.
+            5. Output only JSON:
+            {
+                "text": "<fully translated to {language} with SSML tags, all parentheses and their translated content preserved>",
+                "emotion": "<most appropriate speaking style from list below, or empty string>"
+            }
+
+            Available Azure TTS speaking styles (for emotion field, choose one or leave empty):
+            - cheerful: Happy, upbeat mood
+            - sad: Sorrowful, melancholic
+            - angry: Annoyed, displeased
+            - excited: Enthusiastic, energetic
+            - friendly: Pleasant, warm, inviting
+            - terrified: Very scared, panicked
+            - shouting: Loud, speaking forcefully
+            - unfriendly: Cold, distant
+            - whispering: Speaking very softly
+            - hopeful: Optimistic, expecting positive outcomes
+            - calm: Relaxed, composed
+            - fearful: Afraid, nervous
+            - embarrassed: Uncomfortable, self-conscious
+            - serious: Stern, focused, no-nonsense
+            - depressed: Very sad, low mood
+            - disgruntled: Annoyed, dissatisfied
+            - assistant: Professional, helpful tone (for helpful NPCs)
+            - newscast: Clear, formal news reporter style
+            - customerservice: Polite, patient service tone
+
+            Available SSML markup tags (add in text field outside parentheses):
+            
+            Pauses/Breaks:
+            - [break] or [break:500ms] - Short pause (default 500ms)
+            - [long-break] or [break:1s] - Long pause (1 second)
+            - [break:2s] - Custom duration pause
+            
+            Emphasis (highlight important words):
+            - [emphasis]word[/emphasis] - Moderate emphasis (default)
+            - [emphasis:strong]IMPORTANT[/emphasis] - Strong emphasis
+            - [emphasis:reduced]minor[/emphasis] - Reduced emphasis
+            
+            Examples:
+            "I'm [emphasis:strong]very[/emphasis] happy!" -> Strong emphasis on "very"
+            "Wait[break:1s] Are you sure?" -> 1 second pause between sentences
+            "Call me at [telephone]555-0123[/telephone]" -> Pronounce phone number correctly
+            "The date is [date]2024-01-13[/date]" -> Pronounce date naturally
+            
+            Note: Only use emotion field for speaking style. Add SSML tags directly in text field.
+            """;
+
+        public static readonly string DefaultTTSProcessingPrompt_EdgeTTS =
+            """
+            You are a professional TTS text processor for Microsoft Edge-TTS (free TTS service).
+
+            Rules:
+            1. Translate all text into {language}.
+            2. For text inside parentheses: translate only the content, keep parentheses, do not add annotations.
+            3. For text outside parentheses: translate normally (Edge-TTS has limited SSML support).
+            4. Never add tags inside parentheses.
+            5. Output only JSON:
+            {
+                "text": "<fully translated to {language}, all parentheses and their translated content preserved>",
+                "emotion": ""
+            }
+
+            Note: Edge-TTS uses the same voice names as Azure TTS but is completely free and doesn't require API key.
+            Basic features: rate (speed) control is supported through SSML prosody tags.
+            Advanced features like speaking styles may not be available for all voices.
+            """;
+
+        public static readonly string DefaultTTSProcessingPrompt_GeminiTTS =
+            """
+            You are a professional TTS text processor for Google Gemini Text-to-Speech.
+
+            Rules:
+            1. Translate all text into {language}.
+            2. For text inside parentheses: translate only the content, keep parentheses, do not add annotations.
+            3. For text outside parentheses: translate and add natural language style directives.
+            4. Never add directives inside parentheses.
+            5. Output only JSON:
+            {
+                "text": "<fully translated to {language} with style directives, all parentheses and their translated content preserved>",
+                "emotion": ""
+            }
+
+            Natural Language Style Control:
+            Gemini TTS uses natural language prompts to control speaking style. You can add style directives at the beginning of text or before specific parts:
+            
+            Examples:
+            - "Say cheerfully: Have a wonderful day!"
+            - "In a spooky whisper: Something wicked this way comes"
+            - "Speak excitedly and quickly: I can't believe it!"
+            - "With a warm, friendly tone: Welcome home"
+            - "In a sad, tired voice: I'm exhausted"
+            - "Energetically: Let's go!"
+            - "Calmly and softly: Everything will be okay"
+            
+            Style Attributes You Can Specify:
+            - Emotion: happy, sad, angry, excited, calm, nervous, confident, surprised, scared, bored
+            - Tone: cheerful, friendly, warm, cold, professional, casual, playful, serious
+            - Manner: whisper, shout, hurry, slowly, energetically, lazily, tiredly
+            - Pace: quickly, slowly, at normal pace
+            - Accent/Character: British accent, Southern accent, robotic, childlike
+            
+            Multi-part Styling:
+            You can add different styles to different parts of the same text:
+            "Say happily: Good morning! [pause] Now in a serious tone: We need to talk."
+            
+            Note: Gemini TTS is highly controllable through natural language. Be creative and descriptive with your style instructions.
+            Available voices: Kore, Puck, Aoede, Enceladus, Charon, Fenrir, Leda, Callirrhoe, and 22 more.
+            """;
+
         /// <summary>
         /// Get the current TTS processing prompt from settings or fallback to default
         /// </summary>

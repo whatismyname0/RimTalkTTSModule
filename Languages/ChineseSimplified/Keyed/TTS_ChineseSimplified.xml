@@ -103,9 +103,9 @@
     <RimTalk.Settings.TTS.TTSSupplier.FishAudio>Fish Audio</RimTalk.Settings.TTS.TTSSupplier.FishAudio>
     <RimTalk.Settings.TTS.TTSSupplier.CosyVoice>CosyVoice2</RimTalk.Settings.TTS.TTSSupplier.CosyVoice>
     <RimTalk.Settings.TTS.TTSSupplier.IndexTTS>IndexTTS2</RimTalk.Settings.TTS.TTSSupplier.IndexTTS>
-    <RimTalk.Settings.TTS.TTSSupplier.AzureTTS>Azure TTS</RimTalk.Settings.TTS.TTSSupplier.AzureTTS>
-    <RimTalk.Settings.TTS.TTSSupplier.EdgeTTS>Edge-TTS（免费）</RimTalk.Settings.TTS.TTSSupplier.EdgeTTS>
-    <RimTalk.Settings.TTS.TTSSupplier.GeminiTTS>Gemini TTS</RimTalk.Settings.TTS.TTSSupplier.GeminiTTS>
+    <RimTalk.Settings.TTS.TTSSupplier.AzureTTS>AzureTTS（未完成）</RimTalk.Settings.TTS.TTSSupplier.AzureTTS>
+    <RimTalk.Settings.TTS.TTSSupplier.EdgeTTS>EdgeTTS（免费）</RimTalk.Settings.TTS.TTSSupplier.EdgeTTS>
+    <RimTalk.Settings.TTS.TTSSupplier.GeminiTTS>GeminiTTS（未完成）</RimTalk.Settings.TTS.TTSSupplier.GeminiTTS>
     <RimTalk.Settings.TTS.SpeedLabel>播放速度：{0}</RimTalk.Settings.TTS.SpeedLabel>
     <RimTalk.Settings.TTS.ModelLabel.CosyVoice>TTS 模型（CosyVoice）：{0}</RimTalk.Settings.TTS.ModelLabel.CosyVoice>
     <RimTalk.Settings.TTS.ModelLabel.IndexTTS>TTS 模型（IndexTTS）：{0}</RimTalk.Settings.TTS.ModelLabel.IndexTTS>

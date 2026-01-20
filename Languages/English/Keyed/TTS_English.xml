@@ -86,8 +86,13 @@
     <RimTalk.TTS.VoiceNoneDesc>Disable TTS for this character</RimTalk.TTS.VoiceNoneDesc>
     <RimTalk.TTS.VoiceDefault>Default</RimTalk.TTS.VoiceDefault>
     <RimTalk.TTS.VoiceDefaultDesc>Use the default voice model from TTS settings</RimTalk.TTS.VoiceDefaultDesc>
+    <RimTalk.TTS.VoiceRuleBased>Rule-based</RimTalk.TTS.VoiceRuleBased>
+    <RimTalk.TTS.VoiceRuleBasedDesc>Determine voice automatically based on assignment rules</RimTalk.TTS.VoiceRuleBasedDesc>
+    <RimTalk.Settings.TTS.RuleBased>Rule-based</RimTalk.Settings.TTS.RuleBased>
+    <RimTalk.Settings.TTS.Rules>Display/Collapse Rule List</RimTalk.Settings.TTS.Rules>
     <RimTalk.TTS.Save>Save</RimTalk.TTS.Save>
     <RimTalk.TTS.Cancel>Cancel</RimTalk.TTS.Cancel>
+    <RimTalk.TTS.OK>OK</RimTalk.TTS.OK>
     <RimTalk.TTS.VoiceUpdated>Voice model updated for {0}</RimTalk.TTS.VoiceUpdated>
 
     <!-- Overlay_MapComponentOnGUI_Postfix -->
@@ -131,4 +136,61 @@
 
     <RimTalk.TTS.SyncComplete>User voice sync complete</RimTalk.TTS.SyncComplete>
     <RimTalk.TTS.SyncFailed>User voice sync failed</RimTalk.TTS.SyncFailed>
+
+    <!-- Advanced Mode -->
+    <RimTalk.Settings.TTS.AdvancedMode.Enabled>Advanced Mode: Enabled</RimTalk.Settings.TTS.AdvancedMode.Enabled>
+    <RimTalk.Settings.TTS.AdvancedMode.Disabled>Advanced Mode: Disabled</RimTalk.Settings.TTS.AdvancedMode.Disabled>
+    <RimTalk.Settings.TTS.AdvancedMode.RulesList>Voice Assignment Rules (Priority Order):</RimTalk.Settings.TTS.AdvancedMode.RulesList>
+
+    <!-- Voice Rule Editor Window -->
+    <RimTalk.Settings.TTS.RuleEditor.Title>Edit Voice Assignment Rule</RimTalk.Settings.TTS.RuleEditor.Title>
+    <RimTalk.Settings.TTS.RuleEditor.SelectedRequirements>Selected Requirements (All Must Match)</RimTalk.Settings.TTS.RuleEditor.SelectedRequirements>
+    <RimTalk.Settings.TTS.RuleEditor.AvailableRequirements>Available Requirement Types</RimTalk.Settings.TTS.RuleEditor.AvailableRequirements>
+    <RimTalk.Settings.TTS.RuleEditor.SelectedVoiceModels>Selected Voice Models (Random Selection)</RimTalk.Settings.TTS.RuleEditor.SelectedVoiceModels>
+    <RimTalk.Settings.TTS.RuleEditor.UnselectedVoiceModels>Available Voice Models</RimTalk.Settings.TTS.RuleEditor.UnselectedVoiceModels>
+    <RimTalk.Settings.TTS.RuleEditor.Gender>Gender:</RimTalk.Settings.TTS.RuleEditor.Gender>
+    <RimTalk.Settings.TTS.RuleEditor.Xenotype>Xenotype (Biotech DLC):</RimTalk.Settings.TTS.RuleEditor.Xenotype>
+    <RimTalk.Settings.TTS.RuleEditor.Race>Race (HAR mod):</RimTalk.Settings.TTS.RuleEditor.Race>
+    <RimTalk.Settings.TTS.RuleEditor.Age>Age Range:</RimTalk.Settings.TTS.RuleEditor.Age>
+    <RimTalk.Settings.TTS.RuleEditor.AddAge>Add Age Requirement</RimTalk.Settings.TTS.RuleEditor.AddAge>
+    <RimTalk.Settings.TTS.RuleEditor.AgeRangeError>Age must be between 0 and 999999</RimTalk.Settings.TTS.RuleEditor.AgeRangeError>
+    <RimTalk.Settings.TTS.RuleEditor.MaxLessThanMinError>Max age must not be less than min age</RimTalk.Settings.TTS.RuleEditor.MaxLessThanMinError>
+    <RimTalk.Settings.TTS.RuleEditor.AgeInvalidNumberError>Please enter valid numbers for age</RimTalk.Settings.TTS.RuleEditor.AgeInvalidNumberError>
+    <RimTalk.Settings.TTS.RuleEditor.Help>How to Use:
+
+1. Adding Requirements:
+   - Click buttons in the lower-left panel to add requirements
+   - Upper-left panel shows selected requirements
+   - Click × to remove requirements
+
+2. Adding Voice Models:
+   - Click voice models in the lower-right panel to add them
+   - Upper-right panel shows selected voice models
+   - Click × to remove voice models
+   - One voice will be randomly selected from the selected voices when matched
+
+3. Matching Logic:
+   - Same type requirements automatically use "OR" logic
+     Example: Selecting both "Male" and "Female" will match all male or female characters
+   - Different type results use "AND" logic
+     Example: Selecting "Male", "Baseliner", "Hussars", and "Age 20-30" will match male characters aged 20-30 who are either Baseliner or Hussars
+   - Empty type = always matches
+
+4. Overall Rule Priority (unrelated to this window, refers to the main settings rule logic):
+   - Evaluates characters from top to bottom
+   - Randomly selects one voice from the first matched rule
+   - Use ↑↓ buttons to adjust priority</RimTalk.Settings.TTS.RuleEditor.Help>
+
+    <!-- Rule Display Strings -->
+    <RimTalk.Settings.TTS.Rule.Gender>Gender: {0}</RimTalk.Settings.TTS.Rule.Gender>
+    <RimTalk.Settings.TTS.Rule.Xenotype>Xenotype: {0}</RimTalk.Settings.TTS.Rule.Xenotype>
+    <RimTalk.Settings.TTS.Rule.Race>Race: {0}</RimTalk.Settings.TTS.Rule.Race>
+    <RimTalk.Settings.TTS.Rule.Age>Age: {0}-{1}</RimTalk.Settings.TTS.Rule.Age>
+    <RimTalk.Settings.TTS.Rule.EmptyRule>Empty rule</RimTalk.Settings.TTS.Rule.EmptyRule>
+    <RimTalk.Settings.TTS.Rule.UniversalRule>All characters</RimTalk.Settings.TTS.Rule.UniversalRule>
+    <RimTalk.Settings.TTS.Rule.VoiceCount>→ {0} voice(s)</RimTalk.Settings.TTS.Rule.VoiceCount>
+    <RimTalk.Settings.TTS.Rule.NoVoices>→ No voices</RimTalk.Settings.TTS.Rule.NoVoices>
+    <RimTalk.Settings.TTS.Rule.Or> or </RimTalk.Settings.TTS.Rule.Or>
+    <RimTalk.Settings.TTS.Rule.And> and </RimTalk.Settings.TTS.Rule.And>
+    <RimTalk.Settings.TTS.Rule.AgeLabel>Age</RimTalk.Settings.TTS.Rule.AgeLabel>
 </LanguageData>

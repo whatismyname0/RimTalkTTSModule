@@ -8,6 +8,8 @@ namespace RimTalk.TTS.Data
     public class VoiceModel : IExposable
     {
         public const string NONE_MODEL_ID = "NONE";
+        public const string RULE_BASED_MODEL_ID = "RULE_BASED";
+        public const string DEFAULT_MODEL_ID = "DEFAULT";
         
         public string ModelId = "";
         public string ModelName = "";

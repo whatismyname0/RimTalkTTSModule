@@ -28,7 +28,22 @@ namespace RimTalk.TTS.Data
         public const int DEFAULT_GENERATE_COOLDOWN_MS = 5000;
 
         // Selected TTS supplier implementation
-        public TTSSupplier Supplier = TTSSupplier.FishAudio;
+        private TTSSupplier _supplier = TTSSupplier.FishAudio;
+        public TTSSupplier Supplier
+        {
+            get => _supplier;
+            set
+            {
+                if (_supplier != value)
+                {
+                    _supplier = value;
+                    // When supplier changes, the default voice model also changes
+                    // Update cache for all pawns using default voice with new supplier's default
+                    string newDefaultVoice = GetSupplierDefaultVoiceModelId(value);
+                    PawnVoiceManager.OnDefaultVoiceChanged(newDefaultVoice);
+                }
+            }
+        }
 
         // TTS Configuration
         public bool EnableTTS = false;
@@ -80,6 +95,11 @@ namespace RimTalk.TTS.Data
         // Per-supplier region (for Azure TTS)
         public System.Collections.Generic.Dictionary<string, string> SupplierRegion = new System.Collections.Generic.Dictionary<string, string>();
 
+        // Advanced mode for default voice assignment
+        public System.Collections.Generic.Dictionary<string, bool> SupplierAdvancedMode = new System.Collections.Generic.Dictionary<string, bool>();
+        // Per-supplier voice assignment rules (advanced mode)
+        public System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceAssignmentRule>> SupplierVoiceRules = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceAssignmentRule>>();
+
         public override void ExposeData()
         {
             base.ExposeData();
@@ -98,7 +118,7 @@ namespace RimTalk.TTS.Data
             Scribe_Values.Look(ref TTSSpeed, "ttsSpeed", DEFAULT_SUPPLIER_SPEED);
             Scribe_Values.Look(ref GenerateCooldownMiliSeconds, "generateCooldownMiliSeconds", DEFAULT_GENERATE_COOLDOWN_MS);
             Scribe_Values.Look(ref ButtonDisplay, "buttonDisplay", true);
-            Scribe_Values.Look<TTSSupplier>(ref Supplier, "ttsSupplier", TTSSupplier.None);
+            Scribe_Values.Look<TTSSupplier>(ref _supplier, "ttsSupplier", TTSSupplier.None);
             Scribe_Collections.Look(ref SupplierApiKeys, "supplierApiKeys", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref SupplierModels, "supplierModels", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref SupplierGenerateCooldownMs, "supplierGenerateCooldownMs", LookMode.Value, LookMode.Value);
@@ -109,6 +129,8 @@ namespace RimTalk.TTS.Data
             Scribe_Collections.Look(ref SupplierSpeed, "supplierSpeed", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref SupplierDefaultVoiceModelId, "supplierDefaultVoiceModelId", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref SupplierRegion, "supplierRegion", LookMode.Value, LookMode.Value);
+            Scribe_Collections.Look(ref SupplierAdvancedMode, "supplierAdvancedMode", LookMode.Value, LookMode.Value);
+            Scribe_Collections.Look(ref SupplierVoiceRules, "supplierVoiceRules", LookMode.Value, LookMode.Deep);
             Scribe_Values.Look(ref PlayerReferenceVoiceModelId, "playerReferenceVoiceModelId", VoiceModel.NONE_MODEL_ID);
 
             // LLM API configuration
@@ -150,6 +172,26 @@ namespace RimTalk.TTS.Data
             {
                 SupplierRegion = new System.Collections.Generic.Dictionary<string, string>();
                 SupplierRegion[TTSSupplier.AzureTTS.ToString()] = "eastus";
+            }
+
+            if (SupplierAdvancedMode == null)
+            {
+                SupplierAdvancedMode = new System.Collections.Generic.Dictionary<string, bool>();
+                foreach (TTSSupplier supplier in System.Enum.GetValues(typeof(TTSSupplier)))
+                {
+                    if (supplier == TTSSupplier.None) continue;
+                    SupplierAdvancedMode[supplier.ToString()] = false;
+                }
+            }
+
+            if (SupplierVoiceRules == null)
+            {
+                SupplierVoiceRules = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceAssignmentRule>>();
+                foreach (TTSSupplier supplier in System.Enum.GetValues(typeof(TTSSupplier)))
+                {
+                    if (supplier == TTSSupplier.None) continue;
+                    SupplierVoiceRules[supplier.ToString()] = new System.Collections.Generic.List<VoiceAssignmentRule>();
+                }
             }
         }
 
@@ -205,7 +247,16 @@ namespace RimTalk.TTS.Data
 
         public void SetSupplierDefaultVoiceModelId(TTSSupplier supplier, string modelId)
         {
-            SupplierDefaultVoiceModelId[supplier.ToString()] = string.IsNullOrEmpty(modelId) ? VoiceModel.NONE_MODEL_ID : modelId;
+            string oldValue = GetSupplierDefaultVoiceModelId(supplier);
+            string newValue = string.IsNullOrEmpty(modelId) ? VoiceModel.NONE_MODEL_ID : modelId;
+            
+            SupplierDefaultVoiceModelId[supplier.ToString()] = newValue;
+            
+            // Notify voice manager if default voice changed, pass new value for intelligent cache update
+            if (oldValue != newValue)
+            {
+                PawnVoiceManager.OnDefaultVoiceChanged(newValue);
+            }
         }
 
         public int GetSupplierGenerateCooldown(TTSSupplier supplier)
@@ -317,6 +368,29 @@ namespace RimTalk.TTS.Data
         public void SetSupplierRegion(TTSSupplier supplier, string region)
         {
             SupplierRegion[supplier.ToString()] = region ?? "eastus";
+        }
+
+        public bool GetSupplierAdvancedMode(TTSSupplier supplier)
+        {
+            return SupplierAdvancedMode.TryGetValue(supplier.ToString(), out var value) && value;
+        }
+
+        public void SetSupplierAdvancedMode(TTSSupplier supplier, bool enabled)
+        {
+            SupplierAdvancedMode[supplier.ToString()] = enabled;
+        }
+
+        public System.Collections.Generic.List<VoiceAssignmentRule> GetSupplierVoiceRules(TTSSupplier supplier)
+        {
+            return SupplierVoiceRules.TryGetValue(supplier.ToString(), out var value) ? value : new System.Collections.Generic.List<VoiceAssignmentRule>();
+        }
+
+        public void SetSupplierVoiceRules(TTSSupplier supplier, System.Collections.Generic.List<VoiceAssignmentRule> rules)
+        {
+            SupplierVoiceRules[supplier.ToString()] = rules ?? new System.Collections.Generic.List<VoiceAssignmentRule>();
+            
+            // Notify voice manager that rules changed
+            PawnVoiceManager.OnRulesChanged();
         }
     }
 }

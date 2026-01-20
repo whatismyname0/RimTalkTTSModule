@@ -53,7 +53,7 @@ namespace RimTalk.TTS.UI
             }
 
             // Calculate content height dynamically based on selected supplier's voice model count
-            float baseHeight = 1600f; // base for other sections
+            float baseHeight = 2000f; // base for other sections
             float voiceModelRowHeight = 40f; // Height per voice model row (30f + 6f gap + padding)
             var supplierVoiceModels = settings.GetSupplierVoiceModels(settings.Supplier);
             int voiceModelCount = supplierVoiceModels?.Count ?? 0;
@@ -428,6 +428,39 @@ namespace RimTalk.TTS.UI
 
             listing.Label("RimTalk.Settings.TTS.DefaultVoiceModel".Translate());
 
+            // Show default model selector (now includes RULE_BASED as an option)
+            DrawSimpleDefaultVoiceSelector(listing, settings, voiceModels);
+
+            listing.Gap(6f);
+
+            // Rules button and list
+            if (listing.ButtonText("RimTalk.Settings.TTS.Rules".Translate()))
+            {
+                // Toggle rules visibility (using a static variable)
+                showRulesList = !showRulesList;
+            }
+
+            if (showRulesList)
+            {
+                listing.Gap(6f);
+                DrawVoiceRulesList(listing, settings, width, voiceModels);
+            }
+
+            // Player reference voice selection (always shown)
+            DrawPlayerVoiceSelector(listing, settings);
+
+            // Voice model list (model configurations)
+            DrawVoiceModelsList(listing, settings, width, voiceModels);
+        }
+
+        private static bool showRulesList = false;
+        private static int selectedRuleIndex = -1;
+        private static int lastClickedRuleIndex = -1;
+        private static float lastClickTime = 0f;
+        private static readonly float DOUBLE_CLICK_TIME = 0.5f; // 500ms window for double click
+
+        private static void DrawSimpleDefaultVoiceSelector(Listing_Standard listing, TTSSettings settings, System.Collections.Generic.List<VoiceModel> voiceModels)
+        {
             // Default model selector (shows names from current voice model list)
             string defaultModelId = settings.GetSupplierDefaultVoiceModelId(settings.Supplier);
 
@@ -437,6 +470,10 @@ namespace RimTalk.TTS.UI
                 if (defaultModelId == VoiceModel.NONE_MODEL_ID)
                 {
                     currentDefaultName = "RimTalk.Settings.TTS.NoneModel".Translate();
+                }
+                else if (defaultModelId == VoiceModel.RULE_BASED_MODEL_ID)
+                {
+                    currentDefaultName = "RimTalk.Settings.TTS.RuleBased".Translate();
                 }
                 else if (voiceModels != null)
                 {
@@ -460,6 +497,12 @@ namespace RimTalk.TTS.UI
                     settings.SetSupplierDefaultVoiceModelId(settings.Supplier, VoiceModel.NONE_MODEL_ID);
                 }));
 
+                // Add RULE_BASED option
+                options.Add(new FloatMenuOption("RimTalk.Settings.TTS.RuleBased".Translate(), delegate
+                {
+                    settings.SetSupplierDefaultVoiceModelId(settings.Supplier, VoiceModel.RULE_BASED_MODEL_ID);
+                }));
+
                 if (voiceModels != null)
                 {
                     foreach (var vm in voiceModels)
@@ -474,7 +517,137 @@ namespace RimTalk.TTS.UI
 
                 Find.WindowStack.Add(new FloatMenu(options));
             }
+        }
 
+        private static void DrawVoiceRulesList(Listing_Standard listing, TTSSettings settings, float width, System.Collections.Generic.List<VoiceModel> voiceModels)
+        {
+            var rules = settings.GetSupplierVoiceRules(settings.Supplier);
+            
+            // Rules list title
+            listing.Label("RimTalk.Settings.TTS.AdvancedMode.RulesList".Translate());
+            
+            // Container box for rules
+            float ruleListHeight = Mathf.Max(200f, rules.Count * 35f + 10f);
+            Rect ruleListOuterRect = listing.GetRect(ruleListHeight);
+            
+            Widgets.DrawBoxSolid(ruleListOuterRect, new Color(0.1f, 0.1f, 0.1f, 0.5f));
+            Widgets.DrawBox(ruleListOuterRect);
+            
+            Rect ruleListInnerRect = ruleListOuterRect.ContractedBy(5f);
+            Rect ruleListViewRect = new Rect(0f, 0f, ruleListInnerRect.width - 20f, rules.Count * 35f);
+            
+            Vector2 ruleScrollPos = Vector2.zero;
+            Widgets.BeginScrollView(ruleListInnerRect, ref ruleScrollPos, ruleListViewRect);
+            
+            float y = 0f;
+            for (int i = 0; i < rules.Count; i++)
+            {
+                var rule = rules[i];
+                Rect ruleRect = new Rect(0f, y, ruleListViewRect.width, 30f);
+                
+                // Highlight selected rule
+                if (i == selectedRuleIndex)
+                {
+                    Widgets.DrawHighlight(ruleRect);
+                }
+                
+                // Rule display text (truncated if needed)
+                string displayText = rule.GetDisplayString(ruleRect.width - 10f);
+                
+                // Double click detection: check if same item clicked within time window
+                if (Widgets.ButtonInvisible(ruleRect))
+                {
+                    float currentTime = Time.realtimeSinceStartup;
+                    bool isDoubleClick = (i == lastClickedRuleIndex) && 
+                                        (currentTime - lastClickTime < DOUBLE_CLICK_TIME);
+                    
+                    if (isDoubleClick)
+                    {
+                        // Double click - open editor
+                        Find.WindowStack.Add(new VoiceRuleEditorWindow(rule, settings, () =>
+                        {
+                            settings.SetSupplierVoiceRules(settings.Supplier, rules);
+                        }));
+                        lastClickedRuleIndex = -1; // Reset to prevent triple-click
+                    }
+                    else
+                    {
+                        // Single click - select and record click
+                        selectedRuleIndex = i;
+                        lastClickedRuleIndex = i;
+                        lastClickTime = currentTime;
+                    }
+                }
+                
+                Rect labelRect = new Rect(ruleRect.x + 5f, ruleRect.y, ruleRect.width - 10f, ruleRect.height);
+                Widgets.Label(labelRect, displayText);
+                
+                y += 35f;
+            }
+            
+            Widgets.EndScrollView();
+            
+            listing.Gap(6f);
+            
+            // Control buttons: ↑ ↓ + ×
+            Rect buttonRowRect = listing.GetRect(30f);
+            float buttonWidth = 40f;
+            float buttonGap = 5f;
+            
+            Rect upButtonRect = new Rect(buttonRowRect.x, buttonRowRect.y, buttonWidth, 30f);
+            if (Widgets.ButtonText(upButtonRect, "↑"))
+            {
+                if (selectedRuleIndex > 0)
+                {
+                    var temp = rules[selectedRuleIndex];
+                    rules[selectedRuleIndex] = rules[selectedRuleIndex - 1];
+                    rules[selectedRuleIndex - 1] = temp;
+                    selectedRuleIndex--;
+                    settings.SetSupplierVoiceRules(settings.Supplier, rules);
+                }
+            }
+            
+            Rect downButtonRect = new Rect(upButtonRect.xMax + buttonGap, buttonRowRect.y, buttonWidth, 30f);
+            if (Widgets.ButtonText(downButtonRect, "↓"))
+            {
+                if (selectedRuleIndex >= 0 && selectedRuleIndex < rules.Count - 1)
+                {
+                    var temp = rules[selectedRuleIndex];
+                    rules[selectedRuleIndex] = rules[selectedRuleIndex + 1];
+                    rules[selectedRuleIndex + 1] = temp;
+                    selectedRuleIndex++;
+                    settings.SetSupplierVoiceRules(settings.Supplier, rules);
+                }
+            }
+            
+            Rect addButtonRect = new Rect(downButtonRect.xMax + buttonGap, buttonRowRect.y, buttonWidth, 30f);
+            if (Widgets.ButtonText(addButtonRect, "+"))
+            {
+                var newRule = new VoiceAssignmentRule();
+                Find.WindowStack.Add(new VoiceRuleEditorWindow(newRule, settings, () =>
+                {
+                    rules.Add(newRule);
+                    settings.SetSupplierVoiceRules(settings.Supplier, rules);
+                    selectedRuleIndex = rules.Count - 1;
+                }));
+            }
+            
+            Rect deleteButtonRect = new Rect(addButtonRect.xMax + buttonGap, buttonRowRect.y, buttonWidth, 30f);
+            if (Widgets.ButtonText(deleteButtonRect, "×"))
+            {
+                if (selectedRuleIndex >= 0 && selectedRuleIndex < rules.Count)
+                {
+                    rules.RemoveAt(selectedRuleIndex);
+                    settings.SetSupplierVoiceRules(settings.Supplier, rules);
+                    selectedRuleIndex = -1;
+                }
+            }
+
+            listing.Gap();
+        }
+
+        private static void DrawPlayerVoiceSelector(Listing_Standard listing, TTSSettings settings)
+        {
             // Player reference voice selection (single-line dropdown using supplier voice models)
             listing.Gap(6f);
             listing.Label("RimTalk.Settings.TTS.PlayerVoiceModel".Translate());
@@ -522,7 +695,10 @@ namespace RimTalk.TTS.UI
             }
 
             listing.Gap();
+        }
 
+        private static void DrawVoiceModelsList(Listing_Standard listing, TTSSettings settings, float width, System.Collections.Generic.List<VoiceModel> voiceModels)
+        {
             // Header with add/remove buttons (similar to RimTalk API configs)
             Rect headerRect = listing.GetRect(24f);
             Rect addButtonRect = new Rect(headerRect.x + headerRect.width - 65f, headerRect.y, 30f, 24f);

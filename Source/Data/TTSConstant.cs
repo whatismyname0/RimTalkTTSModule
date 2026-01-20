@@ -25,7 +25,7 @@ namespace RimTalk.TTS.Data
             5. Output only JSON:
             {
                 "text": "<fully translated to {language} and annotated text, all parentheses and their translated content preserved>",
-                "emotion": ""
+                "emotion": "<empty string>"
             }
 
             Available annotations:
@@ -66,7 +66,7 @@ namespace RimTalk.TTS.Data
             4. 只输出JSON格式:
             {
                 "text": "<完整翻译为 {language} 的文本,所有括号及其翻译内容均保留>",
-                "emotion": ""
+                "emotion": "<空字符串>"
             }
             """;
 
@@ -131,11 +131,10 @@ namespace RimTalk.TTS.Data
 
             Rules:
             1. Translate all text into {language}.
-            4. Never add tags inside parentheses.
-            5. Output only JSON:
+            2. Output only JSON:
             {
                 "text": "<fully translated to {language}, all parentheses and their translated content preserved>",
-                "emotion": ""
+                "emotion": "<empty string>"
             }
             """;
 
@@ -151,7 +150,7 @@ namespace RimTalk.TTS.Data
             5. Output only JSON:
             {
                 "text": "<fully translated to {language} with style directives, all parentheses and their translated content preserved>",
-                "emotion": ""
+                "emotion": "<empty string>"
             }
 
             Natural Language Style Control:

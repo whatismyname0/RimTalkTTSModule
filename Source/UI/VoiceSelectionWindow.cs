@@ -69,7 +69,7 @@ namespace RimTalk.TTS.UI
             Rect listOutRect = new Rect(inRect.x, listTop, inRect.width, listHeight);
 
             // Calculate content height
-            int itemCount = 2 + _voiceModels.Count; // "None" + "Default" + custom models
+            int itemCount = 3 + _voiceModels.Count; // "None" + "Default" + "Rule-based" + custom models
             float contentHeight = itemCount * 40f;
             Rect listViewRect = new Rect(0f, 0f, listOutRect.width - 20f, contentHeight);
 
@@ -83,9 +83,14 @@ namespace RimTalk.TTS.UI
                 "RimTalk.TTS.VoiceNoneDesc".Translate());
 
             // Option: Default (use default voice model from settings)
-            DrawVoiceOption(ref y, listViewRect.width, "", 
+            DrawVoiceOption(ref y, listViewRect.width, VoiceModel.DEFAULT_MODEL_ID, 
                 "RimTalk.TTS.VoiceDefault".Translate(), 
                 "RimTalk.TTS.VoiceDefaultDesc".Translate());
+
+            // Option: Rule-based (determine voice by rules)
+            DrawVoiceOption(ref y, listViewRect.width, VoiceModel.RULE_BASED_MODEL_ID, 
+                "RimTalk.TTS.VoiceRuleBased".Translate(), 
+                "RimTalk.TTS.VoiceRuleBasedDesc".Translate());
 
             // Custom voice models - with validation
             if (_voiceModels != null && _voiceModels.Count > 0)
@@ -192,15 +197,22 @@ namespace RimTalk.TTS.UI
         {
             try
             {
-                // Get voice model from PawnVoiceManager
-                string voiceId = Data.PawnVoiceManager.GetVoiceModel(_pawn);
-                return voiceId ?? ""; // Return empty string for default, not null
+                // Get raw voice model from PawnVoiceManager (without resolving tags)
+                string voiceId = Data.PawnVoiceManager.GetRawVoiceModel(_pawn);
+                
+                // If empty, treat as DEFAULT_MODEL_ID for UI purposes
+                if (string.IsNullOrEmpty(voiceId))
+                {
+                    return VoiceModel.DEFAULT_MODEL_ID;
+                }
+                
+                return voiceId;
             }
             catch (Exception ex)
             {
                 Log.Error($"[RimTalk.TTS] Failed to get current voice model: {ex.Message}");
             }
-            return "";
+            return VoiceModel.DEFAULT_MODEL_ID;
         }
 
         private void SaveVoiceModel(string voiceId)

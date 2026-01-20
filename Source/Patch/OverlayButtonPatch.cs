@@ -60,7 +60,7 @@ namespace RimTalk.TTS.Patch
                     }
                     if (Widgets.ButtonText(generateButtonScreenRect, "RimTalk.TTS.Generate".Translate()))
                     {
-                        genereteButtonFunc();
+                        generateButtonFunc();
                     }
                     if (Widgets.ButtonText(ignoreButtonScreenRect, "RimTalk.TTS.Ignore".Translate()))
                     {
@@ -105,7 +105,7 @@ namespace RimTalk.TTS.Patch
                     if (generateButtonScreenRect.Contains(currentEvent.mousePosition))
                     {
                         currentEvent.Use();
-                        genereteButtonFunc();
+                        generateButtonFunc();
                         return false; // Consume event
                     }
                     if (ignoreButtonScreenRect.Contains(currentEvent.mousePosition))
@@ -132,7 +132,7 @@ namespace RimTalk.TTS.Patch
             TTSService.StopAll(false);
         }
 
-        private static void genereteButtonFunc()
+        private static void generateButtonFunc()
         {
             Messages.Message("RimTalk.TTS.GenerateComplete".Translate(), MessageTypeDefOf.TaskCompletion, false);
             // Select a pawn based on the current iteration strategy

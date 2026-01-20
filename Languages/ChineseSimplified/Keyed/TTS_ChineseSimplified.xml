@@ -86,8 +86,13 @@
     <RimTalk.TTS.VoiceNoneDesc>禁用该角色的语音合成</RimTalk.TTS.VoiceNoneDesc>
     <RimTalk.TTS.VoiceDefault>默认</RimTalk.TTS.VoiceDefault>
     <RimTalk.TTS.VoiceDefaultDesc>使用 TTS 设置中的默认语音模型</RimTalk.TTS.VoiceDefaultDesc>
+    <RimTalk.TTS.VoiceRuleBased>根据规则确定</RimTalk.TTS.VoiceRuleBased>
+    <RimTalk.TTS.VoiceRuleBasedDesc>根据语音分配规则自动确定语音</RimTalk.TTS.VoiceRuleBasedDesc>
+    <RimTalk.Settings.TTS.RuleBased>根据规则确定</RimTalk.Settings.TTS.RuleBased>
+    <RimTalk.Settings.TTS.Rules>显示/隐藏规则列表</RimTalk.Settings.TTS.Rules>
     <RimTalk.TTS.Save>保存</RimTalk.TTS.Save>
     <RimTalk.TTS.Cancel>取消</RimTalk.TTS.Cancel>
+    <RimTalk.TTS.OK>确定</RimTalk.TTS.OK>
     <RimTalk.TTS.VoiceUpdated>{0}的语音模型已更新</RimTalk.TTS.VoiceUpdated>
 
     <!-- Overlay_MapComponentOnGUI_Postfix -->
@@ -131,4 +136,60 @@
 
     <RimTalk.TTS.SyncComplete>用户音色同步完成</RimTalk.TTS.SyncComplete>
     <RimTalk.TTS.SyncFailed>用户音色同步失败</RimTalk.TTS.SyncFailed>
+
+    <!-- 高级模式 -->
+    <RimTalk.Settings.TTS.AdvancedMode.Enabled>高级模式：已启用</RimTalk.Settings.TTS.AdvancedMode.Enabled>
+    <RimTalk.Settings.TTS.AdvancedMode.Disabled>高级模式：未启用</RimTalk.Settings.TTS.AdvancedMode.Disabled>
+    <RimTalk.Settings.TTS.AdvancedMode.RulesList>语音规则（优先级顺序）：</RimTalk.Settings.TTS.AdvancedMode.RulesList>
+
+    <!-- 语音规则编辑器窗口 -->
+    <RimTalk.Settings.TTS.RuleEditor.Title>编辑语音规则</RimTalk.Settings.TTS.RuleEditor.Title>
+    <RimTalk.Settings.TTS.RuleEditor.SelectedRequirements>已选要求（需全部满足）</RimTalk.Settings.TTS.RuleEditor.SelectedRequirements>
+    <RimTalk.Settings.TTS.RuleEditor.AvailableRequirements>可用要求类型</RimTalk.Settings.TTS.RuleEditor.AvailableRequirements>
+    <RimTalk.Settings.TTS.RuleEditor.SelectedVoiceModels>已选语音模型（会从此列表中随机选择）</RimTalk.Settings.TTS.RuleEditor.SelectedVoiceModels>
+    <RimTalk.Settings.TTS.RuleEditor.UnselectedVoiceModels>可用语音模型</RimTalk.Settings.TTS.RuleEditor.UnselectedVoiceModels>
+    <RimTalk.Settings.TTS.RuleEditor.Gender>性别：</RimTalk.Settings.TTS.RuleEditor.Gender>
+    <RimTalk.Settings.TTS.RuleEditor.Xenotype>异种类型（生物科技 DLC）：</RimTalk.Settings.TTS.RuleEditor.Xenotype>
+    <RimTalk.Settings.TTS.RuleEditor.Race>种族（HAR 模组）：</RimTalk.Settings.TTS.RuleEditor.Race>
+    <RimTalk.Settings.TTS.RuleEditor.Age>年龄范围：</RimTalk.Settings.TTS.RuleEditor.Age>
+    <RimTalk.Settings.TTS.RuleEditor.AddAge>添加年龄要求</RimTalk.Settings.TTS.RuleEditor.AddAge>    <RimTalk.Settings.TTS.RuleEditor.AgeRangeError>年龄必须在0到99999之间</RimTalk.Settings.TTS.RuleEditor.AgeRangeError>
+    <RimTalk.Settings.TTS.RuleEditor.MaxLessThanMinError>最大年龄不能小于最小年龄</RimTalk.Settings.TTS.RuleEditor.MaxLessThanMinError>
+    <RimTalk.Settings.TTS.RuleEditor.AgeInvalidNumberError>请输入有效的数字</RimTalk.Settings.TTS.RuleEditor.AgeInvalidNumberError>
+    <RimTalk.Settings.TTS.RuleEditor.Help>使用方法：
+
+1. 添加要求：
+   - 点击左下角面板中的按钮添加要求
+   - 左上角面板显示已选要求
+   - 点击 × 移除要求
+
+2. 添加语音模型：
+   - 点击右下角面板中的语音模型添加
+   - 右上角面板显示已选语音模型
+   - 点击 × 移除语音模型
+   - 匹配时将随机选择一个已选的语音
+
+3. 匹配逻辑：
+   - 同类型要求自动使用"或"逻辑
+     示例：同时选中"男性"和"女性"将会匹配所有男性或女性角色
+   - 不同类型结果使用"与"逻辑
+     示例：同时选中"男性"、"智人种"、"骠骑种"、"年龄20-30岁"将会匹配男性的、年龄在20-30岁的智人种及骠骑种
+   - 某类型为空 = 总是匹配
+
+4. 整体规则优先级（与当前界面无关，是整体设置界面的规则逻辑）：
+   - 按从上到下的顺序评估角色是否符合条目
+   - 从第一个匹配的规则条目所选中的音色中随机选取一个
+   - 使用 ↑↓ 按钮调整优先级</RimTalk.Settings.TTS.RuleEditor.Help>
+
+    <!-- 规则显示字符串 -->
+    <RimTalk.Settings.TTS.Rule.Gender>性别：{0}</RimTalk.Settings.TTS.Rule.Gender>
+    <RimTalk.Settings.TTS.Rule.Xenotype>异种类型：{0}</RimTalk.Settings.TTS.Rule.Xenotype>
+    <RimTalk.Settings.TTS.Rule.Race>种族：{0}</RimTalk.Settings.TTS.Rule.Race>
+    <RimTalk.Settings.TTS.Rule.Age>年龄：{0}-{1}</RimTalk.Settings.TTS.Rule.Age>
+    <RimTalk.Settings.TTS.Rule.EmptyRule>空规则</RimTalk.Settings.TTS.Rule.EmptyRule>
+    <RimTalk.Settings.TTS.Rule.UniversalRule>所有角色</RimTalk.Settings.TTS.Rule.UniversalRule>
+    <RimTalk.Settings.TTS.Rule.VoiceCount>→ {0}个语音</RimTalk.Settings.TTS.Rule.VoiceCount>
+    <RimTalk.Settings.TTS.Rule.NoVoices>→ 无语音</RimTalk.Settings.TTS.Rule.NoVoices>
+    <RimTalk.Settings.TTS.Rule.Or>或</RimTalk.Settings.TTS.Rule.Or>
+    <RimTalk.Settings.TTS.Rule.And>并且</RimTalk.Settings.TTS.Rule.And>
+    <RimTalk.Settings.TTS.Rule.AgeLabel>年龄</RimTalk.Settings.TTS.Rule.AgeLabel>
 </LanguageData>

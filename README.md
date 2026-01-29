@@ -46,6 +46,8 @@ B站演示视频:https://www.bilibili.com/video/BV1PB2fBsEtQ
 
 作者:
 Nitori_Tachyon
+代码参考:
+三哒锅酱(EdgeTTS C# 客户端代码)
 Claude Sonnet 4.5
 Gemini 3 Pro
 GPT-5.1-Codex

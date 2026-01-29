@@ -1,6 +1,4 @@
 using System;
-using System.Diagnostics;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Verse;
@@ -10,12 +8,12 @@ namespace RimTalk.TTS.Service.EdgeTTSService
     /// <summary>
     /// Client for Edge-TTS (Microsoft Edge's free TTS service)
     /// No API key required - uses the same voices as Azure TTS but through Edge browser endpoint
-    /// Uses edge-tts Python package via subprocess
+    /// Uses pure C# WebSocket implementation - no Python dependencies
     /// </summary>
     public static class EdgeTTSClient
     {
         /// <summary>
-        /// Generate speech using Edge-TTS via Python edge-tts package (free, no API key)
+        /// Generate speech using Edge-TTS via WebSocket connection (free, no API key)
         /// </summary>
         public static async Task<byte[]> GenerateSpeechAsync(TTSRequest request, CancellationToken cancellationToken = default)
         {
@@ -33,89 +31,32 @@ namespace RimTalk.TTS.Service.EdgeTTSService
                 int ratePercent = (int)((request.Speed - 1.0f) * 100);
                 string rateStr = ratePercent >= 0 ? $"+{ratePercent}%" : $"{ratePercent}%";
 
-                // Create temp file for output
-                string tempFile = Path.GetTempFileName();
-                string outputFile = Path.ChangeExtension(tempFile, ".mp3");
-                
-                try
+                // Calculate volume parameter
+                int volumePercent = (int)((request.Volume - 1.0f) * 100);
+                string volumeStr = volumePercent >= 0 ? $"+{volumePercent}%" : $"{volumePercent}%";
+
+                // Use the new WebSocket client
+                using (var client = new EdgeTTSWebSocketClient())
                 {
-                    // Get Python script path - go up from Assemblies directory to mod root, then to Source
-                    string assemblyDir = Path.GetDirectoryName(typeof(EdgeTTSClient).Assembly.Location);
-                    string modRoot = Path.GetFullPath(Path.Combine(assemblyDir, "..", ".."));
-                    string scriptPath = Path.Combine(modRoot, "Source", "Service", "EdgeTTSService", "edge_tts_client.py");
+                    byte[] audioData = await client.SynthesizeAsync(
+                        text: request.Input,
+                        voice: voiceName,
+                        rate: rateStr,
+                        volume: volumeStr
+                    );
 
-                    if (!File.Exists(scriptPath))
+                    if (audioData == null || audioData.Length == 0)
                     {
-                        Log.Error($"[RimTalk.TTS] EdgeTTSClient: Python script not found at {scriptPath}");
+                        Log.Warning("[RimTalk.TTS] EdgeTTSClient: No audio data received");
                         return null;
                     }
 
-                    // Run Python script
-                    var psi = new ProcessStartInfo
+                    if (Prefs.DevMode)
                     {
-                        FileName = "python",
-                        Arguments = $"\"{scriptPath}\" \"{request.Input}\" \"{voiceName}\" --rate \"{rateStr}\" --volume \"+0%\" --pitch \"+0Hz\" --output \"{outputFile}\"",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        CreateNoWindow = true
-                    };
-
-                    using var process = Process.Start(psi);
-                    if (process == null)
-                    {
-                        Log.Error("[RimTalk.TTS] EdgeTTSClient: Failed to start Python process");
-                        return null;
+                        Log.Message($"[RimTalk.TTS] EdgeTTSClient: Generated {audioData.Length} bytes of audio");
                     }
 
-                    // Wait for completion
-                    var outputTask = process.StandardOutput.ReadToEndAsync();
-                    var errorTask = process.StandardError.ReadToEndAsync();
-                    
-                    await Task.WhenAll(outputTask, errorTask);
-                    
-                    // Wait for process to exit
-                    await Task.Run(() => process.WaitForExit(), cancellationToken);
-
-                    string output = await outputTask;
-                    string error = await errorTask;
-
-                    if (process.ExitCode != 0)
-                    {
-                        Log.Error($"[RimTalk.TTS] EdgeTTSClient: Python process failed with code {process.ExitCode}");
-                        Log.Error($"[RimTalk.TTS] EdgeTTSClient error: {error}");
-                        return null;
-                    }
-
-                    if (!output.Contains("SUCCESS"))
-                    {
-                        Log.Error($"[RimTalk.TTS] EdgeTTSClient: Unexpected output: {output}");
-                        if (!string.IsNullOrWhiteSpace(error))
-                        {
-                            Log.Error($"[RimTalk.TTS] EdgeTTSClient error: {error}");
-                        }
-                        return null;
-                    }
-
-                    // Read generated audio file
-                    if (!File.Exists(outputFile))
-                    {
-                        Log.Error($"[RimTalk.TTS] EdgeTTSClient: Output file not found: {outputFile}");
-                        return null;
-                    }
-
-                    byte[] audioData = await File.ReadAllBytesAsync(outputFile, cancellationToken);
                     return audioData;
-                }
-                finally
-                {
-                    // Clean up temp files
-                    try
-                    {
-                        if (File.Exists(tempFile)) File.Delete(tempFile);
-                        if (File.Exists(outputFile)) File.Delete(outputFile);
-                    }
-                    catch { /* Ignore cleanup errors */ }
                 }
             }
             catch (Exception ex)

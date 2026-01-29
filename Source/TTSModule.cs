@@ -106,7 +106,7 @@ namespace RimTalk.TTS
             Log.Message("[RimTalk.TTS] Game exiting, full shutdown");
             
             Service.TTSService.StopAll(permanentShutdown: true);
-            Service.AudioPlaybackService.FullReset();
+            Service.AudioPlaybackService.FullReset(); // Then reset state
         }
 
         public bool IsActive => _settings?.EnableTTS ?? false;

@@ -92,6 +92,7 @@ namespace RimTalk.TTS.Patch
             {
                 if (!TTSConfig.IsEnabled) return true;
                 if (__instance == null) return true;
+                if (!TTSConfig.Settings.ControlButtonDisplay) return true;
                 
                 Event currentEvent = Event.current;
 

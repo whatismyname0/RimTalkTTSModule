@@ -48,9 +48,11 @@ B站演示视频:https://www.bilibili.com/video/BV1PB2fBsEtQ
 Nitori_Tachyon
 代码参考:
 三哒锅酱(EdgeTTS C# 客户端代码)
+使用的AI:
 Claude Sonnet 4.5
 Gemini 3 Pro
 GPT-5.1-Codex
 GPT-5 Mini
+Deepseek-v4-flash-0731
 建议与咨询:
 Deepseek v3.2

@@ -239,6 +239,14 @@ namespace RimTalk.TTS.UI
                     {
                         settings.SetSupplierModel(supplierKey, "s2-pro");
                     }
+                    if (listing.RadioButton("RimTalk.Settings.TTS.ModelS21Pro".Translate(), currentModel == "s2.1-pro"))
+                    {
+                        settings.SetSupplierModel(supplierKey, "s2.1-pro");
+                    }
+                    if (listing.RadioButton("RimTalk.Settings.TTS.ModelS21ProFree".Translate(), currentModel == "s2.1-pro-free"))
+                    {
+                        settings.SetSupplierModel(supplierKey, "s2.1-pro-free");
+                    }
                 }
 
                 // CosyVoice model selection

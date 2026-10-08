@@ -61,7 +61,7 @@ namespace RimTalk.TTS.Service
                         , @"\s+", " "
                     ).Trim();
 
-            if (TTSConfig.CurrentSupplier == TTSSettings.TTSSupplier.FishAudio && TTSConfig.Settings.SupplierModels[TTSSettings.TTSSupplier.FishAudio.ToString()] != "s2-pro")
+            if (TTSConfig.CurrentSupplier == TTSSettings.TTSSupplier.FishAudio && TTSConfig.Settings.SupplierModels[TTSSettings.TTSSupplier.FishAudio.ToString()] != "s2-pro" && TTSConfig.Settings.SupplierModels[TTSSettings.TTSSupplier.FishAudio.ToString()] != "s2.1-pro" && TTSConfig.Settings.SupplierModels[TTSSettings.TTSSupplier.FishAudio.ToString()] != "s2.1-pro-free")
             {
                 text = text.Replace("[","(").Replace("]",")");
             }

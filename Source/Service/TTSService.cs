@@ -141,17 +141,14 @@ namespace RimTalk.TTS.Service
                 return false;
             }
 
-            // Validate API key for selected supplier
-            // EdgeTTS doesn't need API key - skip validation
-            // Custom providers handle their own validation
-            if (settings.Supplier != TTSSettings.TTSSupplier.EdgeTTS)
+            // Validate API key for the selected supplier. Each provider decides for itself
+            // whether a key is required (EdgeTTS/None: never; Custom: per its RequiresApiKey
+            // flag; cloud providers: always), so no supplier may be special-cased here.
+            string apiKey = GetApiKeyForSupplier(settings.Supplier, settings);
+            if (!_provider.IsApiKeyValid(apiKey))
             {
-                string apiKey = GetApiKeyForSupplier(settings.Supplier, settings);
-                if (!_provider.IsApiKeyValid(apiKey))
-                {
-                    reason = $"API key not configured or invalid for supplier {settings.Supplier}";
-                    return false;
-                }
+                reason = $"API key not configured or invalid for supplier {settings.Supplier}";
+                return false;
             }
 
             // Early exit: empty text

@@ -16,6 +16,12 @@ namespace RimTalk.TTS.Service
     {
         private static readonly HttpClient _httpClient = new HttpClient();
 
+        /// <summary>Extra attempts made after the first one, for HTTP 503 (busy).</summary>
+        private const int BUSY_MAX_RETRIES = 4;
+
+        /// <summary>Backoff before retry 1..BUSY_MAX_RETRIES: 1s, 2s, 4s, 8s.</summary>
+        private static readonly int[] BUSY_RETRY_DELAYS_MS = { 1000, 2000, 4000, 8000 };
+
         /// <summary>
         /// Generate speech audio from a custom TTS provider.
         /// </summary>
@@ -43,40 +49,62 @@ namespace RimTalk.TTS.Service
 
                 TTSLog.Message($"[RimTalk.TTS] CustomTTSClient: POST {url} (voice={request.Voice}, model={request.Model})");
 
-                using var httpRequest = new HttpRequestMessage(HttpMethod.Post, url);
-                httpRequest.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+                int timeoutSeconds = config.TimeoutSeconds > 0 ? config.TimeoutSeconds : 30;
 
-                // Set authentication header
-                if (config.RequiresApiKey && !string.IsNullOrWhiteSpace(request.ApiKey))
+                for (int attempt = 0; ; attempt++)
                 {
-                    string headerName = string.IsNullOrWhiteSpace(config.AuthHeaderName) ? "Authorization" : config.AuthHeaderName;
-                    string headerPrefix = config.AuthHeaderPrefix ?? "Bearer ";
-                    httpRequest.Headers.TryAddWithoutValidation(headerName, headerPrefix + request.ApiKey);
+                    using var httpRequest = new HttpRequestMessage(HttpMethod.Post, url);
+                    httpRequest.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+
+                    // Set authentication header
+                    if (config.RequiresApiKey && !string.IsNullOrWhiteSpace(request.ApiKey))
+                    {
+                        string headerName = string.IsNullOrWhiteSpace(config.AuthHeaderName) ? "Authorization" : config.AuthHeaderName;
+                        string headerPrefix = config.AuthHeaderPrefix ?? "Bearer ";
+                        httpRequest.Headers.TryAddWithoutValidation(headerName, headerPrefix + request.ApiKey);
+                    }
+
+                    // Set timeout (applies per attempt, so retries do not eat the whole budget)
+                    using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    cts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+
+                    using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, cts.Token);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        string errorBody = await response.Content.ReadAsStringAsync();
+
+                        // 503 = "busy", a transient condition: retry with exponential backoff.
+                        // 400/404/409/500 are terminal - retrying them unchanged cannot help.
+                        if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable &&
+                            attempt < BUSY_MAX_RETRIES)
+                        {
+                            int delayMs = BUSY_RETRY_DELAYS_MS[attempt];
+                            TTSLog.Warning($"[RimTalk.TTS] CustomTTSClient: HTTP 503 (server busy), retry {attempt + 1}/{BUSY_MAX_RETRIES} in {delayMs} ms - {errorBody}");
+                            await Task.Delay(delayMs, cancellationToken);
+                            continue;
+                        }
+
+                        TTSLog.Error($"[RimTalk.TTS] CustomTTSClient: HTTP {(int)response.StatusCode} {response.ReasonPhrase} - {errorBody}");
+                        return null;
+                    }
+
+                    byte[] audioData = await response.Content.ReadAsByteArrayAsync();
+
+                    if (audioData == null || audioData.Length == 0)
+                    {
+                        TTSLog.Warning("[RimTalk.TTS] CustomTTSClient: Empty response from server");
+                        return null;
+                    }
+
+                    if (attempt > 0)
+                    {
+                        TTSLog.Message($"[RimTalk.TTS] CustomTTSClient: succeeded on retry {attempt}");
+                    }
+
+                    TTSLog.Message($"[RimTalk.TTS] CustomTTSClient: Received {audioData.Length} bytes");
+                    return audioData;
                 }
-
-                // Set timeout
-                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                cts.CancelAfter(TimeSpan.FromSeconds(config.TimeoutSeconds > 0 ? config.TimeoutSeconds : 30));
-
-                using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, cts.Token);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    string errorBody = await response.Content.ReadAsStringAsync();
-                    TTSLog.Error($"[RimTalk.TTS] CustomTTSClient: HTTP {(int)response.StatusCode} {response.ReasonPhrase} - {errorBody}");
-                    return null;
-                }
-
-                byte[] audioData = await response.Content.ReadAsByteArrayAsync();
-
-                if (audioData == null || audioData.Length == 0)
-                {
-                    TTSLog.Warning("[RimTalk.TTS] CustomTTSClient: Empty response from server");
-                    return null;
-                }
-
-                TTSLog.Message($"[RimTalk.TTS] CustomTTSClient: Received {audioData.Length} bytes");
-                return audioData;
             }
             catch (OperationCanceledException)
             {
@@ -190,6 +218,21 @@ namespace RimTalk.TTS.Service
             template = template.Replace("{emotion}", EscapeForTemplate(request.InstructText ?? ""));
             template = template.Replace("{instruct_text}", EscapeForTemplate(request.InstructText ?? ""));
             template = template.Replace("{api_key}", EscapeForTemplate(request.ApiKey ?? ""));
+
+            // Anything still looking like {placeholder} was never substituted: the name is
+            // not one we know (typically a typo such as {voices}). It goes out verbatim, and
+            // the outcome is quiet - an unknown field is ignored, so the server answers 200
+            // and speaks with whatever default voice it picked. Warn, but send as-is.
+            var leftovers = System.Text.RegularExpressions.Regex.Matches(template, @"\{[A-Za-z_][A-Za-z0-9_]*\}");
+            if (leftovers.Count > 0)
+            {
+                var names = new System.Collections.Generic.List<string>();
+                foreach (System.Text.RegularExpressions.Match m in leftovers)
+                {
+                    if (!names.Contains(m.Value)) names.Add(m.Value);
+                }
+                TTSLog.Warning($"[RimTalk.TTS] CustomTTSClient: unrecognized placeholder(s) in template, sent as-is: {string.Join(", ", names.ToArray())}");
+            }
 
             return template;
         }

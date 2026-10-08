@@ -16,9 +16,11 @@
     <RimTalk.TTS.Off>关闭</RimTalk.TTS.Off>
     <RimTalk.Settings.TTS.ApiKey>API 密钥：</RimTalk.Settings.TTS.ApiKey>
     <RimTalk.Settings.TTS.ModelLabel>TTS 模型：{0}</RimTalk.Settings.TTS.ModelLabel>
-    <RimTalk.Settings.TTS.ModelHighQuality>fishaudio-1（v1.6，上上代模型）</RimTalk.Settings.TTS.ModelHighQuality>
-    <RimTalk.Settings.TTS.ModelFaster>s1（上一代模型）</RimTalk.Settings.TTS.ModelFaster>
-    <RimTalk.Settings.TTS.ModelS2Pro>s2-pro（最新模型，推荐）</RimTalk.Settings.TTS.ModelS2Pro>
+    <RimTalk.Settings.TTS.ModelHighQuality>fishaudio-1（v1.6）</RimTalk.Settings.TTS.ModelHighQuality>
+    <RimTalk.Settings.TTS.ModelFaster>s1</RimTalk.Settings.TTS.ModelFaster>
+    <RimTalk.Settings.TTS.ModelS2Pro>s2-pro</RimTalk.Settings.TTS.ModelS2Pro>
+    <RimTalk.Settings.TTS.ModelS21Pro>s2.1-pro</RimTalk.Settings.TTS.ModelS21Pro>
+    <RimTalk.Settings.TTS.ModelS21ProFree>s2.1-pro-free（s2.1-pro的免费版，生成时间可能很长）</RimTalk.Settings.TTS.ModelS21ProFree>
     <RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>生成冷却时间(毫秒): {0}</RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>
     <RimTalk.Settings.TTS.VolumeLabel>音量：{0}</RimTalk.Settings.TTS.VolumeLabel>
     <RimTalk.Settings.TTS.TemperatureLabel>温度：{0} (仅 Fish Audio 有效)</RimTalk.Settings.TTS.TemperatureLabel>

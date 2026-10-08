@@ -68,7 +68,9 @@ namespace RimTalk.TTS.Patch
 
                 if (method == null)
                 {
-                    TTSLog.Warning("[RimTalk.TTS] CreateInteraction_Patch: Method not found, skipping patch");
+                    // Expected on RimTalk 1.2.0+, which replaced CreateInteraction with
+                    // TalkService.MarkTalkSpoken (handled by MarkTalkSpoken_Patch below).
+                    TTSLog.Message("[RimTalk.TTS] CreateInteraction_Patch: Method not found (RimTalk 1.2.0+), skipping patch");
                     return false;
                 }
 
@@ -133,6 +135,104 @@ namespace RimTalk.TTS.Patch
                 catch (Exception ex)
                 {
                     TTSLog.Error($"[RimTalk.TTS] CreateInteraction Prefix exception: {ex}");
+                    return true; // On error, allow execution
+                }
+            }
+        }
+
+        /// <summary>
+        /// Patch: TalkService.MarkTalkSpoken - Intercept when dialogue is actually shown.
+        ///
+        /// RimTalk 1.2.0 removed TalkService.CreateInteraction: spoken lines are no longer turned
+        /// into a LogEntry there, and the line becomes visible (overlay log row, conversation
+        /// pacing, export) the moment <c>MarkTalkSpoken</c> dequeues it from PawnState.TalkResponses.
+        /// That makes this the point where a line has to be held back until its speech exists and
+        /// the previous line has finished playing; without the hold the line is consumed instantly
+        /// and the generated audio is never played because nothing calls PlayAudio any more.
+        /// </summary>
+        [HarmonyPatch]
+        public static class MarkTalkSpoken_Patch
+        {
+            static bool Prepare()
+            {
+                var method = GetTarget();
+                if (method == null)
+                {
+                    TTSLog.Warning("[RimTalk.TTS] MarkTalkSpoken_Patch: Method not found, skipping patch");
+                    return false;
+                }
+
+                TTSLog.Message("[RimTalk.TTS] MarkTalkSpoken_Patch: Method found, patch will be applied");
+                return true;
+            }
+
+            static MethodBase TargetMethod()
+            {
+                return GetTarget();
+            }
+
+            private static MethodBase GetTarget()
+            {
+                return typeof(TalkService).GetMethod("MarkTalkSpoken",
+                    BindingFlags.NonPublic | BindingFlags.Static,
+                    null,
+                    new[] { typeof(global::RimTalk.Data.PawnState) },
+                    null);
+            }
+
+            // Prefix: while the line's audio is still generating, or while the previous line is
+            // still playing, refuse to consume the talk. DisplayTalk runs again every 0.5s, so the
+            // line simply waits at the head of its queue and is displayed once the audio is ready.
+            static bool Prefix(global::RimTalk.Data.PawnState pawnState)
+            {
+                try
+                {
+                    if (!TTSModuleIsActive())
+                        return true;
+
+                    var pawn = pawnState?.Pawn;
+                    if (pawn == null)
+                        return true;
+
+                    if (pawnState.TalkResponses.Count == 0)
+                        return true;
+
+                    var talk = pawnState.TalkResponses[0];
+                    if (talk == null)
+                        return true;
+
+                    // Pawns without a voice never produce audio and must not be delayed.
+                    if (PawnVoiceManager.GetVoiceModel(pawn) == VoiceModel.NONE_MODEL_ID)
+                        return true;
+
+                    // The overlay "Display" button forces the queue to drain: drop the pending
+                    // speech instead of making the player wait for it.
+                    if (OverlayButtonPatch.ForceDisplay)
+                    {
+                        TTSService.CancelDialogue(talk.Id);
+                        return true;
+                    }
+
+                    // Keep playback serialized: do not show a new line over audio still playing.
+                    if (Service.AudioPlaybackService.IsCurrentlyPlaying())
+                        return false;
+
+                    // Speech for this line is still being generated - wait for it.
+                    if (IsBlocked(talk.Id))
+                        return false;
+
+                    // Get volume from settings using correct supplier key (handles Custom suppliers)
+                    var settings = TTSConfig.Settings;
+                    float volume = settings != null
+                        ? settings.GetSupplierVolume(settings.GetCurrentSupplierKey())
+                        : 1.0f;
+
+                    Service.AudioPlaybackService.PlayAudio(talk.Id, pawn, volume);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    TTSLog.Error($"[RimTalk.TTS] MarkTalkSpoken Prefix exception: {ex}");
                     return true; // On error, allow execution
                 }
             }

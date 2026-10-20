@@ -410,12 +410,11 @@ namespace RimTalk.TTS.UI
         {
             listing.Label("RimTalk.Settings.TTS.ProcessingPromptLabel".Translate());
             
-            // Initialize buffer if needed - show default prompt if custom is empty
+            // Initialize buffer if needed - show the effective prompt (custom or the
+            // supplier-specific default) so the text area matches what is actually used.
             if (!processingPromptInitialized)
             {
-                processingPromptBuffer = string.IsNullOrWhiteSpace(settings.CustomTTSProcessingPrompt)
-                    ? Data.TTSConstant.DefaultTTSProcessingPrompt
-                    : settings.CustomTTSProcessingPrompt;
+                processingPromptBuffer = Data.TTSConstant.GetTTSProcessingPrompt(settings);
                 processingPromptInitialized = true;
             }
 
@@ -828,14 +827,23 @@ namespace RimTalk.TTS.UI
                     {
                         Messages.Message("RimTalk.TTS.UploadFailed.NameEmpty".Translate(), MessageTypeDefOf.RejectInput, false);
                     }
+                    else if (string.IsNullOrWhiteSpace(uploadTextBuffer))
+                    {
+                        // "text" is a required field of the SiliconFlow upload API.
+                        Messages.Message("RimTalk.TTS.UploadFailed.TextEmpty".Translate(), MessageTypeDefOf.RejectInput, false);
+                    }
                     else
                     {
-                        // Kick off upload in background
+                        // Kick off upload in background. Snapshot the buffers so edits made
+                        // while the request is in flight cannot change what gets uploaded.
                         var apiKey = settings.GetSupplierApiKey(settings.GetCurrentSupplierKey());
                         var model = settings.GetSupplierModel(settings.GetCurrentSupplierKey());
+                        string uploadPath = uploadPathBuffer;
+                        string uploadName = uploadNameBuffer;
+                        string uploadText = uploadTextBuffer;
                         System.Threading.Tasks.Task.Run(async () =>
                         {
-                            var uri = await Service.SiliconFlowClient.UploadUserVoiceAsync(apiKey, model, uploadPathBuffer, uploadNameBuffer, uploadTextBuffer);
+                            var uri = await Service.SiliconFlowClient.UploadUserVoiceAsync(apiKey, model, uploadPath, uploadName, uploadText);
                             if (!string.IsNullOrWhiteSpace(uri))
                             {
                                 // Defer the Refresh and message to run on the main thread
@@ -974,27 +982,32 @@ namespace RimTalk.TTS.UI
             if (settings.Supplier == TTSSettings.TTSSupplier.CosyVoice || settings.Supplier == TTSSettings.TTSSupplier.IndexTTS)
             {
                 var apiKey = settings.GetSupplierApiKey(supplierKey);
-                var supplier = settings.Supplier;
                 var sKey = supplierKey;
                 System.Threading.Tasks.Task.Run(async () =>
                 {
                     var list = await Service.SiliconFlowClient.ListUserVoicesAsync(apiKey);
                     if (list != null && list.Count > 0)
                     {
-                        var current = settings.GetSupplierVoiceModels(sKey) ?? new System.Collections.Generic.List<Data.VoiceModel>();
-                        bool changed = false;
-                        foreach (var t in list)
+                        // Apply on the main thread: the same List<VoiceModel> instance is
+                        // enumerated by the IMGUI code above, so mutating it from a
+                        // background thread can throw or silently drop rows.
+                        EnqueueMainThreadAction(() =>
                         {
-                            if (!current.Exists(x => x.ModelId == t.Item1))
+                            var current = settings.GetSupplierVoiceModels(sKey) ?? new System.Collections.Generic.List<Data.VoiceModel>();
+                            bool changed = false;
+                            foreach (var t in list)
                             {
-                                current.Add(new Data.VoiceModel(t.Item1, t.Item2));
-                                changed = true;
+                                if (!current.Exists(x => x.ModelId == t.Item1))
+                                {
+                                    current.Add(new Data.VoiceModel(t.Item1, t.Item2));
+                                    changed = true;
+                                }
                             }
-                        }
-                        if (changed)
-                        {
-                            settings.SetSupplierVoiceModels(sKey, current);
-                        }
+                            if (changed)
+                            {
+                                settings.SetSupplierVoiceModels(sKey, current);
+                            }
+                        });
                         // Notify user that sync completed (enqueue to show on main thread)
                         EnqueueMessage("RimTalk.TTS.SyncComplete".Translate(), MessageTypeDefOf.TaskCompletion);
                     }
@@ -1040,28 +1053,45 @@ namespace RimTalk.TTS.UI
             Rect delRect = new Rect(idRect.xMax + 5f, y, 24f, height);
             if (Widgets.ButtonText(delRect, "X"))
             {
-                // If looks like a SiliconFlow user voice (speech:...), attempt deletion
                 string toDeleteId = model.ModelId ?? "";
-                if (!string.IsNullOrWhiteSpace(toDeleteId) && toDeleteId.StartsWith("speech:"))
+                var settingsRef = TTSConfig.Settings;
+
+                // If it looks like a SiliconFlow user voice (speech:...), attempt server deletion
+                if (settingsRef != null && !string.IsNullOrWhiteSpace(toDeleteId) && toDeleteId.StartsWith("speech:"))
                 {
-                    var apiKey = LoadedModManager.GetMod(typeof(TTSMod)) is TTSMod mod ? (mod.GetSettings<TTSSettings>()?.GetSupplierApiKey(mod.GetSettings<TTSSettings>().Supplier) ?? "") : "";
-                    var supplier = LoadedModManager.GetMod(typeof(TTSMod)) is TTSMod _m2 ? _m2.GetSettings<TTSSettings>().Supplier : TTSSettings.TTSSupplier.None;
-                    // Use background task to delete
-                    System.Threading.Tasks.Task.Run(async () =>
+                    string supplierKey = settingsRef.GetCurrentSupplierKey();
+                    string apiKey = settingsRef.GetSupplierApiKey(supplierKey);
+                    if (!string.IsNullOrWhiteSpace(apiKey))
                     {
-                        bool ok = await Service.SiliconFlowClient.DeleteUserVoiceAsync(apiKey, toDeleteId);
-                        if (ok)
-                            EnqueueMessage("RimTalk.TTS.DeleteComplete".Translate(), MessageTypeDefOf.TaskCompletion);
-                        else
-                            EnqueueMessage("RimTalk.TTS.DeleteFailed".Translate(), MessageTypeDefOf.RejectInput);
-                    });
+                        System.Threading.Tasks.Task.Run(async () =>
+                        {
+                            bool ok = await Service.SiliconFlowClient.DeleteUserVoiceAsync(apiKey, toDeleteId);
+                            if (ok)
+                                EnqueueMessage("RimTalk.TTS.DeleteComplete".Translate(), MessageTypeDefOf.TaskCompletion);
+                            else
+                                EnqueueMessage("RimTalk.TTS.DeleteFailed".Translate(), MessageTypeDefOf.RejectInput);
+                        });
+                    }
                 }
 
-                // Remove locally regardless (server deletion attempted above)
-                if (models != null && index >= 0 && index < models.Count)
+                // If the default voice points at this entry, reset it so requests do not
+                // keep referencing a voice that no longer exists.
+                if (settingsRef != null && !string.IsNullOrWhiteSpace(toDeleteId))
                 {
-                    models.RemoveAt(index);
+                    string supplierKey = settingsRef.GetCurrentSupplierKey();
+                    if (settingsRef.GetSupplierDefaultVoiceModelId(supplierKey) == toDeleteId)
+                    {
+                        settingsRef.SetSupplierDefaultVoiceModelId(supplierKey, VoiceModel.NONE_MODEL_ID);
+                    }
                 }
+
+                // Defer local removal: mutating the list while DrawVoiceModelsList is
+                // iterating it would shift the remaining rows in the same frame.
+                var toRemove = model;
+                EnqueueMainThreadAction(() =>
+                {
+                    if (models != null) models.Remove(toRemove);
+                });
             }
         }
 

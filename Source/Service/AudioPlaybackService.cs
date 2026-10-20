@@ -77,6 +77,18 @@ public static class AudioPlaybackService
     }
 
     /// <summary>
+    /// True when usable audio is stored for this dialogue. A missing entry or a null/empty
+    /// entry both mean "no playable audio" (the latter is how a failed generation is recorded).
+    /// </summary>
+    public static bool HasAudioEntry(Guid dialogueId)
+    {
+        lock (_lock)
+        {
+            return _dialogueAudio.TryGetValue(dialogueId, out var data) && data != null && data.Length > 0;
+        }
+    }
+
+    /// <summary>
     /// Play audio for a dialogue. Waits for previous playback and TTS generation.
     /// </summary>
     public static async void PlayAudio(Guid dialogueId, Pawn pawn, float volume = 1.0f)
@@ -112,6 +124,7 @@ public static class AudioPlaybackService
             if (ttsWaitCycles >= maxTtsWaitCycles)
             {
                 TTSLog.Warning($"[RimTalk.TTS] Timeout waiting for TTS (30s), skipping audio for dialogue {dialogueId}");
+                TTSLog.Diag($"play [{dialogueId.ToString("N").Substring(0, 8)}]: gave up waiting for TTS after 30s");
                 lock (_lock)
                 {
                     _isPlaying = false;
@@ -130,6 +143,7 @@ public static class AudioPlaybackService
                 if (!_dialogueAudio.TryGetValue(dialogueId, out wavData))
                 {
                     TTSLog.Message($"[RimTalk.TTS] No audio found for dialogue {dialogueId}, skipping playback");
+                    TTSLog.Diag($"play [{dialogueId.ToString("N").Substring(0, 8)}]: NO AUDIO ENTRY (generation result was never stored or was already discarded)");
                     _isPlaying = false;
                     return;
                 }
@@ -138,6 +152,7 @@ public static class AudioPlaybackService
                 {
                     _dialogueAudio.Remove(dialogueId);
                     TTSLog.Message($"[RimTalk.TTS] Audio is null or empty for dialogue {dialogueId}, skipping playback");
+                    TTSLog.Diag($"play [{dialogueId.ToString("N").Substring(0, 8)}]: audio entry is null/empty (generation failed)");
                     _isPlaying = false;
                     return;
                 }
@@ -155,6 +170,7 @@ public static class AudioPlaybackService
                     // follower.pawn = pawn;
                     // follower.verticalOffset = 0.5f;
                     TTSLog.Message($"[RimTalk.TTS] Playback start [{dialogueId.ToString().Substring(0, 8)}]: {clip.length:F1}s, {wavData.Length} bytes");
+                    TTSLog.Diag($"play [{dialogueId.ToString("N").Substring(0, 8)}]: PLAYING {clip.length:F1}s, {wavData.Length} bytes, volume={_audioSource.volume:F2}");
                     _audioSource.Play();
                     // follower.pawn = null;
 
@@ -165,6 +181,7 @@ public static class AudioPlaybackService
                 else
                 {
                     TTSLog.Error("[RimTalk.TTS] Failed to create audio clip from audio data or clip length is 0");
+                    TTSLog.Diag($"play [{dialogueId.ToString("N").Substring(0, 8)}]: AUDIO CLIP DECODE FAILED (clip null or zero length)");
                 }
             }
             catch (Exception ex)
@@ -282,7 +299,9 @@ public static class AudioPlaybackService
     }
 
     /// <summary>
-    /// Load AudioClip from MP3 byte array using temporary file
+    /// Load AudioClip from MP3 byte array using temporary file.
+    /// Runs on the Unity main thread: UnityWebRequestMultimedia / DownloadHandlerAudioClip
+    /// are Unity APIs that must not be touched from a worker thread.
     /// </summary>
     private static async Task<AudioClip> LoadAudioClipFromMP3(byte[] mp3Data, string dialogueId)
     {
@@ -293,28 +312,25 @@ public static class AudioPlaybackService
             tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"rimtalk_audio_{dialogueId}.mp3");
             await System.IO.File.WriteAllBytesAsync(tempFile, mp3Data);
 
-            // Load using UnityWebRequestMultimedia on main thread
+            // Load using UnityWebRequestMultimedia (file:// URI; new Uri handles spaces/backslashes)
             AudioClip clip = null;
-            await Task.Run(async () =>
+            using (var www = UnityEngine.Networking.UnityWebRequestMultimedia.GetAudioClip(new System.Uri(tempFile).AbsoluteUri, UnityEngine.AudioType.MPEG))
             {
-                using (var www = UnityEngine.Networking.UnityWebRequestMultimedia.GetAudioClip("file:///" + tempFile, UnityEngine.AudioType.MPEG))
+                var operation = www.SendWebRequest();
+                while (!operation.isDone)
                 {
-                    var operation = www.SendWebRequest();
-                    while (!operation.isDone)
-                    {
-                        await Task.Delay(10);
-                    }
-
-                    if (www.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
-                    {
-                        clip = UnityEngine.Networking.DownloadHandlerAudioClip.GetContent(www);
-                    }
-                    else
-                    {
-                        TTSLog.Error($"[RimTalk.TTS] Failed to load MP3: {www.error}");
-                    }
+                    await Task.Delay(10);
                 }
-            });
+
+                if (www.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+                {
+                    clip = UnityEngine.Networking.DownloadHandlerAudioClip.GetContent(www);
+                }
+                else
+                {
+                    TTSLog.Error($"[RimTalk.TTS] Failed to load MP3: {www.error}");
+                }
+            }
 
             return clip;
         }

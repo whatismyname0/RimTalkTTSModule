@@ -163,7 +163,27 @@ namespace RimTalk.TTS.Patch
                 }
 
                 TTSLog.Message("[RimTalk.TTS] MarkTalkSpoken_Patch: Method found, patch will be applied");
+                TTSLog.Diag("patch applied on TalkService.MarkTalkSpoken (RimTalk 1.2.0 display path)");
                 return true;
+            }
+
+            // ---- temporary diagnostics (see TTSLog.Diag) ----
+            private static readonly HashSet<string> _diagSeen = new HashSet<string>();
+            private static bool _diagModuleOffLogged;
+
+            private static void DiagOnce(Guid id, string reason, string message)
+            {
+                string key = id.ToString("N") + "|" + reason;
+                lock (_diagSeen)
+                {
+                    if (!_diagSeen.Add(key)) return;
+                }
+                TTSLog.Diag(message);
+            }
+
+            private static string ShortId(Guid id)
+            {
+                return id.ToString("N").Substring(0, 8);
             }
 
             static MethodBase TargetMethod()
@@ -188,7 +208,14 @@ namespace RimTalk.TTS.Patch
                 try
                 {
                     if (!TTSModuleIsActive())
+                    {
+                        if (!_diagModuleOffLogged)
+                        {
+                            _diagModuleOffLogged = true;
+                            TTSLog.Diag("pass: TTS module inactive (IsEnabled/isOnButton off) - no line will ever be held");
+                        }
                         return true;
+                    }
 
                     var pawn = pawnState?.Pawn;
                     if (pawn == null)
@@ -203,23 +230,30 @@ namespace RimTalk.TTS.Patch
 
                     // Pawns without a voice never produce audio and must not be delayed.
                     if (PawnVoiceManager.GetVoiceModel(pawn) == VoiceModel.NONE_MODEL_ID)
-                        return true;
-
-                    // The overlay "Display" button forces the queue to drain: drop the pending
-                    // speech instead of making the player wait for it.
-                    if (OverlayButtonPatch.ForceDisplay)
                     {
-                        TTSService.CancelDialogue(talk.Id);
+                        DiagOnce(talk.Id, "voice-none", $"pass [{ShortId(talk.Id)}] pawn={pawn.LabelShort}: voice=NONE");
                         return true;
                     }
 
+                    // NOTE: the overlay "Display" button (OverlayButtonPatch.displayPassport) only
+                    // shortens RimTalk's reply-interval pacing via CommonUtil.HasPassed - it must
+                    // NOT make this line skip its speech. Cancelling the pending audio here (the
+                    // old behaviour of this branch) dropped audio that was already generated, so a
+                    // manually advanced line was shown without ever being spoken.
+
                     // Keep playback serialized: do not show a new line over audio still playing.
                     if (Service.AudioPlaybackService.IsCurrentlyPlaying())
+                    {
+                        DiagOnce(talk.Id, "playing", $"HOLD [{ShortId(talk.Id)}] pawn={pawn.LabelShort}: previous audio still playing");
                         return false;
+                    }
 
                     // Speech for this line is still being generated - wait for it.
                     if (IsBlocked(talk.Id))
+                    {
+                        DiagOnce(talk.Id, "generating", $"HOLD [{ShortId(talk.Id)}] pawn={pawn.LabelShort}: speech still generating");
                         return false;
+                    }
 
                     // Get volume from settings using correct supplier key (handles Custom suppliers)
                     var settings = TTSConfig.Settings;
@@ -227,6 +261,7 @@ namespace RimTalk.TTS.Patch
                         ? settings.GetSupplierVolume(settings.GetCurrentSupplierKey())
                         : 1.0f;
 
+                    DiagOnce(talk.Id, "ready", $"PASS [{ShortId(talk.Id)}] pawn={pawn.LabelShort}: speech ready, starting playback (audioEntry={Service.AudioPlaybackService.HasAudioEntry(talk.Id)})");
                     Service.AudioPlaybackService.PlayAudio(talk.Id, pawn, volume);
                     return true;
                 }
@@ -271,6 +306,7 @@ namespace RimTalk.TTS.Patch
                     return;
                 try
                 {
+                    TTSLog.Diag($"cancel requested by TalkHistory.AddIgnored [{id.ToString("N").Substring(0, 8)}]");
                     TTSModule.Instance.OnDialogueCancelled(id);
                 }
                 catch (Exception ex)
@@ -378,11 +414,19 @@ namespace RimTalk.TTS.Patch
                     var dialogueId = item.Id;
                     var text = item.Text;
 
-                    if (PawnVoiceManager.GetVoiceModel(pawn) == VoiceModel.NONE_MODEL_ID)
+                    string shortId = dialogueId.ToString("N").Substring(0, 8);
+                    string voice = PawnVoiceManager.GetVoiceModel(pawn);
+
+                    if (voice == VoiceModel.NONE_MODEL_ID)
+                    {
+                        TTSLog.Diag($"request [{shortId}] pawn={pawn.LabelShort}: voice=NONE -> no TTS, line will show without audio");
                         return;
+                    }
 
                     // Immediately mark dialogue as "generating" to block display
                     RequestBlock(dialogueId);
+
+                    TTSLog.Diag($"request [{shortId}] pawn={pawn.LabelShort} voice={voice}: blocked + TTS requested");
 
                     // Start TTS generation immediately when dialogue enters the queue
                     TTSModule.Instance.OnDialogueGenerated(text, pawn, dialogueId);
@@ -445,6 +489,7 @@ namespace RimTalk.TTS.Patch
 
                     var dialogueId = talkResponse.Id;
                     // Cancel TTS generation or discard generated audio
+                    TTSLog.Diag($"cancel requested by PawnState.IgnoreTalkResponse [{dialogueId.ToString("N").Substring(0, 8)}]");
                     TTSModule.Instance.OnDialogueCancelled(dialogueId);
                 }
                 catch (Exception ex)

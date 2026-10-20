@@ -357,6 +357,9 @@ namespace RimTalk.TTS.Service
         /// </summary>
         private static void HandleGenerationResult(Guid dialogueId, byte[] audioData, TTSSettings settings)
         {
+            bool stillBlocked = RimTalkPatches.IsBlocked(dialogueId);
+            TTSLog.Diag($"audio ready [{dialogueId.ToString("N").Substring(0, 8)}]: {(audioData?.Length ?? 0)} bytes, blocked={stillBlocked}");
+
             // Check if should continue
             if (!ShouldContinueProcessing(dialogueId, settings, out string reason))
             {
@@ -456,6 +459,8 @@ namespace RimTalk.TTS.Service
             {
                 toCancel = RimTalkPatches.blockedDialogues.ToList();
             }
+
+            TTSLog.Diag($"StopAll(permanentShutdown={permanentShutdown}): cancelling {toCancel.Count} blocked dialogue(s) - their audio will be reported as discarded");
             
             // Cancel all pending TTS generation tasks
             foreach (var id in toCancel)
@@ -474,8 +479,11 @@ namespace RimTalk.TTS.Service
         public static void CancelDialogue(Guid dialogueId)
         {
             if (dialogueId == Guid.Empty) return;
-            
-            if (RimTalkPatches.IsBlocked(dialogueId))
+
+            bool wasBlocked = RimTalkPatches.IsBlocked(dialogueId);
+            TTSLog.Diag($"cancel [{dialogueId.ToString("N").Substring(0, 8)}]: wasBlocked={wasBlocked} (block released, pending speech dropped)");
+
+            if (wasBlocked)
             {
                 CleanupAndRelease(dialogueId);
             }

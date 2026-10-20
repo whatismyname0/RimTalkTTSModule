@@ -91,7 +91,9 @@ namespace RimTalk.TTS.Patch
             // Position the button at the bottom of the window, above OK/Cancel buttons
             float buttonWidth = 120f;
             float buttonHeight = 20f;
-            float bottomMargin = 90f; // Leave space for OK/Cancel buttons
+            // Larger margin = further up from the window bottom (raised 15px to clear
+            // the buttons below it).
+            float bottomMargin = 105f;
             
             Rect buttonRect = new Rect(
                 inRect.x + 360f,

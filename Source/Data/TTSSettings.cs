@@ -162,6 +162,10 @@ namespace RimTalk.TTS.Data
             // Initialize dictionaries if null (backwards compatibility)
             InitializeDictionaryIfNull(ref SupplierApiKeys, (s) => s == TTSSupplier.FishAudio ? (FishAudioApiKey ?? "") : "");
             InitializeDictionaryIfNull(ref SupplierModels, (s) => s == TTSSupplier.FishAudio ? (TTSModel ?? "s2-pro") : "");
+            // SiliconFlow rejects requests with an empty "model". Keep usable defaults for
+            // the CosyVoice/IndexTTS suppliers while preserving any custom model id.
+            EnsureSupplierModelDefault(TTSSupplier.CosyVoice, "FunAudioLLM/CosyVoice2-0.5B");
+            EnsureSupplierModelDefault(TTSSupplier.IndexTTS, "IndexTeam/IndexTTS-2");
             InitializeDictionaryIfNull(ref SupplierGenerateCooldownMs, (s) => s == TTSSupplier.FishAudio ? GenerateCooldownMiliSeconds : DEFAULT_GENERATE_COOLDOWN_MS);
             InitializeDictionaryIfNull(ref SupplierVolume, (s) => s == TTSSupplier.FishAudio ? TTSVolume : DEFAULT_SUPPLIER_VOLUME);
             InitializeDictionaryIfNull(ref SupplierTemperature, (s) => s == TTSSupplier.FishAudio ? TTSTemperature : 0.9f);
@@ -221,6 +225,19 @@ namespace RimTalk.TTS.Data
             {
                 if (supplier == TTSSupplier.None) continue;
                 dict[supplier.ToString()] = getValue(supplier);
+            }
+        }
+
+        /// <summary>
+        /// Ensure a supplier has a non-empty model id, falling back to the built-in model.
+        /// </summary>
+        private void EnsureSupplierModelDefault(TTSSupplier supplier, string defaultModel)
+        {
+            if (SupplierModels == null) return;
+            string key = supplier.ToString();
+            if (!SupplierModels.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
+            {
+                SupplierModels[key] = defaultModel;
             }
         }
 

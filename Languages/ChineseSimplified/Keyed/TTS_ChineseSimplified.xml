@@ -142,6 +142,7 @@
 
     <RimTalk.TTS.UploadFailed.LocalFileNotFound>上传失败：未找到本地文件</RimTalk.TTS.UploadFailed.LocalFileNotFound>
     <RimTalk.TTS.UploadFailed.NameEmpty>上传失败：名称不能为空</RimTalk.TTS.UploadFailed.NameEmpty>
+    <RimTalk.TTS.UploadFailed.TextEmpty>上传失败：参考文本不能为空（API 必填）</RimTalk.TTS.UploadFailed.TextEmpty>
     <RimTalk.TTS.UploadComplete>上传成功</RimTalk.TTS.UploadComplete>
     <RimTalk.TTS.UploadFailed.ServerError>上传失败：服务器返回错误</RimTalk.TTS.UploadFailed.ServerError>
 

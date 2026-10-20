@@ -142,6 +142,7 @@
 
     <RimTalk.TTS.UploadFailed.LocalFileNotFound>Upload failed: local file not found</RimTalk.TTS.UploadFailed.LocalFileNotFound>
     <RimTalk.TTS.UploadFailed.NameEmpty>Upload failed: name is empty</RimTalk.TTS.UploadFailed.NameEmpty>
+    <RimTalk.TTS.UploadFailed.TextEmpty>Upload failed: reference text is empty (required by the API)</RimTalk.TTS.UploadFailed.TextEmpty>
     <RimTalk.TTS.UploadComplete>Upload complete</RimTalk.TTS.UploadComplete>
     <RimTalk.TTS.UploadFailed.ServerError>Upload failed: server error</RimTalk.TTS.UploadFailed.ServerError>
 

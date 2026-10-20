@@ -20,13 +20,6 @@ namespace RimTalk.TTS.Patch
         private static Rect displayButtonScreenRect = default;
         private static bool displayPassport = false;
 
-        /// <summary>
-        /// True while the overlay's Display button is draining the dialogue queue. RimTalk.TTS
-        /// stops holding lines back for speech during that call so the player can force the
-        /// pending dialogue onto the screen immediately.
-        /// </summary>
-        public static bool ForceDisplay => displayPassport;
-
         [HarmonyPatch]
         public static class Overlay_MapComponentOnGUI_Postfix
         {
@@ -193,8 +186,21 @@ namespace RimTalk.TTS.Patch
         private static void displayButtonFunc()
         {
             displayPassport = true;
-            TalkService.DisplayTalk();
-            displayPassport = false;
+            try
+            {
+                TalkService.DisplayTalk();
+            }
+            catch (Exception ex)
+            {
+                // Without this the flag would stay set for the rest of the session, which
+                // permanently bypasses RimTalk's reply pacing: CommonUtil.HasPassed would keep
+                // returning true, so every queued line would look like it is already due.
+                TTSLog.Error($"[RimTalk.TTS] Overlay Display: TalkService.DisplayTalk() threw: {ex}");
+            }
+            finally
+            {
+                displayPassport = false;
+            }
         }
 
         [HarmonyPatch]

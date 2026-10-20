@@ -8,3 +8,10 @@ SiliconFlowTTSModelGuide.md
 TTSRequest.md
 Textures/UI/ToggleButton.dds.zstd
 Textures/UI/VoiceSettings.dds.zstd
+Assets.zip
+Assets.zip.fingerprint
+Assets.zip.stamps
+Assets.zip.roles
+.gitignore
+obj/
+.understand-anything/

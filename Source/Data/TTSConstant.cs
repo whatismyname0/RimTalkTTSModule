@@ -206,16 +206,41 @@ namespace RimTalk.TTS.Data
             """;
 
         /// <summary>
-        /// Get the current TTS processing prompt from settings or fallback to default
+        /// Get the current TTS processing prompt from settings or fall back to the
+        /// default prompt of the currently selected supplier.
         /// </summary>
         public static string GetTTSProcessingPrompt(TTSSettings settings)
         {
             if (settings == null)
                 return DefaultTTSProcessingPrompt;
 
-            return string.IsNullOrWhiteSpace(settings.CustomTTSProcessingPrompt)
-                ? DefaultTTSProcessingPrompt
-                : settings.CustomTTSProcessingPrompt;
+            if (!string.IsNullOrWhiteSpace(settings.CustomTTSProcessingPrompt))
+                return settings.CustomTTSProcessingPrompt;
+
+            return GetDefaultProcessingPrompt(settings.Supplier);
+        }
+
+        /// <summary>
+        /// Default preprocessing prompt for a supplier. FishAudio keeps the legacy
+        /// generic prompt (S1/S2 users can pick their specific one via the reset buttons).
+        /// </summary>
+        public static string GetDefaultProcessingPrompt(TTSSettings.TTSSupplier supplier)
+        {
+            switch (supplier)
+            {
+                case TTSSettings.TTSSupplier.CosyVoice:
+                    return DefaultTTSProcessingPrompt_CosyVoice;
+                case TTSSettings.TTSSupplier.IndexTTS:
+                    return DefaultTTSProcessingPrompt_IndexTTS;
+                case TTSSettings.TTSSupplier.AzureTTS:
+                    return DefaultTTSProcessingPrompt_AzureTTS;
+                case TTSSettings.TTSSupplier.EdgeTTS:
+                    return DefaultTTSProcessingPrompt_EdgeTTS;
+                case TTSSettings.TTSSupplier.GeminiTTS:
+                    return DefaultTTSProcessingPrompt_GeminiTTS;
+                default:
+                    return DefaultTTSProcessingPrompt;
+            }
         }
     }
 }

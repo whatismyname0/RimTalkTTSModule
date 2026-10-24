@@ -71,7 +71,7 @@ async def test_api_connection(api_key, reference_id):
             format="wav",
             latency="normal",
             normalize=False,
-            model="s1",
+            model="s2-pro",
             temperature=0.9,
             top_p=0.9
         )

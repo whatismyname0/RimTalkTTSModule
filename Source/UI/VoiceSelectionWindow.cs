@@ -32,7 +32,7 @@ namespace RimTalk.TTS.UI
             if (modInstance != null)
             {
                 _settings = modInstance.GetSettings<TTSSettings>();
-                _voiceModels = _settings != null ? (_settings.GetSupplierVoiceModels(_settings.Supplier) ?? new List<VoiceModel>()) : new List<VoiceModel>();
+                _voiceModels = _settings != null ? (_settings.GetSupplierVoiceModels(_settings.GetCurrentSupplierKey()) ?? new List<VoiceModel>()) : new List<VoiceModel>();
             }
             else
             {
@@ -233,7 +233,7 @@ namespace RimTalk.TTS.UI
             }
             catch (Exception ex)
             {
-                Log.Error($"[RimTalk.TTS] Failed to get current voice model: {ex.Message}");
+                TTSLog.Error($"[RimTalk.TTS] Failed to get current voice model: {ex.Message}");
             }
             return VoiceModel.DEFAULT_MODEL_ID;
         }
@@ -247,7 +247,7 @@ namespace RimTalk.TTS.UI
             }
             catch (Exception ex)
             {
-                Log.Error($"[RimTalk.TTS] Failed to get current language: {ex.Message}");
+                TTSLog.Error($"[RimTalk.TTS] Failed to get current language: {ex.Message}");
             }
             return "";
         }
@@ -261,7 +261,7 @@ namespace RimTalk.TTS.UI
             }
             catch (Exception ex)
             {
-                Log.Error($"[RimTalk.TTS] Failed to save voice model: {ex.Message}\n{ex.StackTrace}");
+                TTSLog.Error($"[RimTalk.TTS] Failed to save voice model: {ex.Message}\n{ex.StackTrace}");
             }
         }
 
@@ -274,7 +274,7 @@ namespace RimTalk.TTS.UI
             }
             catch (Exception ex)
             {
-                Log.Error($"[RimTalk.TTS] Failed to save language: {ex.Message}\n{ex.StackTrace}");
+                TTSLog.Error($"[RimTalk.TTS] Failed to save language: {ex.Message}\n{ex.StackTrace}");
             }
         }
     }

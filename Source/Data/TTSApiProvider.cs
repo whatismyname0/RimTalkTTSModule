@@ -5,6 +5,8 @@ namespace RimTalk.TTS.Data
     /// </summary>
     public enum TTSApiProvider
     {
+        Skip,
+        RimTalkSame,
         DeepSeek,
         OpenAI,
         Custom

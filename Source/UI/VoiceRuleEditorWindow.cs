@@ -388,7 +388,7 @@ namespace RimTalk.TTS.UI
             
             float y = 0f;
             var toRemove = new List<string>();
-            var supplierModels = settings.GetSupplierVoiceModels(settings.Supplier);
+            var supplierModels = settings.GetSupplierVoiceModels(settings.GetCurrentSupplierKey());
             
             foreach (var modelId in rule.VoiceModelIds)
             {
@@ -425,7 +425,7 @@ namespace RimTalk.TTS.UI
 
             Rect scrollRect = new Rect(rect.x + 5f, rect.y + 30f, rect.width - 10f, rect.height - 35f);
             
-            var supplierModels = settings.GetSupplierVoiceModels(settings.Supplier);
+            var supplierModels = settings.GetSupplierVoiceModels(settings.GetCurrentSupplierKey());
             var unselectedModels = supplierModels.Where(m => !rule.VoiceModelIds.Contains(m.ModelId)).ToList();
             
             Rect viewRect = new Rect(0f, 0f, scrollRect.width - 20f, unselectedModels.Count * 30f);

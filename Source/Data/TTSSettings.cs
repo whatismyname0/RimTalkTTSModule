@@ -1,15 +1,41 @@
+using System;
 using System.Collections.Generic;
 using Verse;
 
 namespace RimTalk.TTS.Data
 {
     /// <summary>
-    /// TTS module settings - independent from main RimTalk settings
+    /// TTS module settings - independent from main RimTalk settings.
+    ///
+    /// Schema v2 (2026-10): per-supplier values live in <see cref="Suppliers"/> (one
+    /// <see cref="SupplierConfig"/> per key), LLM options in <see cref="Llm"/>, global options in
+    /// <see cref="Ui"/>. The public members below are thin accessors so callers (snapshot, UI,
+    /// pipeline) did not have to change.
+    ///
+    /// Only v2 is written. A pre-v2 settings file is imported automatically on load
+    /// (<see cref="SettingsMigration"/>); the one-release v1 dual-write was removed.
     /// </summary>
     public class TTSSettings : ModSettings
     {
-        // Player reference voice model id (null/empty = use supplier default, VoiceModel.NONE_MODEL_ID = none)
-        public string PlayerReferenceVoiceModelId = VoiceModel.NONE_MODEL_ID;
+        public const float DEFAULT_SUPPLIER_VOLUME = 0.8f;
+        public const float DEFAULT_SUPPLIER_SPEED = 1.0f;
+        public const int DEFAULT_GENERATE_COOLDOWN_MS = 5000;
+        public const int DEFAULT_REQUEST_TIMEOUT_SECONDS = 120;
+        public const int MAX_REQUEST_TIMEOUT_SECONDS = 600;
+        public const int CURRENT_SCHEMA = 2;
+
+        // Missing schema key means a pre-v2 file; loading only warns (migration was removed).
+        private int _schema = 1;
+
+        public LlmConfig Llm = new LlmConfig();
+        public UiConfig Ui = new UiConfig();
+        public List<SupplierConfig> Suppliers = new List<SupplierConfig>();
+
+        // Kept at the top level: both keys already existed in v1 with the same names.
+        public List<CustomProviderConfig> CustomProviders = new List<CustomProviderConfig>();
+        public string CurrentCustomProviderId = "";
+
+        private TTSSupplier _supplier = TTSSupplier.FishAudio;
 
         public enum TTSSupplier
         {
@@ -20,16 +46,16 @@ namespace RimTalk.TTS.Data
             AzureTTS,
             EdgeTTS,
             GeminiTTS,
-            TTSWebUI
+            Custom
         }
 
-        // Default constants (use these instead of deprecated legacy fields)
-        public const float DEFAULT_SUPPLIER_VOLUME = 0.8f;
-        public const float DEFAULT_SUPPLIER_SPEED = 1.0f;
-        public const int DEFAULT_GENERATE_COOLDOWN_MS = 5000;
+        public TTSSettings()
+        {
+            EnsureInitialized();
+        }
 
-        // Selected TTS supplier implementation
-        private TTSSupplier _supplier = TTSSupplier.FishAudio;
+        // ===== accessors (unchanged public surface) =====================================
+
         public TTSSupplier Supplier
         {
             get => _supplier;
@@ -38,221 +64,211 @@ namespace RimTalk.TTS.Data
                 if (_supplier != value)
                 {
                     _supplier = value;
-                    // When supplier changes, the default voice model also changes
-                    // Update cache for all pawns using default voice with new supplier's default
+                    // When supplier changes, the default voice model also changes.
                     string newDefaultVoice = GetSupplierDefaultVoiceModelId(value);
                     PawnVoiceManager.OnDefaultVoiceChanged(newDefaultVoice);
                 }
             }
         }
 
-        // TTS Configuration
-        public bool EnableTTS = false;
-        public string FishAudioApiKey = "";//Deprecated
-        public float TTSVolume = 0.8f;//Deprecated
-        public List<VoiceModel> VoiceModels = new();//Deprecated
-        public string TTSTranslationLanguage = "";
-        public string DefaultVoiceModelId = "";//Deprecated
-        
-        // LLM API Configuration (for text processing/translation)
-        public TTSApiProvider ApiProvider = TTSApiProvider.DeepSeek;
-        public string ApiKey = "";
-        public string Model = "deepseek-chat";
-        public string CustomBaseUrl = ""; // For custom provider
-        
-        // Custom TTS processing prompt (empty = use default from TTSConstant)
-        public string CustomTTSProcessingPrompt = "";
-        
-        // Remove bracketed content during preprocessing
-        public bool RemoveBracketsInPreProcess = false;
-        
-        public string TTSModel = "s1"; // fishaudio-1 (v1.6) or s1 (default)//Deprecated
-        public float TTSTemperature = 0.9f; // TTS generation temperature (0.7-1.0)//Deprecated
-        public float TTSTopP = 0.9f; // TTS generation top_p (0.7-1.0)//Deprecated
-        public float TTSSpeed = 1.0f; // TTS playback speed (0.25-4.0)//Deprecated
+        public bool EnableTTS { get => Ui.EnableTTS; set => Ui.EnableTTS = value; }
+        public bool ButtonDisplay { get => Ui.ButtonDisplay; set => Ui.ButtonDisplay = value; }
+        public bool ControlButtonDisplay { get => Ui.ControlButtonDisplay; set => Ui.ControlButtonDisplay = value; }
+        public bool isOnButton { get => Ui.IsOnButton; set => Ui.IsOnButton = value; }
+        public string TTSTranslationLanguage { get => Ui.TranslationLanguage; set => Ui.TranslationLanguage = value ?? ""; }
+        public int TtsRequestTimeoutSeconds { get => Ui.TtsRequestTimeoutSeconds; set => Ui.TtsRequestTimeoutSeconds = value; }
+        public string PlayerReferenceVoiceModelId { get => Ui.PlayerReferenceVoiceModelId; set => Ui.PlayerReferenceVoiceModelId = value ?? ""; }
+        public string CustomTTSProcessingPrompt { get => Ui.CustomTTSProcessingPrompt; set => Ui.CustomTTSProcessingPrompt = value ?? ""; }
 
-        public bool ButtonDisplay = true;
+        public TTSApiProvider ApiProvider { get => Llm.ApiProvider; set => Llm.ApiProvider = value; }
+        public string ApiKey { get => Llm.ApiKey; set => Llm.ApiKey = value ?? ""; }
+        public string Model { get => Llm.Model; set => Llm.Model = value ?? ""; }
+        public string CustomBaseUrl { get => Llm.CustomBaseUrl; set => Llm.CustomBaseUrl = value ?? ""; }
+        public bool RemoveBracketsInPreProcess { get => Llm.RemoveBracketsInPreProcess; set => Llm.RemoveBracketsInPreProcess = value; }
 
-        public bool isOnButton = true;
-        
-        // Generate cooldown (seconds) and queue behavior
-        public int GenerateCooldownMiliSeconds = 5000;//Deprecated
-
-        // Per-supplier API keys (string key is supplier enum name)
-        public System.Collections.Generic.Dictionary<string, string> SupplierApiKeys = new System.Collections.Generic.Dictionary<string, string>();
-        // Per-supplier models (string key is supplier enum name)
-        public System.Collections.Generic.Dictionary<string, string> SupplierModels = new System.Collections.Generic.Dictionary<string, string>();
-
-        // Per-supplier basic config values
-        public System.Collections.Generic.Dictionary<string, int> SupplierGenerateCooldownMs = new System.Collections.Generic.Dictionary<string, int>();
-        public System.Collections.Generic.Dictionary<string, float> SupplierVolume = new System.Collections.Generic.Dictionary<string, float>();
-        public System.Collections.Generic.Dictionary<string, float> SupplierTemperature = new System.Collections.Generic.Dictionary<string, float>();
-        public System.Collections.Generic.Dictionary<string, float> SupplierTopP = new System.Collections.Generic.Dictionary<string, float>();
-        public System.Collections.Generic.Dictionary<string, float> SupplierSpeed = new System.Collections.Generic.Dictionary<string, float>();
-        // Per-supplier voice model lists
-        public System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceModel>> SupplierVoiceModels = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceModel>>();
-        // Per-supplier default voice model id
-        public System.Collections.Generic.Dictionary<string, string> SupplierDefaultVoiceModelId = new System.Collections.Generic.Dictionary<string, string>();
-        // Per-supplier region (for Azure TTS)
-        public System.Collections.Generic.Dictionary<string, string> SupplierRegion = new System.Collections.Generic.Dictionary<string, string>();
-
-        // Advanced mode for default voice assignment
-        public System.Collections.Generic.Dictionary<string, bool> SupplierAdvancedMode = new System.Collections.Generic.Dictionary<string, bool>();
-        // Per-supplier voice assignment rules (advanced mode)
-        public System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceAssignmentRule>> SupplierVoiceRules = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceAssignmentRule>>();
+        // ===== persistence ==============================================================
 
         public override void ExposeData()
         {
             base.ExposeData();
-            
-            Scribe_Values.Look(ref EnableTTS, "enableTTS", false);
-            Scribe_Values.Look(ref FishAudioApiKey, "fishAudioApiKey", "");
-            Scribe_Values.Look(ref TTSVolume, "ttsVolume", 0.8f);
-            Scribe_Collections.Look(ref VoiceModels, "voiceModels", LookMode.Deep);
-            Scribe_Values.Look(ref TTSTranslationLanguage, "ttsTranslationLanguage", "");
-            Scribe_Values.Look(ref DefaultVoiceModelId, "defaultVoiceModelId", "");
-            Scribe_Values.Look(ref CustomTTSProcessingPrompt, "customTTSProcessingPrompt", "");
-            Scribe_Values.Look(ref TTSModel, "ttsModel", "s1");
-            Scribe_Values.Look(ref TTSTemperature, "ttsTemperature", 0.9f);
-            Scribe_Values.Look(ref TTSTopP, "ttsTopP", 0.9f);
-            Scribe_Values.Look(ref TTSVolume, "ttsVolume", DEFAULT_SUPPLIER_VOLUME);
-            Scribe_Values.Look(ref TTSSpeed, "ttsSpeed", DEFAULT_SUPPLIER_SPEED);
-            Scribe_Values.Look(ref GenerateCooldownMiliSeconds, "generateCooldownMiliSeconds", DEFAULT_GENERATE_COOLDOWN_MS);
-            Scribe_Values.Look(ref ButtonDisplay, "buttonDisplay", true);
+
+            bool loading = Scribe.mode == LoadSaveMode.LoadingVars;
+            bool saving = Scribe.mode == LoadSaveMode.Saving;
+            if (!loading && !saving)
+            {
+                EnsureInitialized();
+                return;
+            }
+
+            if (saving) _schema = CURRENT_SCHEMA;
+
+            Scribe_Values.Look(ref _schema, "schema", 1);
             Scribe_Values.Look<TTSSupplier>(ref _supplier, "ttsSupplier", TTSSupplier.None);
-            Scribe_Collections.Look(ref SupplierApiKeys, "supplierApiKeys", LookMode.Value, LookMode.Value);
-            Scribe_Collections.Look(ref SupplierModels, "supplierModels", LookMode.Value, LookMode.Value);
-            Scribe_Collections.Look(ref SupplierGenerateCooldownMs, "supplierGenerateCooldownMs", LookMode.Value, LookMode.Value);
-            Scribe_Collections.Look(ref SupplierVolume, "supplierVolume", LookMode.Value, LookMode.Value);
-            Scribe_Collections.Look(ref SupplierTemperature, "supplierTemperature", LookMode.Value, LookMode.Value);
-            Scribe_Collections.Look(ref SupplierTopP, "supplierTopP", LookMode.Value, LookMode.Value);
-            Scribe_Collections.Look(ref SupplierVoiceModels, "supplierVoiceModels", LookMode.Value, LookMode.Deep);
-            Scribe_Collections.Look(ref SupplierSpeed, "supplierSpeed", LookMode.Value, LookMode.Value);
-            Scribe_Collections.Look(ref SupplierDefaultVoiceModelId, "supplierDefaultVoiceModelId", LookMode.Value, LookMode.Value);
-            Scribe_Collections.Look(ref SupplierRegion, "supplierRegion", LookMode.Value, LookMode.Value);
-            Scribe_Collections.Look(ref SupplierAdvancedMode, "supplierAdvancedMode", LookMode.Value, LookMode.Value);
-            Scribe_Collections.Look(ref SupplierVoiceRules, "supplierVoiceRules", LookMode.Value, LookMode.Deep);
-            Scribe_Values.Look(ref PlayerReferenceVoiceModelId, "playerReferenceVoiceModelId", VoiceModel.NONE_MODEL_ID);
+            Scribe_Collections.Look(ref CustomProviders, "customProviders", LookMode.Deep);
+            Scribe_Values.Look(ref CurrentCustomProviderId, "currentCustomProviderId", "");
 
-            // LLM API configuration
-            Scribe_Values.Look<TTSApiProvider>(ref ApiProvider, "apiProvider", TTSApiProvider.DeepSeek);
-            Scribe_Values.Look(ref ApiKey, "apiKey", "");
-            Scribe_Values.Look(ref Model, "model", "deepseek-chat");
-            Scribe_Values.Look(ref CustomBaseUrl, "customBaseUrl", "");
-            Scribe_Values.Look(ref RemoveBracketsInPreProcess, "removeBracketsInPreProcess", false);
+            Scribe_Deep.Look(ref Llm, "llm");
+            Scribe_Deep.Look(ref Ui, "ui");
+            Scribe_Collections.Look(ref Suppliers, "suppliers", LookMode.Deep);
 
-            LoadOldSettings();
+            if (loading)
+            {
+                try
+                {
+                    // Import-only: read the v1 key layout when the file predates schema v2, then
+                    // persist v2 only (no v1 dual-write any more).
+                    _legacy.ExposeData();
+                    if (_schema < CURRENT_SCHEMA)
+                    {
+                        SettingsMigration.MigrateV1ToV2(_legacy, this);
+                        _schema = CURRENT_SCHEMA;
+                        TTSLog.Message($"[RimTalk.TTS] Settings migrated to schema v{CURRENT_SCHEMA} " +
+                                       $"(suppliers={Suppliers.Count}, customProviders={CustomProviders.Count})");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    TTSLog.Error($"[RimTalk.TTS] Settings migration failed, using defaults: {ex}");
+                    _schema = CURRENT_SCHEMA;
+                }
+
+                EnsureInitialized();
+            }
+            else
+            {
+                EnsureInitialized();
+            }
         }
 
-        private void LoadOldSettings()
+        private readonly LegacySettingsV1 _legacy = new LegacySettingsV1();
+
+        /// <summary>Built-in supplier defaults (fresh entry, or after a removed/renamed custom key).</summary>
+        internal static SupplierConfig CreateDefaultSupplier(TTSSupplier kind)
         {
-            // Initialize dictionaries if null (backwards compatibility)
-            InitializeDictionaryIfNull(ref SupplierApiKeys, (s) => s == TTSSupplier.FishAudio ? (FishAudioApiKey ?? "") : "");
-            InitializeDictionaryIfNull(ref SupplierModels, (s) => s == TTSSupplier.FishAudio ? (TTSModel ?? "s1") : "");
-            InitializeDictionaryIfNull(ref SupplierGenerateCooldownMs, (s) => s == TTSSupplier.FishAudio ? GenerateCooldownMiliSeconds : DEFAULT_GENERATE_COOLDOWN_MS);
-            InitializeDictionaryIfNull(ref SupplierVolume, (s) => s == TTSSupplier.FishAudio ? TTSVolume : DEFAULT_SUPPLIER_VOLUME);
-            InitializeDictionaryIfNull(ref SupplierTemperature, (s) => s == TTSSupplier.FishAudio ? TTSTemperature : 0.9f);
-            InitializeDictionaryIfNull(ref SupplierSpeed, (s) => DEFAULT_SUPPLIER_SPEED);
-            InitializeDictionaryIfNull(ref SupplierTopP, (s) => s == TTSSupplier.FishAudio ? TTSTopP : 0.9f);
-            
-            if (SupplierVoiceModels == null)
+            var cfg = new SupplierConfig
             {
-                SupplierVoiceModels = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceModel>>();
-                foreach (TTSSupplier supplier in System.Enum.GetValues(typeof(TTSSupplier)))
+                Key = kind.ToString(),
+                Kind = kind,
+                Region = "eastus",
+            };
+
+            switch (kind)
+            {
+                case TTSSupplier.FishAudio:
+                    cfg.Model = "s2-pro";
+                    break;
+                case TTSSupplier.CosyVoice:
+                    cfg.Model = "FunAudioLLM/CosyVoice2-0.5B";
+                    break;
+                case TTSSupplier.IndexTTS:
+                    cfg.Model = "IndexTeam/IndexTTS-2";
+                    break;
+            }
+
+            if (kind != TTSSupplier.FishAudio)
+            {
+                cfg.VoiceModels = GetDefaultVoiceModels(kind);
+            }
+
+            cfg.Normalize();
+            return cfg;
+        }
+
+        /// <summary>Create the supplier entry for an arbitrary key (built-in name or "Custom_{id}").</summary>
+        internal static SupplierConfig CreateSupplierForKey(string key)
+        {
+            TTSSupplier kind;
+            if (!string.IsNullOrEmpty(key)
+                && Enum.TryParse(key, out kind)
+                && kind != TTSSupplier.None)
+            {
+                return CreateDefaultSupplier(kind);
+            }
+
+            return new SupplierConfig
+            {
+                Key = key ?? "",
+                Kind = TTSSupplier.Custom,
+                Region = "eastus",
+            };
+        }
+
+        /// <summary>Create/normalize the v2 structure. Safe to call repeatedly.</summary>
+        public void EnsureInitialized()
+        {
+            if (Llm == null) Llm = new LlmConfig();
+            if (Ui == null) Ui = new UiConfig();
+            if (Suppliers == null) Suppliers = new List<SupplierConfig>();
+            if (CustomProviders == null) CustomProviders = new List<CustomProviderConfig>();
+
+            foreach (TTSSupplier kind in Enum.GetValues(typeof(TTSSupplier)))
+            {
+                if (kind == TTSSupplier.None) continue;
+                string key = kind.ToString();
+                if (FindConfig(key) == null)
                 {
-                    if (supplier == TTSSupplier.None) continue;
-                    SupplierVoiceModels[supplier.ToString()] = supplier == TTSSupplier.FishAudio 
-                        ? (VoiceModels ?? new System.Collections.Generic.List<VoiceModel>())
-                        : GetDefaultVoiceModels(supplier);
+                    Suppliers.Add(CreateDefaultSupplier(kind));
                 }
             }
 
-            InitializeDictionaryIfNull(ref SupplierDefaultVoiceModelId, (s) => s == TTSSupplier.FishAudio ? (DefaultVoiceModelId ?? "") : VoiceModel.NONE_MODEL_ID);
-            
-            if (SupplierRegion == null)
+            foreach (var cfg in Suppliers)
             {
-                SupplierRegion = new System.Collections.Generic.Dictionary<string, string>();
-                SupplierRegion[TTSSupplier.AzureTTS.ToString()] = "eastus";
+                cfg?.Normalize();
             }
 
-            if (SupplierAdvancedMode == null)
+            EnsureCustomProviderDictionaries();
+        }
+
+        private SupplierConfig FindConfig(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return null;
+            return Suppliers.Find(c => c != null && c.Key == key);
+        }
+
+        internal SupplierConfig GetOrCreateSupplierConfig(string key)
+        {
+            if (Suppliers == null) Suppliers = new List<SupplierConfig>();
+            var cfg = FindConfig(key);
+            if (cfg == null)
             {
-                SupplierAdvancedMode = new System.Collections.Generic.Dictionary<string, bool>();
-                foreach (TTSSupplier supplier in System.Enum.GetValues(typeof(TTSSupplier)))
-                {
-                    if (supplier == TTSSupplier.None) continue;
-                    SupplierAdvancedMode[supplier.ToString()] = false;
-                }
+                cfg = CreateSupplierForKey(key);
+                Suppliers.Add(cfg);
             }
-
-            if (SupplierVoiceRules == null)
-            {
-                SupplierVoiceRules = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<VoiceAssignmentRule>>();
-                foreach (TTSSupplier supplier in System.Enum.GetValues(typeof(TTSSupplier)))
-                {
-                    if (supplier == TTSSupplier.None) continue;
-                    SupplierVoiceRules[supplier.ToString()] = new System.Collections.Generic.List<VoiceAssignmentRule>();
-                }
-            }
+            return cfg;
         }
 
-        /// <summary>
-        /// Helper to initialize supplier dictionaries from legacy settings
-        /// </summary>
-        private void InitializeDictionaryIfNull<T>(ref System.Collections.Generic.Dictionary<string, T> dict, System.Func<TTSSupplier, T> getValue)
+        // ===== per-supplier accessors (enum) =============================================
+
+        public string GetSupplierApiKey(TTSSupplier supplier) => GetOrCreateSupplierConfig(supplier.ToString()).ApiKey ?? "";
+
+        public void SetSupplierApiKey(TTSSupplier supplier, string apiKey) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).ApiKey = apiKey ?? "";
+
+        public string GetSupplierModel(TTSSupplier supplier) => GetOrCreateSupplierConfig(supplier.ToString()).Model ?? "";
+
+        public void SetSupplierModel(TTSSupplier supplier, string model) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).Model = model ?? "";
+
+        public List<VoiceModel> GetSupplierVoiceModels(TTSSupplier supplier)
         {
-            if (dict != null) return;
-            
-            dict = new System.Collections.Generic.Dictionary<string, T>();
-            foreach (TTSSupplier supplier in System.Enum.GetValues(typeof(TTSSupplier)))
-            {
-                if (supplier == TTSSupplier.None) continue;
-                dict[supplier.ToString()] = getValue(supplier);
-            }
+            var cfg = GetOrCreateSupplierConfig(supplier.ToString());
+            if (cfg.VoiceModels == null) cfg.VoiceModels = new List<VoiceModel>();
+            return cfg.VoiceModels;
         }
 
-        public string GetSupplierApiKey(TTSSupplier supplier)
-        {
-            return SupplierApiKeys.TryGetValue(supplier.ToString(), out var value) ? value : string.Empty;
-        }
+        public void SetSupplierVoiceModels(TTSSupplier supplier, List<VoiceModel> models) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).VoiceModels = models ?? new List<VoiceModel>();
 
-        public void SetSupplierApiKey(TTSSupplier supplier, string apiKey)
-        {
-            SupplierApiKeys[supplier.ToString()] = apiKey ?? string.Empty;
-        }
-
-        public string GetSupplierModel(TTSSupplier supplier)
-        {
-            return SupplierModels.TryGetValue(supplier.ToString(), out var value) ? value : string.Empty;
-        }
-
-        public void SetSupplierModel(TTSSupplier supplier, string model)
-        {
-            SupplierModels[supplier.ToString()] = model ?? string.Empty;
-        }
-
-        public System.Collections.Generic.List<VoiceModel> GetSupplierVoiceModels(TTSSupplier supplier)
-        {
-            return SupplierVoiceModels.TryGetValue(supplier.ToString(), out var value) ? value : new System.Collections.Generic.List<VoiceModel>();
-        }
-
-        public void SetSupplierVoiceModels(TTSSupplier supplier, System.Collections.Generic.List<VoiceModel> models)
-        {
-            SupplierVoiceModels[supplier.ToString()] = models ?? new System.Collections.Generic.List<VoiceModel>();
-        }
-
-        public string GetSupplierDefaultVoiceModelId(TTSSupplier supplier)
-        {
-            return SupplierDefaultVoiceModelId.TryGetValue(supplier.ToString(), out var value) ? value : VoiceModel.NONE_MODEL_ID;
-        }
+        public string GetSupplierDefaultVoiceModelId(TTSSupplier supplier) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).DefaultVoiceModelId ?? VoiceModel.NONE_MODEL_ID;
 
         public void SetSupplierDefaultVoiceModelId(TTSSupplier supplier, string modelId)
         {
-            string oldValue = GetSupplierDefaultVoiceModelId(supplier);
+            var cfg = GetOrCreateSupplierConfig(supplier.ToString());
+            string oldValue = cfg.DefaultVoiceModelId ?? VoiceModel.NONE_MODEL_ID;
             string newValue = string.IsNullOrEmpty(modelId) ? VoiceModel.NONE_MODEL_ID : modelId;
-            
-            SupplierDefaultVoiceModelId[supplier.ToString()] = newValue;
-            
+            cfg.DefaultVoiceModelId = newValue;
+
             // Notify voice manager if default voice changed, pass new value for intelligent cache update
             if (oldValue != newValue)
             {
@@ -260,44 +276,125 @@ namespace RimTalk.TTS.Data
             }
         }
 
-        public int GetSupplierGenerateCooldown(TTSSupplier supplier)
+        public int GetSupplierGenerateCooldown(TTSSupplier supplier) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).CooldownMs;
+
+        public void SetSupplierGenerateCooldown(TTSSupplier supplier, int ms) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).CooldownMs = ms;
+
+        public float GetSupplierVolume(TTSSupplier supplier) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).Volume;
+
+        public void SetSupplierVolume(TTSSupplier supplier, float vol) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).Volume = vol;
+
+        public float GetSupplierTemperature(TTSSupplier supplier) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).Temperature;
+
+        public void SetSupplierTemperature(TTSSupplier supplier, float t) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).Temperature = t;
+
+        public float GetSupplierTopP(TTSSupplier supplier) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).TopP;
+
+        public void SetSupplierTopP(TTSSupplier supplier, float p) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).TopP = p;
+
+        public float GetSupplierSpeed(TTSSupplier supplier) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).Speed;
+
+        public void SetSupplierSpeed(TTSSupplier supplier, float s) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).Speed = s;
+
+        public string GetSupplierRegion(TTSSupplier supplier) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).Region ?? "eastus";
+
+        public void SetSupplierRegion(TTSSupplier supplier, string region) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).Region = region ?? "eastus";
+
+        public bool GetSupplierAdvancedMode(TTSSupplier supplier) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).AdvancedMode;
+
+        public void SetSupplierAdvancedMode(TTSSupplier supplier, bool enabled) =>
+            GetOrCreateSupplierConfig(supplier.ToString()).AdvancedMode = enabled;
+
+        public List<VoiceAssignmentRule> GetSupplierVoiceRules(TTSSupplier supplier)
         {
-            return SupplierGenerateCooldownMs.TryGetValue(supplier.ToString(), out var value) ? value : DEFAULT_GENERATE_COOLDOWN_MS;
+            var cfg = GetOrCreateSupplierConfig(supplier.ToString());
+            if (cfg.Rules == null) cfg.Rules = new List<VoiceAssignmentRule>();
+            return cfg.Rules;
         }
 
-        public void SetSupplierGenerateCooldown(TTSSupplier supplier, int ms)
+        public void SetSupplierVoiceRules(TTSSupplier supplier, List<VoiceAssignmentRule> rules)
         {
-            SupplierGenerateCooldownMs[supplier.ToString()] = ms;
+            GetOrCreateSupplierConfig(supplier.ToString()).Rules = rules ?? new List<VoiceAssignmentRule>();
+            PawnVoiceManager.OnRulesChanged();
         }
 
-        public float GetSupplierVolume(TTSSupplier supplier)
+        // ===== per-supplier accessors (string key) =======================================
+
+        public string GetSupplierApiKey(string key) => GetOrCreateSupplierConfig(key).ApiKey ?? "";
+        public void SetSupplierApiKey(string key, string apiKey) => GetOrCreateSupplierConfig(key).ApiKey = apiKey ?? "";
+        public string GetSupplierModel(string key) => GetOrCreateSupplierConfig(key).Model ?? "";
+        public void SetSupplierModel(string key, string model) => GetOrCreateSupplierConfig(key).Model = model ?? "";
+
+        public List<VoiceModel> GetSupplierVoiceModels(string key)
         {
-            return SupplierVolume.TryGetValue(supplier.ToString(), out var value) ? value : DEFAULT_SUPPLIER_VOLUME;
+            var cfg = GetOrCreateSupplierConfig(key);
+            if (cfg.VoiceModels == null) cfg.VoiceModels = new List<VoiceModel>();
+            return cfg.VoiceModels;
         }
 
-        public void SetSupplierVolume(TTSSupplier supplier, float vol)
+        public void SetSupplierVoiceModels(string key, List<VoiceModel> models) =>
+            GetOrCreateSupplierConfig(key).VoiceModels = models ?? new List<VoiceModel>();
+
+        public string GetSupplierDefaultVoiceModelId(string key) =>
+            GetOrCreateSupplierConfig(key).DefaultVoiceModelId ?? VoiceModel.NONE_MODEL_ID;
+
+        public void SetSupplierDefaultVoiceModelId(string key, string modelId)
         {
-            SupplierVolume[supplier.ToString()] = vol;
+            var cfg = GetOrCreateSupplierConfig(key);
+            string oldValue = cfg.DefaultVoiceModelId ?? VoiceModel.NONE_MODEL_ID;
+            string newValue = string.IsNullOrEmpty(modelId) ? VoiceModel.NONE_MODEL_ID : modelId;
+            cfg.DefaultVoiceModelId = newValue;
+            if (oldValue != newValue) PawnVoiceManager.OnDefaultVoiceChanged(newValue);
         }
 
-        public float GetSupplierTemperature(TTSSupplier supplier)
+        public int GetSupplierGenerateCooldown(string key) => GetOrCreateSupplierConfig(key).CooldownMs;
+        public void SetSupplierGenerateCooldown(string key, int ms) => GetOrCreateSupplierConfig(key).CooldownMs = ms;
+        public float GetSupplierVolume(string key) => GetOrCreateSupplierConfig(key).Volume;
+        public void SetSupplierVolume(string key, float vol) => GetOrCreateSupplierConfig(key).Volume = vol;
+        public float GetSupplierTemperature(string key) => GetOrCreateSupplierConfig(key).Temperature;
+        public void SetSupplierTemperature(string key, float t) => GetOrCreateSupplierConfig(key).Temperature = t;
+        public float GetSupplierTopP(string key) => GetOrCreateSupplierConfig(key).TopP;
+        public void SetSupplierTopP(string key, float p) => GetOrCreateSupplierConfig(key).TopP = p;
+        public float GetSupplierSpeed(string key) => GetOrCreateSupplierConfig(key).Speed;
+        public void SetSupplierSpeed(string key, float s) => GetOrCreateSupplierConfig(key).Speed = s;
+        public bool GetSupplierAdvancedMode(string key) => GetOrCreateSupplierConfig(key).AdvancedMode;
+        public void SetSupplierAdvancedMode(string key, bool enabled) => GetOrCreateSupplierConfig(key).AdvancedMode = enabled;
+
+        public List<VoiceAssignmentRule> GetSupplierVoiceRules(string key)
         {
-            return SupplierTemperature.TryGetValue(supplier.ToString(), out var value) ? value : 0.9f;
+            var cfg = GetOrCreateSupplierConfig(key);
+            if (cfg.Rules == null) cfg.Rules = new List<VoiceAssignmentRule>();
+            return cfg.Rules;
         }
 
-        public void SetSupplierTemperature(TTSSupplier supplier, float t)
+        public void SetSupplierVoiceRules(string key, List<VoiceAssignmentRule> rules)
         {
-            SupplierTemperature[supplier.ToString()] = t;
+            GetOrCreateSupplierConfig(key).Rules = rules ?? new List<VoiceAssignmentRule>();
+            PawnVoiceManager.OnRulesChanged();
         }
 
-        public float GetSupplierTopP(TTSSupplier supplier)
-        {
-            return SupplierTopP.TryGetValue(supplier.ToString(), out var value) ? value : 0.9f;
-        }
+        // ===== misc helpers =============================================================
 
-        public void SetSupplierTopP(TTSSupplier supplier, float p)
+        /// <summary>
+        /// Per-request TTS timeout in seconds, clamped to the supported range. 0 disables the
+        /// timeout entirely (a request may then wait forever).
+        /// </summary>
+        public int GetTtsRequestTimeoutSeconds()
         {
-            SupplierTopP[supplier.ToString()] = p;
+            return Math.Max(0, Math.Min(MAX_REQUEST_TIMEOUT_SECONDS, TtsRequestTimeoutSeconds));
         }
 
         /// <summary>
@@ -306,9 +403,9 @@ namespace RimTalk.TTS.Data
         /// AzureTTS has common neural voices.
         /// FishAudio has no presets by default.
         /// </summary>
-        public static System.Collections.Generic.List<VoiceModel> GetDefaultVoiceModels(TTSSupplier supplier)
+        public static List<VoiceModel> GetDefaultVoiceModels(TTSSupplier supplier)
         {
-            var presets = new System.Collections.Generic.List<VoiceModel>();
+            var presets = new List<VoiceModel>();
             string[] names = new[] { "alex", "benjamin", "charles", "david", "anna", "bella", "claire", "diana" };
 
             switch (supplier)
@@ -343,18 +440,6 @@ namespace RimTalk.TTS.Data
                     presets.Add(new VoiceModel("Leda", "Leda (Youthful)"));
                     presets.Add(new VoiceModel("Callirrhoe", "Callirrhoe (Easy-going)"));
                     break;
-                case TTSSupplier.TTSWebUI:
-                    // TTS-WebUI: Common voices from various supported models
-                    // Users should configure based on their installed TTS-WebUI extensions
-                    presets.Add(new VoiceModel("default", "Default Voice"));
-                    presets.Add(new VoiceModel("bark_v0_en_speaker_0", "Bark - Speaker 0 (EN)"));
-                    presets.Add(new VoiceModel("bark_v0_en_speaker_1", "Bark - Speaker 1 (EN)"));
-                    presets.Add(new VoiceModel("bark_v0_zh_speaker_0", "Bark - Speaker 0 (ZH)"));
-                    presets.Add(new VoiceModel("tortoise_random", "Tortoise - Random"));
-                    presets.Add(new VoiceModel("xtts_default", "XTTSv2 - Default"));
-                    presets.Add(new VoiceModel("kokoro_af", "Kokoro - AF"));
-                    presets.Add(new VoiceModel("kokoro_am", "Kokoro - AM"));
-                    break;
                 default:
                     // FishAudio: no presets
                     break;
@@ -363,47 +448,94 @@ namespace RimTalk.TTS.Data
             return presets;
         }
 
-        public float GetSupplierSpeed(TTSSupplier supplier)
+        // ===== custom providers =========================================================
+
+        /// <summary>
+        /// Get the effective supplier key string for dictionary lookups.
+        /// For built-in suppliers: enum name. For custom: "Custom_{Id}".
+        /// </summary>
+        public string GetCurrentSupplierKey()
         {
-            return SupplierSpeed.TryGetValue(supplier.ToString(), out var value) ? value : DEFAULT_SUPPLIER_SPEED;
+            if (Supplier == TTSSupplier.Custom)
+            {
+                var cfg = GetCurrentCustomProvider();
+                return cfg?.GetSupplierKey() ?? "Custom";
+            }
+            return Supplier.ToString();
         }
 
-        public void SetSupplierSpeed(TTSSupplier supplier, float s)
+        /// <summary>Get the currently selected custom provider config, or null.</summary>
+        public CustomProviderConfig GetCurrentCustomProvider()
         {
-            SupplierSpeed[supplier.ToString()] = s;
+            if (string.IsNullOrEmpty(CurrentCustomProviderId) || CustomProviders == null) return null;
+            return CustomProviders.Find(c => c.Id == CurrentCustomProviderId);
         }
 
-        public string GetSupplierRegion(TTSSupplier supplier)
+        /// <summary>Get a custom provider by its ID.</summary>
+        public CustomProviderConfig GetCustomProviderById(string id)
         {
-            return SupplierRegion.TryGetValue(supplier.ToString(), out var value) ? value : "eastus";
+            if (string.IsNullOrEmpty(id) || CustomProviders == null) return null;
+            return CustomProviders.Find(c => c.Id == id);
         }
 
-        public void SetSupplierRegion(TTSSupplier supplier, string region)
+        /// <summary>Add a new custom provider and return it.</summary>
+        public CustomProviderConfig AddCustomProvider(string name, string baseUrl)
         {
-            SupplierRegion[supplier.ToString()] = region ?? "eastus";
+            if (CustomProviders == null) CustomProviders = new List<CustomProviderConfig>();
+            var config = new CustomProviderConfig(name, baseUrl);
+            CustomProviders.Add(config);
+            InitializeCustomProviderDictionaries(config);
+            return config;
         }
 
-        public bool GetSupplierAdvancedMode(TTSSupplier supplier)
+        /// <summary>Remove a custom provider by ID.</summary>
+        public bool RemoveCustomProvider(string id)
         {
-            return SupplierAdvancedMode.TryGetValue(supplier.ToString(), out var value) && value;
+            if (CustomProviders == null) return false;
+            string key = $"Custom_{id}";
+            if (Suppliers != null)
+            {
+                Suppliers.RemoveAll(c => c != null && c.Key == key);
+            }
+            // If it's the current custom provider, unselect
+            if (CurrentCustomProviderId == id)
+                CurrentCustomProviderId = "";
+            return CustomProviders.RemoveAll(c => c.Id == id) > 0;
         }
 
-        public void SetSupplierAdvancedMode(TTSSupplier supplier, bool enabled)
+        /// <summary>Initialize the supplier entry of a custom provider.</summary>
+        private void InitializeCustomProviderDictionaries(CustomProviderConfig config)
         {
-            SupplierAdvancedMode[supplier.ToString()] = enabled;
+            if (config == null) return;
+            string key = config.GetSupplierKey();
+            string defaultVoice = !string.IsNullOrWhiteSpace(config.DefaultVoice) ? config.DefaultVoice : "alloy";
+
+            var cfg = GetOrCreateSupplierConfig(key);
+            cfg.Kind = TTSSupplier.Custom;
+            // Always sync API key/model from config so editor changes take effect immediately
+            cfg.ApiKey = config.ApiKey ?? "";
+            cfg.Model = config.Model ?? "tts-1";
+
+            if (cfg.VoiceModels == null || cfg.VoiceModels.Count == 0)
+            {
+                cfg.VoiceModels = new List<VoiceModel> { new VoiceModel(defaultVoice, defaultVoice) };
+            }
+            // Default voice model ID: use config.DefaultVoice instead of NONE so requests aren't blocked
+            if (string.IsNullOrEmpty(cfg.DefaultVoiceModelId) || cfg.DefaultVoiceModelId == VoiceModel.NONE_MODEL_ID)
+            {
+                cfg.DefaultVoiceModelId = defaultVoice;
+            }
         }
 
-        public System.Collections.Generic.List<VoiceAssignmentRule> GetSupplierVoiceRules(TTSSupplier supplier)
+        /// <summary>Ensure all custom providers have their supplier entries initialized.</summary>
+        public void EnsureCustomProviderDictionaries()
         {
-            return SupplierVoiceRules.TryGetValue(supplier.ToString(), out var value) ? value : new System.Collections.Generic.List<VoiceAssignmentRule>();
-        }
-
-        public void SetSupplierVoiceRules(TTSSupplier supplier, System.Collections.Generic.List<VoiceAssignmentRule> rules)
-        {
-            SupplierVoiceRules[supplier.ToString()] = rules ?? new System.Collections.Generic.List<VoiceAssignmentRule>();
-            
-            // Notify voice manager that rules changed
-            PawnVoiceManager.OnRulesChanged();
+            if (CustomProviders == null) return;
+            foreach (var cfg in CustomProviders)
+            {
+                if (cfg == null) continue;
+                InitializeCustomProviderDictionaries(cfg);
+            }
         }
     }
 }

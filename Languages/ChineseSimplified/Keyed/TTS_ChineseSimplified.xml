@@ -22,11 +22,14 @@
     <RimTalk.Settings.TTS.ModelS21Pro>s2.1-pro</RimTalk.Settings.TTS.ModelS21Pro>
     <RimTalk.Settings.TTS.ModelS21ProFree>s2.1-pro-free（s2.1-pro的免费版，生成时间可能很长）</RimTalk.Settings.TTS.ModelS21ProFree>
     <RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>生成冷却时间(毫秒): {0}</RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>
+    <RimTalk.Settings.TTS.RequestTimeoutLabel>请求超时：{0} 秒（0 = 不超时）</RimTalk.Settings.TTS.RequestTimeoutLabel>
+    <RimTalk.Settings.TTS.RequestTimeoutInfo>从请求发往供应商时开始计时（不含预处理与冷却排队）。超时的句子只显示文字、不发声。</RimTalk.Settings.TTS.RequestTimeoutInfo>
+    <RimTalk.Settings.TTS.Validation.Required>*必填</RimTalk.Settings.TTS.Validation.Required>
     <RimTalk.Settings.TTS.VolumeLabel>音量：{0}</RimTalk.Settings.TTS.VolumeLabel>
     <RimTalk.Settings.TTS.TemperatureLabel>温度：{0} (仅 Fish Audio 有效)</RimTalk.Settings.TTS.TemperatureLabel>
     <RimTalk.Settings.TTS.TopPLabel>Top P：{0} (仅 Fish Audio 有效)</RimTalk.Settings.TTS.TopPLabel>
     <RimTalk.Settings.TTS.TranslationLanguage>语音语言（必须填写）：</RimTalk.Settings.TTS.TranslationLanguage>
-    <RimTalk.Settings.TTS.TranslationLanguageInfo>留空以禁用翻译。输入语言（如"中文"、"English"、"日本語"）以在语音合成前翻译所有对话。</RimTalk.Settings.TTS.TranslationLanguageInfo>
+    <RimTalk.Settings.TTS.TranslationLanguageInfo>除跳过预处理外必填。输入合成前用于翻译所有对话的目标语言（如"中文"、"English"、"日本語"）。留空则所有句子都不会有语音。</RimTalk.Settings.TTS.TranslationLanguageInfo>
     <RimTalk.Settings.TTS.ProcessingPromptLabel>TTS 处理提示词：</RimTalk.Settings.TTS.ProcessingPromptLabel>
     <RimTalk.Settings.TTS.Model>TTS 模型</RimTalk.Settings.TTS.Model>
     <RimTalk.Settings.TTS.ModelInfo>推荐使用 Fish Audio S2-pro</RimTalk.Settings.TTS.ModelInfo>

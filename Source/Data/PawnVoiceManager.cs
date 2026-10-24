@@ -77,7 +77,7 @@ namespace RimTalk.TTS.Data
         /// </summary>
         private static bool IsDefaultRuleBased()
         {
-            var settings = TTSConfig.Settings;
+            var settings = TtsRuntime.Current?.Settings;
             if (settings == null) return false;
             
             var defaultModelId = settings.GetSupplierDefaultVoiceModelId(settings.GetCurrentSupplierKey());
@@ -110,7 +110,7 @@ namespace RimTalk.TTS.Data
         /// </summary>
         private static bool IsVoiceModelValid(string voiceModelId)
         {
-            var settings = TTSConfig.Settings;
+            var settings = TtsRuntime.Current?.Settings;
             if (settings == null) return false;
 
             var supplierModels = settings.GetSupplierVoiceModels(settings.GetCurrentSupplierKey());
@@ -125,7 +125,7 @@ namespace RimTalk.TTS.Data
         /// </summary>
         private static string GetDefaultVoiceModel(Pawn pawn)
         {
-            var settings = TTSConfig.Settings;
+            var settings = TtsRuntime.Current?.Settings;
             if (settings == null) return VoiceModel.NONE_MODEL_ID;
 
             var defaultModelId = settings.GetSupplierDefaultVoiceModelId(settings.GetCurrentSupplierKey()) ?? VoiceModel.NONE_MODEL_ID;
@@ -146,7 +146,7 @@ namespace RimTalk.TTS.Data
         {
             if (pawn == null) return VoiceModel.NONE_MODEL_ID;
 
-            var settings = TTSConfig.Settings;
+            var settings = TtsRuntime.Current?.Settings;
             if (settings == null) return VoiceModel.NONE_MODEL_ID;
 
             string supplierKey = settings.GetCurrentSupplierKey();

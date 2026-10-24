@@ -15,3 +15,6 @@ Assets.zip.roles
 .gitignore
 obj/
 .understand-anything/
+__pycache__/
+*.pyc
+Source/bin/

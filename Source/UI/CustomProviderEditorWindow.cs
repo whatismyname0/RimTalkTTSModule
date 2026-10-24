@@ -88,12 +88,12 @@ namespace RimTalk.TTS.UI
 
             // Name
             listing.Label("RimTalk.Settings.TTS.CustomProvider.Name".Translate());
-            _nameBuffer = listing.TextEntry(_nameBuffer);
+            _nameBuffer = ValidatedTextEntry.Draw(listing, "custom_provider_name", _nameBuffer, true);
             listing.Gap(4f);
 
             // Base URL
             listing.Label("RimTalk.Settings.TTS.CustomProvider.BaseUrl".Translate());
-            _baseUrlBuffer = listing.TextEntry(_baseUrlBuffer);
+            _baseUrlBuffer = ValidatedTextEntry.Draw(listing, "custom_provider_base_url", _baseUrlBuffer, true);
             listing.Gap(4f);
 
             // Endpoint path
@@ -145,7 +145,8 @@ namespace RimTalk.TTS.UI
             if (_config.RequiresApiKey)
             {
                 listing.Label("RimTalk.Settings.TTS.CustomProvider.ApiKey".Translate());
-                _apiKeyBuffer = listing.TextEntry(_apiKeyBuffer);
+                _apiKeyBuffer = ValidatedTextEntry.Draw(
+                    listing, "custom_provider_api_key", _apiKeyBuffer, _config.RequiresApiKey);
                 listing.Gap(4f);
 
                 listing.Label("RimTalk.Settings.TTS.CustomProvider.AuthHeaderName".Translate());

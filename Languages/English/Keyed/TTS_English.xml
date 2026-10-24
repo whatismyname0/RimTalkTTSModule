@@ -22,11 +22,14 @@
     <RimTalk.Settings.TTS.ModelS21Pro>s2.1-pro</RimTalk.Settings.TTS.ModelS21Pro>
     <RimTalk.Settings.TTS.ModelS21ProFree>s2.1-pro-free（Free version of s2.1-pro, time to response may be longer）</RimTalk.Settings.TTS.ModelS21ProFree>
     <RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>Generate Cooldown (miliseconds): {0}</RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>
+    <RimTalk.Settings.TTS.RequestTimeoutLabel>Request timeout: {0} s (0 = no timeout)</RimTalk.Settings.TTS.RequestTimeoutLabel>
+    <RimTalk.Settings.TTS.RequestTimeoutInfo>Counted from the moment a request is sent to the supplier (preprocessing and cooldown excluded). A timed-out line is displayed without speech.</RimTalk.Settings.TTS.RequestTimeoutInfo>
+    <RimTalk.Settings.TTS.Validation.Required>*Required</RimTalk.Settings.TTS.Validation.Required>
     <RimTalk.Settings.TTS.VolumeLabel>Volume: {0}</RimTalk.Settings.TTS.VolumeLabel>
     <RimTalk.Settings.TTS.TemperatureLabel>Temperature: {0} (Used only by Fish Audio)</RimTalk.Settings.TTS.TemperatureLabel>
     <RimTalk.Settings.TTS.TopPLabel>Top P: {0} (Used only by Fish Audio)</RimTalk.Settings.TTS.TopPLabel>
     <RimTalk.Settings.TTS.TranslationLanguage>Voice Language (must):</RimTalk.Settings.TTS.TranslationLanguage>
-    <RimTalk.Settings.TTS.TranslationLanguageInfo>Leave empty to disable translation. Enter a language (e.g., "English", "Chinese", "Japanese") to translate all dialogue before TTS.</RimTalk.Settings.TTS.TranslationLanguageInfo>
+    <RimTalk.Settings.TTS.TranslationLanguageInfo>Required unless preprocessing is skipped. Enter the language all dialogue is translated into before TTS (e.g., "English", "Chinese", "Japanese"). Empty means no speech at all.</RimTalk.Settings.TTS.TranslationLanguageInfo>
     <RimTalk.Settings.TTS.ProcessingPromptLabel>TTS Processing Prompt:</RimTalk.Settings.TTS.ProcessingPromptLabel>
     <RimTalk.Settings.TTS.Model>TTS Model</RimTalk.Settings.TTS.Model>
     <RimTalk.Settings.TTS.ModelInfo>Fish Audio S2-pro is recommended.</RimTalk.Settings.TTS.ModelInfo>

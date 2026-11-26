@@ -241,6 +241,9 @@ namespace RimTalk.TTS.Data
         // List of voice model IDs (randomly select one if pawn matches)
         public List<string> VoiceModelIds = new List<string>();
 
+        // Optional voice-design instruction passed to TTS providers that support instruct_text.
+        public string InstructText = "";
+
         public VoiceAssignmentRule() { }
 
         /// <summary>
@@ -320,6 +323,7 @@ namespace RimTalk.TTS.Data
             }
 
             Scribe_Collections.Look(ref VoiceModelIds, "voiceModelIds", LookMode.Value);
+            Scribe_Values.Look(ref InstructText, "instructText", "");
 
             if (Scribe.mode == LoadSaveMode.LoadingVars)
             {
@@ -369,6 +373,16 @@ namespace RimTalk.TTS.Data
         }
 
         /// <summary>
+        /// Get a stable voice model ID for this pawn (same pawn, same voice)
+        /// </summary>
+        public string GetVoiceModelIdFor(Pawn pawn)
+        {
+            if (VoiceModelIds.Count == 0) return VoiceModel.NONE_MODEL_ID;
+            if (VoiceModelIds.Count == 1) return VoiceModelIds[0];
+            int index = (int)((uint)pawn.thingIDNumber % (uint)VoiceModelIds.Count);
+            return VoiceModelIds[index];
+        }
+	/// <summary>
         /// Get display string for this rule
         /// </summary>
         public string GetDisplayString()

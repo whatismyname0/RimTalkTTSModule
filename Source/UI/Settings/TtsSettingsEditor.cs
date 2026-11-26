@@ -45,6 +45,11 @@ namespace RimTalk.TTS.UI
 
         public void SetControlButtonDisplay(bool value) => _settings.ControlButtonDisplay = value;
 
+	public void SetStripStageDirections(bool value)
+	{
+	_settings.Ui.StripStageDirections = value;
+	}
+
         public void SetRequestTimeout(int seconds) => _settings.TtsRequestTimeoutSeconds = seconds;
 
         public void SetTranslationLanguage(string value) => _settings.TTSTranslationLanguage = value ?? "";

@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+    <!-- RimTalk TTS Module - Russian Translation -->
+
+    <!-- Settings_TTS.cs -->
+    <RimTalk.Settings.TTS>TTS</RimTalk.Settings.TTS>
+    <RimTalk.Settings.TTS.Title>Настройки озвучки (Text-to-Speech)</RimTalk.Settings.TTS.Title>
+    <RimTalk.Settings.TTS.Enable>Включить озвучку</RimTalk.Settings.TTS.Enable>
+    <RimTalk.Settings.TTS.EnableTooltip>Автоматически превращает реплики в речь при их показе.</RimTalk.Settings.TTS.EnableTooltip>
+    <RimTalk.Settings.TTS.ButtonEnable>Кнопка вкл/выкл озвучки</RimTalk.Settings.TTS.ButtonEnable>
+    <RimTalk.Settings.TTS.ButtonEnableTooltip>Показывать в игровом интерфейсе кнопку переключения озвучки. Её состояние не сохраняется. Игнорируется, если озвучка выключена.</RimTalk.Settings.TTS.ButtonEnableTooltip>
+    <RimTalk.Settings.TTS.ControlButtonEnable>Кнопки управления генерацией</RimTalk.Settings.TTS.ControlButtonEnable>
+    <RimTalk.Settings.TTS.ControlButtonEnableTooltip>Показывать кнопки управления генерацией в окне RimTalk. Не скрываются, когда окно RimTalk скрыто.</RimTalk.Settings.TTS.ControlButtonEnableTooltip>
+    <RimTalk.TTS.OnOffUpdated>Модуль озвучки: {0}</RimTalk.TTS.OnOffUpdated>
+    <RimTalk.TTS.On>включён</RimTalk.TTS.On>
+    <RimTalk.TTS.Off>выключен</RimTalk.TTS.Off>
+    <RimTalk.Settings.TTS.ApiKey>API-ключ:</RimTalk.Settings.TTS.ApiKey>
+    <RimTalk.Settings.TTS.ModelLabel>Модель озвучки: {0}</RimTalk.Settings.TTS.ModelLabel>
+    <RimTalk.Settings.TTS.ModelHighQuality>fishaudio-1 (v1.6)</RimTalk.Settings.TTS.ModelHighQuality>
+    <RimTalk.Settings.TTS.ModelFaster>s1</RimTalk.Settings.TTS.ModelFaster>
+    <RimTalk.Settings.TTS.ModelS2Pro>s2-pro</RimTalk.Settings.TTS.ModelS2Pro>
+    <RimTalk.Settings.TTS.ModelS21Pro>s2.1-pro</RimTalk.Settings.TTS.ModelS21Pro>
+    <RimTalk.Settings.TTS.ModelS21ProFree>s2.1-pro-free (бесплатная версия s2.1-pro, ответ может идти дольше)</RimTalk.Settings.TTS.ModelS21ProFree>
+    <RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>Пауза между запросами (мс): {0}</RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>
+    <RimTalk.Settings.TTS.RequestTimeoutLabel>Таймаут запроса: {0} с (0 = без ограничения)</RimTalk.Settings.TTS.RequestTimeoutLabel>
+    <RimTalk.Settings.TTS.RequestTimeoutInfo>Отсчитывается с момента отправки запроса провайдеру (предобработка и пауза не учитываются). Реплика, не уложившаяся в таймаут, показывается без озвучки.</RimTalk.Settings.TTS.RequestTimeoutInfo>
+    <RimTalk.Settings.TTS.Validation.Required>*Обязательно</RimTalk.Settings.TTS.Validation.Required>
+    <RimTalk.Settings.TTS.VolumeLabel>Громкость: {0}</RimTalk.Settings.TTS.VolumeLabel>
+    <RimTalk.Settings.TTS.TemperatureLabel>Temperature: {0} (только для Fish Audio)</RimTalk.Settings.TTS.TemperatureLabel>
+    <RimTalk.Settings.TTS.TopPLabel>Top P: {0} (только для Fish Audio)</RimTalk.Settings.TTS.TopPLabel>
+    <RimTalk.Settings.TTS.TranslationLanguage>Язык озвучки (обязательно):</RimTalk.Settings.TTS.TranslationLanguage>
+    <RimTalk.Settings.TTS.TranslationLanguageInfo>Обязательно, если предобработка не пропускается. Укажите язык, на который переводятся все реплики перед озвучкой (например, «English», «Chinese», «Japanese»). Если поле пустое, озвучки не будет вообще.</RimTalk.Settings.TTS.TranslationLanguageInfo>
+    <RimTalk.Settings.TTS.ProcessingPromptLabel>Промпт обработки текста:</RimTalk.Settings.TTS.ProcessingPromptLabel>
+    <RimTalk.Settings.TTS.Model>Модель озвучки</RimTalk.Settings.TTS.Model>
+    <RimTalk.Settings.TTS.ModelInfo>Рекомендуется Fish Audio S2-pro.</RimTalk.Settings.TTS.ModelInfo>
+    <RimTalk.Settings.TTS.Temperature>Temperature (чем ниже, тем стабильнее; чем выше, тем эмоциональнее)</RimTalk.Settings.TTS.Temperature>
+    <RimTalk.Settings.TTS.TopP>Top P (управление однородностью: чем ниже, тем ровнее и тем более «деревянная» речь)</RimTalk.Settings.TTS.TopP>
+    <RimTalk.Settings.TTS.ProcessingPrompt>Промпт обработки текста</RimTalk.Settings.TTS.ProcessingPrompt>
+    <RimTalk.Settings.TTS.ProcessingPromptInfo>Используйте {language} для целевого языка. Этот промпт обрабатывает текст перед отправкой в TTS API.</RimTalk.Settings.TTS.ProcessingPromptInfo>
+    <RimTalk.Settings.TTS.Volume>Громкость</RimTalk.Settings.TTS.Volume>
+    <RimTalk.Settings.TTS.VoiceModels>Настройки голосовых моделей</RimTalk.Settings.TTS.VoiceModels>
+    <RimTalk.Settings.TTS.DefaultVoiceModel>Голосовая модель по умолчанию</RimTalk.Settings.TTS.DefaultVoiceModel>
+    <RimTalk.Settings.TTS.None>Нет (без озвучки)</RimTalk.Settings.TTS.None>
+    <RimTalk.Settings.TTS.ModelID>ID модели</RimTalk.Settings.TTS.ModelID>
+    <RimTalk.Settings.TTS.ModelName>Своё название</RimTalk.Settings.TTS.ModelName>
+    <RimTalk.Settings.TTS.AddVoiceModel>Добавить голосовую модель</RimTalk.Settings.TTS.AddVoiceModel>
+    <RimTalk.Settings.TTS.Info>Нужны API-ключ Fish Audio и ID эталонного голоса. Текст в скобках автоматически удаляется перед синтезом речи.</RimTalk.Settings.TTS.Info>
+    <RimTalk.Settings.TTS.DefaultModel>Модель по умолчанию: {0}</RimTalk.Settings.TTS.DefaultModel>
+    <RimTalk.Settings.TTS.PlayerVoiceModel>Голосовая модель игрока</RimTalk.Settings.TTS.PlayerVoiceModel>
+    <RimTalk.Settings.TTS.NotSet>(не задано)</RimTalk.Settings.TTS.NotSet>
+    <RimTalk.Settings.TTS.NoneModel>Нет (без озвучки)</RimTalk.Settings.TTS.NoneModel>
+    <RimTalk.Settings.TTS.ClearDefault>(сбросить значение по умолчанию)</RimTalk.Settings.TTS.ClearDefault>
+    <RimTalk.Settings.TTS.ColumnDescription>Левая колонка: название модели (для отображения), правая колонка: ID модели (для запросов к API). Для Azure Custom Voice используйте формат «deploymentId:voiceName» (например, «abc123:MyVoice»). ВНИМАНИЕ: для CosyVoice и IndexTTS удаление модели также удаляет её данные на SiliconFlow. НЕОБРАТИМО!</RimTalk.Settings.TTS.ColumnDescription>
+    <RimTalk.Settings.TTS.ColumnModelName>Название модели</RimTalk.Settings.TTS.ColumnModelName>
+    <RimTalk.Settings.TTS.ColumnModelID>ID модели</RimTalk.Settings.TTS.ColumnModelID>
+    <RimTalk.Settings.TTS.Delete>Удалить</RimTalk.Settings.TTS.Delete>
+    <RimTalk.Settings.TTS.AddModelSection>Добавить модель:</RimTalk.Settings.TTS.AddModelSection>
+    <RimTalk.Settings.TTS.NameLabel>Название:</RimTalk.Settings.TTS.NameLabel>
+    <RimTalk.Settings.TTS.IDLabel>ID:</RimTalk.Settings.TTS.IDLabel>
+    <RimTalk.Settings.TTS.AddModelButton>Добавить модель</RimTalk.Settings.TTS.AddModelButton>
+    <RimTalk.Settings.TTS.ProcessingPromptTip>Используйте {language} для целевого языка и {text} для текста реплики. Для сложных промптов лучше использовать внешний редактор.</RimTalk.Settings.TTS.ProcessingPromptTip>
+    <RimTalk.Settings.TTS.ResetPrompt>Сбросить промпт</RimTalk.Settings.TTS.ResetPrompt>
+    <RimTalk.Settings.TTS.ResetPrompt.FishAudioOld>Промпт Fish Audio по умолчанию (v1.6/S1)</RimTalk.Settings.TTS.ResetPrompt.FishAudioOld>
+    <RimTalk.Settings.TTS.ResetPrompt.FishAudioS2>Промпт Fish Audio по умолчанию (S2-pro)</RimTalk.Settings.TTS.ResetPrompt.FishAudioS2>
+    <RimTalk.Settings.TTS.ResetPrompt.CosyVoice>Промпт CosyVoice по умолчанию</RimTalk.Settings.TTS.ResetPrompt.CosyVoice>
+    <RimTalk.Settings.TTS.ResetPrompt.IndexTTS>Промпт IndexTTS по умолчанию</RimTalk.Settings.TTS.ResetPrompt.IndexTTS>
+    <RimTalk.Settings.TTS.ResetPrompt.AzureTTS>Промпт Azure TTS по умолчанию</RimTalk.Settings.TTS.ResetPrompt.AzureTTS>
+    <RimTalk.Settings.TTS.ResetPrompt.EdgeTTS>Промпт Edge-TTS по умолчанию</RimTalk.Settings.TTS.ResetPrompt.EdgeTTS>
+    <RimTalk.Settings.TTS.ResetPrompt.GeminiTTS>Промпт Gemini TTS по умолчанию</RimTalk.Settings.TTS.ResetPrompt.GeminiTTS>
+    <RimTalk.Settings.TTS.ResetPrompt.Custom>Промпт своего провайдера по умолчанию</RimTalk.Settings.TTS.ResetPrompt.Custom>
+    <RimTalk.Settings.TTS.ModelConfigurations>Настройки голосовых моделей</RimTalk.Settings.TTS.ModelConfigurations>
+    <RimTalk.Settings.TTS.NoCustomModels>Пока не настроено ни одной своей голосовой модели.\n\nДобавьте модели в настройках озвучки, и они появятся здесь.</RimTalk.Settings.TTS.NoCustomModels>
+
+    <!-- LLM API Settings -->
+    <RimTalk.Settings.TTS.LLMApiConfig>Настройка LLM API для предобработки текста озвучки</RimTalk.Settings.TTS.LLMApiConfig>
+    <RimTalk.Settings.TTS.ProviderLabel>Провайдер API:</RimTalk.Settings.TTS.ProviderLabel>
+    <RimTalk.Settings.TTS.ProviderSkip>Пропустить</RimTalk.Settings.TTS.ProviderSkip>
+    <RimTalk.Settings.TTS.ProviderSkipTooltip>Пропустить предобработку через LLM и отправлять текст реплик напрямую провайдеру озвучки</RimTalk.Settings.TTS.ProviderSkipTooltip>
+    <RimTalk.Settings.TTS.ProviderRimTalkSame>Как в RimTalk</RimTalk.Settings.TTS.ProviderRimTalkSame>
+    <RimTalk.Settings.TTS.ProviderRimTalkSameTooltip>Использовать для предобработки LLM-провайдер, выбранный в настройках RimTalk</RimTalk.Settings.TTS.ProviderRimTalkSameTooltip>
+    <RimTalk.Settings.TTS.CustomProvider>Свой</RimTalk.Settings.TTS.CustomProvider>
+    <RimTalk.Settings.TTS.LLMModelLabel>Модель:</RimTalk.Settings.TTS.LLMModelLabel>
+    <RimTalk.Settings.TTS.LLMApiKeyLabel>API-ключ:</RimTalk.Settings.TTS.LLMApiKeyLabel>
+    <RimTalk.Settings.TTS.CustomBaseUrlLabel>Свой базовый URL:</RimTalk.Settings.TTS.CustomBaseUrlLabel>
+    <RimTalk.Settings.TTS.RemoveBracketsInPreProcess>Исключать текст в скобках при предобработке</RimTalk.Settings.TTS.RemoveBracketsInPreProcess>
+    <RimTalk.Settings.TTS.RemoveBracketsInPreProcessTooltip>Если включено, перед предобработкой через LLM из текста озвучки удаляется всё, что заключено в скобки (круглые, квадратные, звёздочки и т. п.). Это может немного ухудшить передачу эмоций, но исключает риск того, что озвучка зачитает разные описательные вставки.</RimTalk.Settings.TTS.RemoveBracketsInPreProcessTooltip>
+
+    <!-- PersonaEditorWindow.cs -->
+    <RimTalk.PersonaEditor.VoiceModel>Голосовая модель</RimTalk.PersonaEditor.VoiceModel>
+    <RimTalk.PersonaEditor.UseDefault>По умолчанию</RimTalk.PersonaEditor.UseDefault>
+    <RimTalk.PersonaEditor.None>Нет (без озвучки)</RimTalk.PersonaEditor.None>
+
+    <!-- BioTabVoicePatch.cs & VoiceSelectionWindow.cs -->
+    <RimTalk.TTS.VoiceModel>Голос</RimTalk.TTS.VoiceModel>
+    <RimTalk.TTS.VoiceModelTooltip>Выбор голосовой модели</RimTalk.TTS.VoiceModelTooltip>
+    <RimTalk.TTS.CurrentVoice>Текущий голос</RimTalk.TTS.CurrentVoice>
+    <RimTalk.TTS.VoiceSelection>Выбор голоса: {0}</RimTalk.TTS.VoiceSelection>
+    <RimTalk.TTS.VoiceSelectionDesc>Выберите голосовую модель для реплик этого персонажа.</RimTalk.TTS.VoiceSelectionDesc>
+    <RimTalk.TTS.VoiceNone>Нет</RimTalk.TTS.VoiceNone>
+    <RimTalk.TTS.VoiceNoneDesc>Отключить озвучку для этого персонажа</RimTalk.TTS.VoiceNoneDesc>
+    <RimTalk.TTS.VoiceDefault>По умолчанию</RimTalk.TTS.VoiceDefault>
+    <RimTalk.TTS.VoiceDefaultDesc>Использовать голосовую модель по умолчанию из настроек озвучки</RimTalk.TTS.VoiceDefaultDesc>
+    <RimTalk.TTS.VoiceRuleBased>По правилам</RimTalk.TTS.VoiceRuleBased>
+    <RimTalk.TTS.VoiceRuleBasedDesc>Автоматически подбирать голос по правилам назначения</RimTalk.TTS.VoiceRuleBasedDesc>
+    <RimTalk.TTS.CustomLanguage>Свой язык озвучки (оставьте пустым, чтобы использовать общий):</RimTalk.TTS.CustomLanguage>
+    <RimTalk.TTS.CustomLanguageHint>Оставьте пустым, чтобы использовать общую настройку: {0}</RimTalk.TTS.CustomLanguageHint>
+    <RimTalk.TTS.CustomLanguageHintNoGlobal>Оставьте пустым, чтобы использовать общую настройку (сейчас не задана)</RimTalk.TTS.CustomLanguageHintNoGlobal>
+    <RimTalk.Settings.TTS.RuleBased>По правилам</RimTalk.Settings.TTS.RuleBased>
+    <RimTalk.Settings.TTS.Rules>Показать/свернуть список правил</RimTalk.Settings.TTS.Rules>
+    <RimTalk.TTS.Save>Сохранить</RimTalk.TTS.Save>
+    <RimTalk.TTS.Cancel>Отмена</RimTalk.TTS.Cancel>
+    <RimTalk.TTS.OK>ОК</RimTalk.TTS.OK>
+    <RimTalk.TTS.VoiceUpdated>Голосовая модель обновлена: {0}</RimTalk.TTS.VoiceUpdated>
+
+    <!-- Overlay_MapComponentOnGUI_Postfix -->
+    <RimTalk.TTS.Reset>Очистить аудио</RimTalk.TTS.Reset>
+    <RimTalk.TTS.ResetComplete>Всё аудио, ожидающее воспроизведения или генерации, очищено</RimTalk.TTS.ResetComplete>
+    <RimTalk.TTS.Generate>Сгенерировать реплику</RimTalk.TTS.Generate>
+    <RimTalk.TTS.GenerateComplete>Генерация запущена</RimTalk.TTS.GenerateComplete>
+    <RimTalk.TTS.Ignore>Игнорировать текущие реплики</RimTalk.TTS.Ignore>
+    <RimTalk.TTS.IgnoreComplete>Все текущие реплики проигнорированы</RimTalk.TTS.IgnoreComplete>
+    <RimTalk.TTS.Display>Показать следующую</RimTalk.TTS.Display>
+    <RimTalk.Settings.TTS.TTSConfig>Настройки озвучки</RimTalk.Settings.TTS.TTSConfig>
+    <RimTalk.Settings.TTS.TTSSupplier>Провайдер озвучки</RimTalk.Settings.TTS.TTSSupplier>
+    <RimTalk.Settings.TTS.TTSSupplier.FishAudio>Fish Audio</RimTalk.Settings.TTS.TTSSupplier.FishAudio>
+    <RimTalk.Settings.TTS.TTSSupplier.CosyVoice>CosyVoice2</RimTalk.Settings.TTS.TTSSupplier.CosyVoice>
+    <RimTalk.Settings.TTS.TTSSupplier.IndexTTS>IndexTTS2</RimTalk.Settings.TTS.TTSSupplier.IndexTTS>
+    <RimTalk.Settings.TTS.TTSSupplier.AzureTTS>AzureTTS (сейчас недоступен)</RimTalk.Settings.TTS.TTSSupplier.AzureTTS>
+    <RimTalk.Settings.TTS.TTSSupplier.EdgeTTS>EdgeTTS (бесплатно)</RimTalk.Settings.TTS.TTSSupplier.EdgeTTS>
+    <RimTalk.Settings.TTS.TTSSupplier.GeminiTTS>GeminiTTS (сейчас недоступен)</RimTalk.Settings.TTS.TTSSupplier.GeminiTTS>
+    <RimTalk.Settings.TTS.SpeedLabel>Скорость: {0}</RimTalk.Settings.TTS.SpeedLabel>
+    <RimTalk.Settings.TTS.ModelLabel.CosyVoice>Модель озвучки (CosyVoice): {0}</RimTalk.Settings.TTS.ModelLabel.CosyVoice>
+    <RimTalk.Settings.TTS.ModelLabel.IndexTTS>Модель озвучки (IndexTTS): {0}</RimTalk.Settings.TTS.ModelLabel.IndexTTS>
+    <RimTalk.Settings.TTS.AzureRegionLabel>Регион Azure: {0}</RimTalk.Settings.TTS.AzureRegionLabel>
+    <RimTalk.Settings.TTS.CustomRegionLabel>Свой регион (если его нет в списке):</RimTalk.Settings.TTS.CustomRegionLabel>
+    <RimTalk.Settings.TTS.CustomModelIdLabel>Свой ID модели (необязательно):</RimTalk.Settings.TTS.CustomModelIdLabel>
+    <RimTalk.Settings.TTS.ResetModelsButton>Синхронизировать список моделей</RimTalk.Settings.TTS.ResetModelsButton>
+    <RimTalk.Settings.TTS.AzureVoiceLibrary>Открыть библиотеку голосов AzureTTS</RimTalk.Settings.TTS.AzureVoiceLibrary>
+    <RimTalk.Settings.TTS.EdgeVoiceLibrary>Открыть библиотеку голосов EdgeTTS</RimTalk.Settings.TTS.EdgeVoiceLibrary>
+    <RimTalk.Settings.TTS.UploadUserVoiceLabel>Загрузить свой голос (нужно только при загрузке):</RimTalk.Settings.TTS.UploadUserVoiceLabel>
+    <RimTalk.Settings.TTS.UploadFilePath>Путь к файлу (на этом компьютере):</RimTalk.Settings.TTS.UploadFilePath>
+    <RimTalk.Settings.TTS.UploadName>Название голоса:</RimTalk.Settings.TTS.UploadName>
+    <RimTalk.Settings.TTS.UploadTextPreview>Эталонный текст (для модели):</RimTalk.Settings.TTS.UploadTextPreview>
+    <RimTalk.Settings.TTS.UploadButton>Загрузить (если ничего не произошло, нажмите внизу «Синхронизировать список моделей»)</RimTalk.Settings.TTS.UploadButton>
+
+    <RimTalk.TTS.UploadFailed.LocalFileNotFound>Не удалось загрузить: файл не найден</RimTalk.TTS.UploadFailed.LocalFileNotFound>
+    <RimTalk.TTS.UploadFailed.NameEmpty>Не удалось загрузить: не указано название</RimTalk.TTS.UploadFailed.NameEmpty>
+    <RimTalk.TTS.UploadFailed.TextEmpty>Не удалось загрузить: пустой эталонный текст (его требует API)</RimTalk.TTS.UploadFailed.TextEmpty>
+    <RimTalk.TTS.UploadComplete>Загрузка завершена</RimTalk.TTS.UploadComplete>
+    <RimTalk.TTS.UploadFailed.ServerError>Не удалось загрузить: ошибка сервера</RimTalk.TTS.UploadFailed.ServerError>
+
+    <RimTalk.TTS.DeleteComplete>Удаление завершено</RimTalk.TTS.DeleteComplete>
+    <RimTalk.TTS.DeleteFailed>Не удалось удалить</RimTalk.TTS.DeleteFailed>
+
+    <RimTalk.TTS.SyncComplete>Синхронизация пользовательских голосов завершена</RimTalk.TTS.SyncComplete>
+    <RimTalk.TTS.SyncFailed>Не удалось синхронизировать пользовательские голоса</RimTalk.TTS.SyncFailed>
+
+    <!-- Advanced Mode -->
+    <RimTalk.Settings.TTS.AdvancedMode.Enabled>Расширенный режим: включён</RimTalk.Settings.TTS.AdvancedMode.Enabled>
+    <RimTalk.Settings.TTS.AdvancedMode.Disabled>Расширенный режим: выключен</RimTalk.Settings.TTS.AdvancedMode.Disabled>
+    <RimTalk.Settings.TTS.AdvancedMode.RulesList>Правила назначения голосов (по приоритету):</RimTalk.Settings.TTS.AdvancedMode.RulesList>
+
+    <!-- Voice Rule Editor Window -->
+    <RimTalk.Settings.TTS.RuleEditor.Title>Редактирование правила назначения голоса</RimTalk.Settings.TTS.RuleEditor.Title>
+    <RimTalk.Settings.TTS.RuleEditor.SelectedRequirements>Выбранные условия (должны выполняться все)</RimTalk.Settings.TTS.RuleEditor.SelectedRequirements>
+    <RimTalk.Settings.TTS.RuleEditor.AvailableRequirements>Доступные типы условий</RimTalk.Settings.TTS.RuleEditor.AvailableRequirements>
+    <RimTalk.Settings.TTS.RuleEditor.InstructText>Инструкция для OmniVoice (необязательно):</RimTalk.Settings.TTS.RuleEditor.InstructText>
+    <RimTalk.Settings.TTS.RuleEditor.SelectedVoiceModels>Выбранные голосовые модели (выбор случайный)</RimTalk.Settings.TTS.RuleEditor.SelectedVoiceModels>
+    <RimTalk.Settings.TTS.RuleEditor.UnselectedVoiceModels>Доступные голосовые модели</RimTalk.Settings.TTS.RuleEditor.UnselectedVoiceModels>
+    <RimTalk.Settings.TTS.RuleEditor.Gender>Пол:</RimTalk.Settings.TTS.RuleEditor.Gender>
+    <RimTalk.Settings.TTS.RuleEditor.Xenotype>Ксенотип (DLC Biotech):</RimTalk.Settings.TTS.RuleEditor.Xenotype>
+    <RimTalk.Settings.TTS.RuleEditor.Race>Раса (мод HAR):</RimTalk.Settings.TTS.RuleEditor.Race>
+    <RimTalk.Settings.TTS.RuleEditor.Age>Диапазон возраста:</RimTalk.Settings.TTS.RuleEditor.Age>
+    <RimTalk.Settings.TTS.RuleEditor.AddAge>Добавить условие по возрасту</RimTalk.Settings.TTS.RuleEditor.AddAge>
+    <RimTalk.Settings.TTS.RuleEditor.AgeRangeError>Возраст должен быть от 0 до 999999</RimTalk.Settings.TTS.RuleEditor.AgeRangeError>
+    <RimTalk.Settings.TTS.RuleEditor.MaxLessThanMinError>Максимальный возраст не может быть меньше минимального</RimTalk.Settings.TTS.RuleEditor.MaxLessThanMinError>
+    <RimTalk.Settings.TTS.RuleEditor.AgeInvalidNumberError>Введите корректные числа для возраста</RimTalk.Settings.TTS.RuleEditor.AgeInvalidNumberError>
+    <RimTalk.Settings.TTS.RuleEditor.Help>Как пользоваться:
+
+1. Добавление условий:
+   - Нажимайте кнопки в левой нижней панели, чтобы добавить условия
+   - В левой верхней панели показаны выбранные условия
+   - Нажмите ×, чтобы убрать условие
+
+2. Добавление голосовых моделей:
+   - Нажимайте на голосовые модели в правой нижней панели, чтобы добавить их
+   - В правой верхней панели показаны выбранные голосовые модели
+   - Нажмите ×, чтобы убрать голосовую модель
+   - При совпадении правила из выбранных голосов случайно берётся один
+
+3. Логика совпадения:
+   - Условия одного типа автоматически объединяются через «ИЛИ»
+     Пример: если выбрать и «Мужской», и «Женский», подойдут все мужские и женские персонажи
+   - Условия разных типов объединяются через «И»
+     Пример: если выбрать «Мужской», «Базовый человек», «Гусары» и «Возраст 20-30», подойдут мужчины 20-30 лет, которые являются либо базовыми людьми, либо гусарами
+   - Если условий данного типа нет, оно считается выполненным всегда
+
+4. Общий приоритет правил (не относится к этому окну, это логика списка правил в основных настройках):
+   - Персонажи проверяются сверху вниз
+   - Из первого подошедшего правила случайно выбирается один голос
+   - Кнопками ↑↓ меняется приоритет</RimTalk.Settings.TTS.RuleEditor.Help>
+
+    <!-- Rule Display Strings -->
+    <RimTalk.Settings.TTS.Rule.Gender>Пол: {0}</RimTalk.Settings.TTS.Rule.Gender>
+    <RimTalk.Settings.TTS.Rule.Xenotype>Ксенотип: {0}</RimTalk.Settings.TTS.Rule.Xenotype>
+    <RimTalk.Settings.TTS.Rule.Race>Раса: {0}</RimTalk.Settings.TTS.Rule.Race>
+    <RimTalk.Settings.TTS.Rule.Age>Возраст: {0}-{1}</RimTalk.Settings.TTS.Rule.Age>
+    <RimTalk.Settings.TTS.Rule.EmptyRule>Пустое правило</RimTalk.Settings.TTS.Rule.EmptyRule>
+    <RimTalk.Settings.TTS.Rule.UniversalRule>Все персонажи</RimTalk.Settings.TTS.Rule.UniversalRule>
+    <RimTalk.Settings.TTS.Rule.VoiceCount>→ голосов: {0}</RimTalk.Settings.TTS.Rule.VoiceCount>
+    <RimTalk.Settings.TTS.Rule.NoVoices>→ нет голосов</RimTalk.Settings.TTS.Rule.NoVoices>
+    <RimTalk.Settings.TTS.Rule.Or> или </RimTalk.Settings.TTS.Rule.Or>
+    <RimTalk.Settings.TTS.Rule.And> и </RimTalk.Settings.TTS.Rule.And>
+    <RimTalk.Settings.TTS.Rule.AgeLabel>Возраст</RimTalk.Settings.TTS.Rule.AgeLabel>
+
+    <!-- Custom TTS Provider -->
+    <RimTalk.Settings.TTS.CustomProvider.Section>Свои провайдеры озвучки</RimTalk.Settings.TTS.CustomProvider.Section>
+    <RimTalk.Settings.TTS.CustomProvider.Description>Добавляйте свои OpenAI-совместимые провайдеры озвучки. Поддерживаются свой URL, авторизация, эмоции, temperature и свой формат запроса.</RimTalk.Settings.TTS.CustomProvider.Description>
+    <RimTalk.Settings.TTS.CustomProvider.NoProviders>Своих провайдеров пока нет. Нажмите «Добавить нового провайдера», чтобы создать.</RimTalk.Settings.TTS.CustomProvider.NoProviders>
+    <RimTalk.Settings.TTS.CustomProvider.AddNew>+ Добавить нового провайдера</RimTalk.Settings.TTS.CustomProvider.AddNew>
+    <RimTalk.Settings.TTS.CustomProvider.Select>Выбрать</RimTalk.Settings.TTS.CustomProvider.Select>
+    <RimTalk.Settings.TTS.CustomProvider.Edit>Изменить</RimTalk.Settings.TTS.CustomProvider.Edit>
+    <RimTalk.Settings.TTS.CustomProvider.Delete>Удалить</RimTalk.Settings.TTS.CustomProvider.Delete>
+    <RimTalk.Settings.TTS.CustomProvider.Unnamed>[Свой] (без названия)</RimTalk.Settings.TTS.CustomProvider.Unnamed>
+    <RimTalk.Settings.TTS.CustomProvider.AddTitle>Добавление своего провайдера озвучки</RimTalk.Settings.TTS.CustomProvider.AddTitle>
+    <RimTalk.Settings.TTS.CustomProvider.EditTitle>Изменение своего провайдера озвучки</RimTalk.Settings.TTS.CustomProvider.EditTitle>
+    <RimTalk.Settings.TTS.CustomProvider.EditConfig>Изменить настройки провайдера</RimTalk.Settings.TTS.CustomProvider.EditConfig>
+    <RimTalk.Settings.TTS.CustomProvider.CurrentModel>Модель озвучки (свой провайдер): {0}</RimTalk.Settings.TTS.CustomProvider.CurrentModel>
+    <RimTalk.Settings.TTS.CustomProvider.BasicSettings>Основные настройки</RimTalk.Settings.TTS.CustomProvider.BasicSettings>
+    <RimTalk.Settings.TTS.CustomProvider.Name>Название провайдера:</RimTalk.Settings.TTS.CustomProvider.Name>
+    <RimTalk.Settings.TTS.CustomProvider.BaseUrl>Базовый URL (например, https://api.openai.com/v1):</RimTalk.Settings.TTS.CustomProvider.BaseUrl>
+    <RimTalk.Settings.TTS.CustomProvider.EndpointPath>Путь эндпоинта (по умолчанию: /audio/speech):</RimTalk.Settings.TTS.CustomProvider.EndpointPath>
+    <RimTalk.Settings.TTS.CustomProvider.FullUrlPreview>Полный URL: </RimTalk.Settings.TTS.CustomProvider.FullUrlPreview>
+    <RimTalk.Settings.TTS.CustomProvider.Model>Модель (например, tts-1, tts-1-hd):</RimTalk.Settings.TTS.CustomProvider.Model>
+    <RimTalk.Settings.TTS.CustomProvider.DefaultVoice>Голос по умолчанию (например, alloy, echo):</RimTalk.Settings.TTS.CustomProvider.DefaultVoice>
+    <RimTalk.Settings.TTS.CustomProvider.ResponseFormat>Формат ответа:</RimTalk.Settings.TTS.CustomProvider.ResponseFormat>
+    <RimTalk.Settings.TTS.CustomProvider.AuthSettings>Авторизация</RimTalk.Settings.TTS.CustomProvider.AuthSettings>
+    <RimTalk.Settings.TTS.CustomProvider.RequiresApiKey>Требуется API-ключ</RimTalk.Settings.TTS.CustomProvider.RequiresApiKey>
+    <RimTalk.Settings.TTS.CustomProvider.ApiKey>API-ключ (хранится в настройках провайдера):</RimTalk.Settings.TTS.CustomProvider.ApiKey>
+    <RimTalk.Settings.TTS.CustomProvider.AuthHeaderName>Имя заголовка авторизации (по умолчанию: Authorization):</RimTalk.Settings.TTS.CustomProvider.AuthHeaderName>
+    <RimTalk.Settings.TTS.CustomProvider.AuthHeaderPrefix>Префикс заголовка авторизации (по умолчанию: Bearer ):</RimTalk.Settings.TTS.CustomProvider.AuthHeaderPrefix>
+    <RimTalk.Settings.TTS.CustomProvider.OptionalFeatures>Необязательные параметры озвучки</RimTalk.Settings.TTS.CustomProvider.OptionalFeatures>
+    <RimTalk.Settings.TTS.CustomProvider.EnableSpeed>Передавать параметр скорости</RimTalk.Settings.TTS.CustomProvider.EnableSpeed>
+    <RimTalk.Settings.TTS.CustomProvider.EnableSpeedTooltip>Отправлять в теле запроса поле «speed» (стандарт OpenAI).</RimTalk.Settings.TTS.CustomProvider.EnableSpeedTooltip>
+    <RimTalk.Settings.TTS.CustomProvider.EnableTemperature>Передавать параметр temperature</RimTalk.Settings.TTS.CustomProvider.EnableTemperature>
+    <RimTalk.Settings.TTS.CustomProvider.EnableTemperatureTooltip>Отправлять поле «temperature». Не входит в стандарт, но поддерживается многими провайдерами.</RimTalk.Settings.TTS.CustomProvider.EnableTemperatureTooltip>
+    <RimTalk.Settings.TTS.CustomProvider.EnableTopP>Передавать параметр Top P</RimTalk.Settings.TTS.CustomProvider.EnableTopP>
+    <RimTalk.Settings.TTS.CustomProvider.EnableTopPTooltip>Отправлять поле «top_p». Не входит в стандарт, но используется некоторыми провайдерами.</RimTalk.Settings.TTS.CustomProvider.EnableTopPTooltip>
+    <RimTalk.Settings.TTS.CustomProvider.EnableEmotion>Передавать поле эмоции/стиля</RimTalk.Settings.TTS.CustomProvider.EnableEmotion>
+    <RimTalk.Settings.TTS.CustomProvider.EnableEmotionTooltip>Отправлять в запросе поле эмоции или стиля. Имя поля настраивается.</RimTalk.Settings.TTS.CustomProvider.EnableEmotionTooltip>
+    <RimTalk.Settings.TTS.CustomProvider.EmotionFieldName>Имя поля эмоции (например, emotion, style):</RimTalk.Settings.TTS.CustomProvider.EmotionFieldName>
+    <RimTalk.Settings.TTS.CustomProvider.EnableInstructText>Передавать поле инструкции</RimTalk.Settings.TTS.CustomProvider.EnableInstructText>
+    <RimTalk.Settings.TTS.CustomProvider.EnableInstructTextTooltip>Отправлять поле с текстовой инструкцией для управляемой озвучки. Имя поля настраивается.</RimTalk.Settings.TTS.CustomProvider.EnableInstructTextTooltip>
+    <RimTalk.Settings.TTS.CustomProvider.InstructTextFieldName>Имя поля инструкции (например, instruct_text, prompt):</RimTalk.Settings.TTS.CustomProvider.InstructTextFieldName>
+    <RimTalk.Settings.TTS.CustomProvider.EnableStreaming>Включить потоковую передачу</RimTalk.Settings.TTS.CustomProvider.EnableStreaming>
+    <RimTalk.Settings.TTS.CustomProvider.EnableStreamingTooltip>Добавляет в запрос «stream»: true. Ответ всё равно должен содержать готовое аудио целиком.</RimTalk.Settings.TTS.CustomProvider.EnableStreamingTooltip>
+    <RimTalk.Settings.TTS.CustomProvider.Timeout>Таймаут запроса (секунды, по умолчанию 30):</RimTalk.Settings.TTS.CustomProvider.Timeout>
+    <RimTalk.Settings.TTS.CustomProvider.CustomRequestBody>Свой шаблон тела запроса</RimTalk.Settings.TTS.CustomProvider.CustomRequestBody>
+    <RimTalk.Settings.TTS.CustomProvider.UseCustomRequestBody>Использовать свой JSON-шаблон</RimTalk.Settings.TTS.CustomProvider.UseCustomRequestBody>
+    <RimTalk.Settings.TTS.CustomProvider.UseCustomRequestBodyTooltip>Заменяет автоматически собранное тело запроса вашим JSON-шаблоном. Подстановки: {model}, {input}, {voice}, {speed}, {response_format}, {temperature}, {top_p}, {emotion}, {instruct_text}, {api_key}</RimTalk.Settings.TTS.CustomProvider.UseCustomRequestBodyTooltip>
+    <RimTalk.Settings.TTS.CustomProvider.TemplatePlaceholders>Подстановки: {model}, {input}, {voice}, {speed}, {response_format}, {temperature}, {top_p}, {emotion}, {instruct_text}, {api_key}</RimTalk.Settings.TTS.CustomProvider.TemplatePlaceholders>
+    <RimTalk.Settings.TTS.CustomProvider.LoadDefaultTemplate>Загрузить стандартный шаблон OpenAI</RimTalk.Settings.TTS.CustomProvider.LoadDefaultTemplate>
+    <RimTalk.Settings.TTS.CustomProvider.NameRequired>Нужно указать название провайдера</RimTalk.Settings.TTS.CustomProvider.NameRequired>
+    <RimTalk.Settings.TTS.CustomProvider.UrlRequired>Нужно указать базовый URL</RimTalk.Settings.TTS.CustomProvider.UrlRequired>
+    <RimTalk.Settings.TTS.TTSSupplier.Custom>[Свой провайдер]</RimTalk.Settings.TTS.TTSSupplier.Custom>
+
+    <!-- Added in dev version: stage directions option (new keys, see code change) -->
+    <RimTalk.Settings.TTS.StripStageDirections>Убирать ремарки из озвучки</RimTalk.Settings.TTS.StripStageDirections>
+    <RimTalk.Settings.TTS.StripStageDirectionsTooltip>Удаляет текст в скобках, звёздочках и XML-теги перед отправкой реплики в озвучку. Сама реплика не изменяется.</RimTalk.Settings.TTS.StripStageDirectionsTooltip>
+    <RimTalk.Settings.TTS.ModelDrama3>drama-3 (самая выразительная модель, оплата за байт, нужен положительный баланс API)</RimTalk.Settings.TTS.ModelDrama3>
+</LanguageData>

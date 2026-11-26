@@ -9,6 +9,7 @@ using RimTalk.TTS.Config;
 using RimTalk.TTS.Data;
 using RimTalk.TTS.Llm;
 using RimTalk.TTS.Providers;
+using System.Text.RegularExpressions;
 using Verse;
 
 namespace RimTalk.TTS.Pipeline
@@ -332,35 +333,95 @@ namespace RimTalk.TTS.Pipeline
             }
         }
 
-        private async Task<string> ProcessTextAsync(string text, Guid dialogueId, SettingsSnapshot snapshot, CancellationToken token)
-        {
-            if (snapshot.Llm.Skip)
-            {
-                TTSLog.Message($"[RimTalk.TTS] Preprocess skipped [{ShortId(dialogueId)}]: passing raw text to TTS");
-                return text;
-            }
 
-            string language = snapshot.VoiceLanguage;
-            TTSLog.Message($"[RimTalk.TTS] Preprocess [{ShortId(dialogueId)}]: language={language ?? "(null)"}, inputLen={text?.Length}");
+		private async Task<string> ProcessTextAsync(string text, Guid dialogueId, SettingsSnapshot snapshot,CancellationToken token)
+			{
+		string result;
 
-            if (string.IsNullOrWhiteSpace(language))
-            {
-                TTSLog.Warning("[RimTalk.TTS] Translation language not configured");
-                return null;
-            }
+		TTSLog.Message($"[RimTalk.TTS] StripStageDirections={snapshot.StripStageDirections}, Skip={snapshot.Llm.Skip}");
 
-            var preProcessResult = await InputPreProcessService.PreProcessAsync(text, language, snapshot.Llm);
-            token.ThrowIfCancellationRequested();
+		if (snapshot.Llm.Skip)
+		{
+		TTSLog.Message($"[RimTalk.TTS] Preprocess skipped [{ShortId(dialogueId)}]: passing raw text to TTS");
+		result = text;
+		}
+		else
+		{
+		string language = snapshot.VoiceLanguage;
+		TTSLog.Message($"[RimTalk.TTS] Preprocess [{ShortId(dialogueId)}]: language={language ?? "(null)"}, inputLen={text?.Length}");
 
-            if (preProcessResult == null || string.IsNullOrEmpty(preProcessResult.Text))
-            {
-                TTSLog.Warning($"[RimTalk.TTS] Translation/PreProcess returned empty result " +
-                               $"(preProcessResult={(preProcessResult == null ? "null" : "empty text")})");
-                return null;
-            }
-
-            return preProcessResult.Text;
+		if (string.IsNullOrWhiteSpace(language))
+		{
+		TTSLog.Warning("[RimTalk.TTS] Translation language not configured");
+		return null;
         }
+
+        var preProcessResult = await InputPreProcessService.PreProcessAsync(text, language, snapshot.Llm);
+        token.ThrowIfCancellationRequested();
+
+        if (preProcessResult == null || string.IsNullOrEmpty(preProcessResult.Text))
+        {
+            TTSLog.Warning($"[RimTalk.TTS] Translation/PreProcess returned empty result " +
+                           $"(preProcessResult={(preProcessResult == null ? "null" : "empty text")})");
+            return null;
+        }
+
+        result = preProcessResult.Text;
+    }
+
+    // Clean only the copy that will be sent to TTS.
+    if (snapshot.StripStageDirections)
+    {
+        string cleaned = StripStageDirections(result);
+
+        if (string.IsNullOrWhiteSpace(cleaned))
+        {
+            TTSLog.Warning($"[RimTalk.TTS] Stage direction stripping removed all text [{ShortId(dialogueId)}]");
+            return null;
+        }
+
+        if (cleaned.Length != result.Length)
+        {
+            TTSLog.Message($"[RimTalk.TTS] Stage directions stripped [{ShortId(dialogueId)}]: " +
+                           $"inputLen={result.Length}, outputLen={cleaned.Length}");
+        }
+
+        result = cleaned;
+    }
+
+    return result;
+}
+
+private static string StripStageDirections(string text)
+{
+    if (string.IsNullOrWhiteSpace(text))
+        return null;
+
+    // Remove XML-like tags, e.g. <action name="force_rest"/>.
+    string result = Regex.Replace(text, @"<[^>]*>", " ");
+
+    // Remove parenthetical text, including nested parentheses.
+    string previous;
+    do
+    {
+        previous = result;
+        result = Regex.Replace(result, @"[\(（][^()（）]*[\)）]", " ");
+    }
+    while (result != previous);
+
+    // Remove text enclosed in asterisks, including multiple pairs.
+    do
+    {
+        previous = result;
+        result = Regex.Replace(result, @"\*[^*]*\*", " ");
+    }
+    while (result != previous);
+
+    // Normalize spaces, including non-breaking and other Unicode whitespace.
+    result = Regex.Replace(result, @"\s+", " ").Trim();
+
+    return string.IsNullOrWhiteSpace(result) ? null : result;
+}
 
         private async Task<byte[]> GenerateSpeechAsync(Guid dialogueId, string inputText, SettingsSnapshot snapshot,
             CancellationToken token)
@@ -376,10 +437,11 @@ namespace RimTalk.TTS.Pipeline
 
             var ttsRequest = new TTSRequest
             {
+		Seed = snapshot.Seed,
                 ApiKey = supplier.ApiKey,
                 Model = supplier.Model,
                 Input = inputText,
-                InstructText = null,
+                InstructText = snapshot.InstructText,
                 Voice = snapshot.VoiceModelId,
                 Speed = supplier.Speed,
                 Volume = supplier.Volume,

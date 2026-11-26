@@ -22,6 +22,8 @@
     <RimTalk.Settings.TTS.ModelDrama3>drama-3 (most expressive; billed per byte, needs API credit)</RimTalk.Settings.TTS.ModelDrama3>
     <RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>Generate Cooldown (miliseconds): {0}</RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>
     <RimTalk.Settings.TTS.RequestTimeoutLabel>Request timeout: {0} s (0 = no timeout)</RimTalk.Settings.TTS.RequestTimeoutLabel>
+    <RimTalk.Settings.TTS.StripStageDirections>Remove stage directions from speech</RimTalk.Settings.TTS.StripStageDirections>
+<RimTalk.Settings.TTS.StripStageDirectionsTooltip>Remove text in parentheses, asterisks and XML tags before sending dialogue to TTS. Original dialogue remains unchanged.</RimTalk.Settings.TTS.StripStageDirectionsTooltip>
     <RimTalk.Settings.TTS.RequestTimeoutInfo>Counted from the moment a request is sent to the supplier (preprocessing and cooldown excluded). A timed-out line is displayed without speech.</RimTalk.Settings.TTS.RequestTimeoutInfo>
     <RimTalk.Settings.TTS.Validation.Required>*Required</RimTalk.Settings.TTS.Validation.Required>
     <RimTalk.Settings.TTS.VolumeLabel>Volume: {0}</RimTalk.Settings.TTS.VolumeLabel>
@@ -162,6 +164,7 @@
     <RimTalk.Settings.TTS.RuleEditor.Title>Edit Voice Assignment Rule</RimTalk.Settings.TTS.RuleEditor.Title>
     <RimTalk.Settings.TTS.RuleEditor.SelectedRequirements>Selected Requirements (All Must Match)</RimTalk.Settings.TTS.RuleEditor.SelectedRequirements>
     <RimTalk.Settings.TTS.RuleEditor.AvailableRequirements>Available Requirement Types</RimTalk.Settings.TTS.RuleEditor.AvailableRequirements>
+    <RimTalk.Settings.TTS.RuleEditor.InstructText>OmniVoice voice instruction (optional):</RimTalk.Settings.TTS.RuleEditor.InstructText>
     <RimTalk.Settings.TTS.RuleEditor.SelectedVoiceModels>Selected Voice Models (Random Selection)</RimTalk.Settings.TTS.RuleEditor.SelectedVoiceModels>
     <RimTalk.Settings.TTS.RuleEditor.UnselectedVoiceModels>Available Voice Models</RimTalk.Settings.TTS.RuleEditor.UnselectedVoiceModels>
     <RimTalk.Settings.TTS.RuleEditor.Gender>Gender:</RimTalk.Settings.TTS.RuleEditor.Gender>

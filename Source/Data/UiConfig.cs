@@ -11,6 +11,7 @@ namespace RimTalk.TTS.Data
     public class UiConfig : IExposable
     {
         public bool EnableTTS;
+	public bool StripStageDirections = false;
         public bool ButtonDisplay = true;
         public bool ControlButtonDisplay = true;
         public bool IsOnButton = true;
@@ -22,6 +23,7 @@ namespace RimTalk.TTS.Data
 
         public void ExposeData()
         {
+	    Scribe_Values.Look(ref StripStageDirections, "stripStageDirections", false);
             Scribe_Values.Look(ref EnableTTS, "enableTTS", false);
             Scribe_Values.Look(ref ButtonDisplay, "buttonDisplay", true);
             Scribe_Values.Look(ref ControlButtonDisplay, "controlButtonDisplay", true);

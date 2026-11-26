@@ -11,9 +11,12 @@ namespace RimTalk.TTS.Config
     /// </summary>
     public sealed class SettingsSnapshot
     {
+	public long Seed;
+	public bool StripStageDirections;
         public string PawnLabel;
         public string VoiceModelId;
         public string VoiceLanguage;
+        public string InstructText;
         public LlmRequestOptions Llm;
         public SupplierOptions Supplier;
         public int RequestTimeoutSeconds;

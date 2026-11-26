@@ -50,7 +50,7 @@ namespace RimTalk.TTS.UI
             this.absorbInputAroundWindow = true;
         }
 
-        public override Vector2 InitialSize => new Vector2(900f, 600f);
+        public override Vector2 InitialSize => new Vector2(900f, 650f);
 
         public override void DoWindowContents(Rect inRect)
         {
@@ -387,7 +387,8 @@ namespace RimTalk.TTS.UI
             Rect titleRect = new Rect(rect.x + 5f, rect.y + 5f, rect.width - 10f, 25f);
             Widgets.Label(titleRect, "RimTalk.Settings.TTS.RuleEditor.SelectedVoiceModels".Translate());
 
-            Rect scrollRect = new Rect(rect.x + 5f, rect.y + 30f, rect.width - 10f, rect.height - 35f);
+            // Keep the voice list compact so the rule's OmniVoice instruction can be edited below it.
+            Rect scrollRect = new Rect(rect.x + 5f, rect.y + 30f, rect.width - 10f, rect.height - 140f);
             Rect viewRect = new Rect(0f, 0f, scrollRect.width - 20f, rule.VoiceModelIds.Count * 30f);
 
             Widgets.BeginScrollView(scrollRect, ref selectedVoiceScrollPos, viewRect);
@@ -419,6 +420,12 @@ namespace RimTalk.TTS.UI
             }
 
             Widgets.EndScrollView();
+
+            Rect instructionLabelRect = new Rect(rect.x + 5f, rect.y + rect.height - 105f, rect.width - 10f, 22f);
+            Widgets.Label(instructionLabelRect, "RimTalk.Settings.TTS.RuleEditor.InstructText".Translate());
+
+            Rect instructionRect = new Rect(rect.x + 5f, rect.y + rect.height - 82f, rect.width - 10f, 75f);
+            rule.InstructText = Widgets.TextArea(instructionRect, rule.InstructText ?? "");
         }
 
         private void DrawUnselectedVoiceModels(Rect rect)

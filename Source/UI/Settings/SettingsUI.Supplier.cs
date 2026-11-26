@@ -132,14 +132,6 @@ namespace RimTalk.TTS.UI
                 {
                     string currentModel = settings.GetSupplierModel(supplierKey);
                     listing.Label("RimTalk.Settings.TTS.ModelLabel".Translate(currentModel));
-                    if (listing.RadioButton("RimTalk.Settings.TTS.ModelHighQuality".Translate(), currentModel == "fishaudio-1"))
-                    {
-                        editor.SetSupplierModel(supplierKey, "fishaudio-1");
-                    }
-                    if (listing.RadioButton("RimTalk.Settings.TTS.ModelFaster".Translate(), currentModel == "s1"))
-                    {
-                        editor.SetSupplierModel(supplierKey, "s1");
-                    }
                     if (listing.RadioButton("RimTalk.Settings.TTS.ModelS2Pro".Translate(), currentModel == "s2-pro"))
                     {
                         editor.SetSupplierModel(supplierKey, "s2-pro");
@@ -151,6 +143,10 @@ namespace RimTalk.TTS.UI
                     if (listing.RadioButton("RimTalk.Settings.TTS.ModelS21ProFree".Translate(), currentModel == "s2.1-pro-free"))
                     {
                         editor.SetSupplierModel(supplierKey, "s2.1-pro-free");
+                    }
+                    if (listing.RadioButton("RimTalk.Settings.TTS.ModelDrama3".Translate(), currentModel == "drama-3"))
+                    {
+                        editor.SetSupplierModel(supplierKey, "drama-3");
                     }
                 }
 

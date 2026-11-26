@@ -16,7 +16,7 @@ namespace RimTalk.TTS.UI
     {
         private VoiceAssignmentRule rule;
         private TTSSettings settings;
-        private System.Action onSave;
+        private System.Action<VoiceAssignmentRule> onSave;
 
         private Vector2 selectedReqScrollPos;
         private Vector2 availableReqScrollPos;
@@ -33,7 +33,13 @@ namespace RimTalk.TTS.UI
         private static bool raceCollapsed = false;
         private static bool ageCollapsed = false;
 
-        public VoiceRuleEditorWindow(VoiceAssignmentRule rule, TTSSettings settings, System.Action onSave = null)
+        /// <summary>
+        /// Edit <paramref name="rule"/>. For rules that are already stored in the settings the caller
+        /// must pass a <see cref="VoiceAssignmentRule.Clone"/>: the window mutates the object it is
+        /// given, so editing the live rule would make "Cancel" (and the window X) unable to discard
+        /// the changes. <paramref name="onSave"/> receives the edited rule and is only called by Save.
+        /// </summary>
+        public VoiceRuleEditorWindow(VoiceAssignmentRule rule, TTSSettings settings, System.Action<VoiceAssignmentRule> onSave = null)
         {
             this.rule = rule;
             this.settings = settings;
@@ -465,7 +471,7 @@ namespace RimTalk.TTS.UI
             Rect saveRect = new Rect(rect.x + rect.width - (buttonWidth * 2 + gap), rect.y, buttonWidth, 30f);
             if (Widgets.ButtonText(saveRect, "RimTalk.TTS.Save".Translate()))
             {
-                onSave?.Invoke();
+                onSave?.Invoke(rule);
                 Close();
             }
 

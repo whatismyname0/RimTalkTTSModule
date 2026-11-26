@@ -34,6 +34,12 @@ namespace RimTalk.TTS.Data
             Scribe_Values.Look(ref Type, "type", RequirementType.Gender);
         }
 
+        /// <summary>Deep copy used by the rule editor so "Cancel" can discard a draft.</summary>
+        public virtual VoiceRuleRequirement Clone()
+        {
+            return new VoiceRuleRequirement(Type);
+        }
+
         /// <summary>
         /// Check if a pawn matches this requirement
         /// </summary>
@@ -76,6 +82,11 @@ namespace RimTalk.TTS.Data
             return pawn?.gender == Gender;
         }
 
+        public override VoiceRuleRequirement Clone()
+        {
+            return new GenderRequirement(Gender);
+        }
+
         public override string GetDisplayString()
         {
             string genderLabel = Gender.GetLabel();
@@ -108,6 +119,11 @@ namespace RimTalk.TTS.Data
             if (pawn?.genes == null) return false;
             
             return pawn.genes.Xenotype?.defName == XenotypeDefName;
+        }
+
+        public override VoiceRuleRequirement Clone()
+        {
+            return new XenotypeRequirement(XenotypeDefName);
         }
 
         public override string GetDisplayString()
@@ -149,6 +165,11 @@ namespace RimTalk.TTS.Data
         public override bool Matches(Pawn pawn)
         {
             return pawn?.def?.defName == RaceDefName;
+        }
+
+        public override VoiceRuleRequirement Clone()
+        {
+            return new RaceRequirement(RaceDefName);
         }
 
         public override string GetDisplayString()
@@ -198,6 +219,11 @@ namespace RimTalk.TTS.Data
             return age >= MinAge && age <= MaxAge;
         }
 
+        public override VoiceRuleRequirement Clone()
+        {
+            return new AgeRequirement(MinAge, MaxAge);
+        }
+
         public override string GetDisplayString()
         {
             return "RimTalk.Settings.TTS.Rule.Age".Translate(MinAge, MaxAge);
@@ -216,6 +242,48 @@ namespace RimTalk.TTS.Data
         public List<string> VoiceModelIds = new List<string>();
 
         public VoiceAssignmentRule() { }
+
+        /// <summary>
+        /// Deep copy of this rule. The editor works on a draft so closing it with "Cancel" (or the
+        /// window X) cannot modify the rule that is already stored in the settings.
+        /// </summary>
+        public VoiceAssignmentRule Clone()
+        {
+            var clone = new VoiceAssignmentRule();
+            if (Requirements != null)
+            {
+                foreach (var requirement in Requirements)
+                {
+                    if (requirement != null) clone.Requirements.Add(requirement.Clone());
+                }
+            }
+            if (VoiceModelIds != null)
+            {
+                clone.VoiceModelIds.AddRange(VoiceModelIds);
+            }
+            return clone;
+        }
+
+        /// <summary>Replace this rule's content with a deep copy of <paramref name="source"/> (Save path).</summary>
+        public void CopyFrom(VoiceAssignmentRule source)
+        {
+            if (source == null) return;
+
+            Requirements = new List<VoiceRuleRequirement>();
+            if (source.Requirements != null)
+            {
+                foreach (var requirement in source.Requirements)
+                {
+                    if (requirement != null) Requirements.Add(requirement.Clone());
+                }
+            }
+
+            VoiceModelIds = new List<string>();
+            if (source.VoiceModelIds != null)
+            {
+                VoiceModelIds.AddRange(source.VoiceModelIds);
+            }
+        }
 
         public void ExposeData()
         {

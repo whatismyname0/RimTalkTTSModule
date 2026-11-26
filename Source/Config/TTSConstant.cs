@@ -35,25 +35,56 @@ namespace RimTalk.TTS.Config
             Audio effects: [laughing], [chuckling], [sobbing], [crying loudly], [sighing], [groaning], [panting], [gasping], [yawning], [snoring]
             Pauses: [break], [long-break]
             """;
-        public static readonly string DefaultTTSProcessingPrompt_FishAudioS2 =
+        public static readonly string DefaultTTSProcessingPrompt_FishAudio =
             """
-            You are a professional TTS text processor.
+            You are a TTS text preprocessing assistant for Fish Audio TTS model.
 
-            Rules:
-            1. Translate all text into {language}.
-            2. For text inside parentheses: translate only the content, keep parentheses, do not add annotations.
-            3. For text outside parentheses: translate and add suitable annotations.
-            - Emotions: at the start of a sentence, separated by a space.
-            - Tone markers, audio effects: anywhere in the sentence.
-            - Replace ellipses (...) with [break] or [long-break].
-            4. Never add annotations inside parentheses.
-            5. Output only JSON:
-            {
-                "text": "<fully translated to {language} and annotated text, all parentheses and their translated content preserved>",
-                "emotion": "<empty string>"
-            }
+            ## 1. Task
+            Translate ALL source text into {language}. Use any accompanying action or scene descriptions as context to infer the speaker's emotion, vocal quality, and pacing. Insert Fish Audio S2.1-Pro inline control cues (`[...]`) and phoneme tags (`<|phoneme_start|>...<|phoneme_end|>`) only where they improve delivery or pronunciation accuracy. Preserve all literal parentheses and translate only their content (except under Section 5's legacy rule). Return exactly one JSON object.
 
-            Annotation example: [happily] Whoa, what a fine day! [embarassed][cough violently] Wait...wait! [extremely surprised] Why are you here?! [sigh] Never mind. Oh, I remember that [laugh][calmly] sorry [exhale]. Give me the...[gasp] Ouch! [angrily] Watch it!
+            ## 2. Output Contract
+            Return ONLY:
+            {"text":"&lt;fully translated and annotated text&gt;","emotion":""}
+
+            - Output no markdown fences, explanations, extra fields, or text outside the JSON object.
+            - `"emotion"` must always be `""`.
+            - `"text"` must be a valid JSON string (escape internal `"` and `\`).
+
+            ## 3. Inline Control Cues (`[...]`)
+            - **Mechanics**: Square-bracket cues control all speech **after** them until the next cue or sentence end. Place them at sentence start, mid-sentence (for tonal shifts), or between sentences (for reactions/pauses).
+            - **Open-domain**: Supports both concise labels and short natural-language descriptions (e.g., `[quiet, intimate, almost hesitant]`, `[overly cheerful, clearly forcing it]`). Tag the *speaker's delivery*, not the listener's feelings.
+            - **Rules**:
+            - Every emotional, vocal, or descriptive cue MUST be followed by spoken text (no trailing orphan cues).
+            - Never stack competing emotions (max 1 emotion per span). Pairing 1 physical/vocal/delivery cue + 1 emotion cue is encouraged (e.g., `[whispering] [scared]`, `[sigh] [sad]`, `[speaking slowly] [serious]`).
+            - Avoid overuse; keep cues concise (typically ≤2 per line).
+            - Replace ellipses (`...` / `……`) **outside** literal parentheses with `[break]` or `[long-break]`.
+            - **Common cues** (non-exhaustive):
+            - *Emotion*: `[happy]`, `[sad]`, `[angry]`, `[calm]`, `[excited]`, `[curious]`, `[serious]`, `[confident]`, `[empathetic]`, `[reflective]`
+            - *Vocal / Delivery*: `[whispering]`, `[soft voice]`, `[shouting]`, `[breathy]`, `[hoarse]`, `[speaking slowly]`, `[picking up pace]`, `[voice drops slightly]`, `[voice breaking]`
+            - *Reactions (between clauses/sentences)*: `[sigh]`, `[breath]`, `[exhale]`, `[small laugh]`, `[laugh]`, `[chuckling]`, `[cough]`, `[hmm]`, `[lip-smacking]`
+            - *Pacing*: `[break]`, `[long-break]`, `[breath]`, `[short pause]`, `[pause]`, `[long pause]`, `[beat]`
+
+            ## 4. Pronunciation Tags (`<|phoneme_start|>...<|phoneme_end|>`)
+            Use only for ambiguous words, heteronyms, or tricky pronunciations. Always keep punctuation, brackets, and spaces **outside** the tag.
+
+            - **English (CMU Arpabet)**: Exactly 1 word per tag; space-separated phonemes with vowel/rhotic stress digits (`0` unstressed, `1` primary, `2` secondary).
+            - Example: `read` (past) → `<|phoneme_start|>R EH1 D<|phoneme_end|>`; `engineer` → `<|phoneme_start|>EH1 N JH AH0 N IH1 R<|phoneme_end|>`
+            - **Chinese (tone3 pinyin)**: Exactly 1 character/syllable per tag, lowercase pinyin + tone digit (`1`–`4`, `5` neutral). Never wrap multiple characters in one tag; place adjacent tags in character order.
+            - Example: `银行` → `银<|phoneme_start|>hang2<|phoneme_end|>` or `<|phoneme_start|>yin2<|phoneme_end|><|phoneme_start|>hang2<|phoneme_end|>`
+            - **Mandatory when `{language}` is Chinese**: Tag polyphonic characters (多音字) to prevent misreading (e.g., 重庆 `chong2 qing4` vs 重要 `zhong4 yao4`; 音乐 `yin1 yue4` vs 快乐 `kuai4 le4`).
+            - **Japanese (OpenJTalk-style romaji + pitch accent)**: 1 short word/phrase per tag (split long text by punctuation; never wrap a full clause/paragraph). Each vowel-bearing mora (and optional moraic `N`) carries `0` (low) or `1` (high), no space between consonant and vowel (`a,i,u,e,o,N,cl,ky,sh,ch,ts`), no `[` or `]` inside. Normalize spoken symbols first (`％` → `パーセント`). If unsure of pitch accent, leave untagged.
+            - Example: `橋が` → `<|phoneme_start|>ha0shi1ga0<|phoneme_end|>` | `箸が` → `<|phoneme_start|>ha1shi0ga0<|phoneme_end|>`
+
+            ## 5. Parentheses Handling
+            - Preserve all literal parentheses — half-width `()` and full-width `（）` — and translate ONLY their inner content.
+            - NEVER place `[...]` cues or phoneme tags inside literal parentheses, and keep ellipses (`...`) inside them as punctuation.
+            - Examples: `(happy) Hello` → `[happy] Hello` | `an (break) engineer` → `an [break] engineer`
+
+            ## 6. Pre-Output Checklist
+            - Single valid JSON object with `"text"` and `"emotion": ""`, no extra text or fences.
+            - All source parentheses preserved (content translated, untagged, ellipses kept), no parentheses used as TTS cues.
+            - Inline `[...]` cues are concise, non-competing, and followed by speech; ellipses outside parentheses replaced with `[break]`/`[long-break]`.
+            - Phoneme tags strictly use `<|phoneme_start|>...<|phoneme_end|>` with punctuation outside; Chinese polyphonic characters tagged when `{language}` is Chinese.
             """;
         
         public static readonly string DefaultTTSProcessingPrompt_CosyVoice =
@@ -222,13 +253,15 @@ namespace RimTalk.TTS.Config
         }
 
         /// <summary>
-        /// Default preprocessing prompt for a supplier. FishAudio keeps the legacy
-        /// generic prompt (S1/S2 users can pick their specific one via the reset buttons).
+        /// Default preprocessing prompt for a supplier. Custom and None fall back to the
+        /// generic prompt; Fish Audio uses its bracket-direction prompt.
         /// </summary>
         public static string GetDefaultProcessingPrompt(TTSSettings.TTSSupplier supplier)
         {
             switch (supplier)
             {
+                case TTSSettings.TTSSupplier.FishAudio:
+                    return DefaultTTSProcessingPrompt_FishAudio;
                 case TTSSettings.TTSSupplier.CosyVoice:
                     return DefaultTTSProcessingPrompt_CosyVoice;
                 case TTSSettings.TTSSupplier.IndexTTS:

@@ -224,9 +224,30 @@ namespace RimTalk.TTS.Pipeline
             return ids;
         }
 
+        /// <summary>
+        /// Number of lines that are actually being held for speech. Terminated entries
+        /// (Cancelled/Failed) are deliberately excluded: they can stay in the dictionary when the
+        /// line never reaches the display hook (e.g. RimTalk drops a pending response via
+        /// AddIgnored), and counting them would permanently disable the head-of-batch priority.
+        /// </summary>
         public int ActiveCount
         {
-            get { lock (_lock) { return _entries.Count; } }
+            get
+            {
+                lock (_lock)
+                {
+                    int active = 0;
+                    foreach (var entry in _entries.Values)
+                    {
+                        if (entry.State == SpeechState.Requested || entry.State == SpeechState.Generating ||
+                            entry.State == SpeechState.Ready || entry.State == SpeechState.Playing)
+                        {
+                            active++;
+                        }
+                    }
+                    return active;
+                }
+            }
         }
 
         /// <summary>Single cleanup entry: drop every entry (and allow lines to be requested again).</summary>

@@ -61,9 +61,13 @@ namespace RimTalk.TTS.UI
                     if (Widgets.ButtonText(editRect, "RimTalk.Settings.TTS.CustomProvider.Edit".Translate()))
                     {
                         var cpRef = cp;
-                        Find.WindowStack.Add(new CustomProviderEditorWindow(cpRef, () =>
+                        // Edit a draft: the window also flips checkboxes on the object it is given,
+                        // so editing the stored provider directly would survive "Cancel"/X.
+                        var draft = cpRef.Clone();
+                        Find.WindowStack.Add(new CustomProviderEditorWindow(draft, () =>
                         {
-                            // Sync config changes to per-supplier dictionaries
+                            // Apply the saved draft and sync changes to per-supplier dictionaries.
+                            cpRef.CopyFrom(draft);
                             editor.SyncCustomProviderConfig(cpRef);
                         }));
                     }

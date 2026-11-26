@@ -17,7 +17,9 @@ server is deliberately locked down:
 import asyncio
 import base64
 import hmac
+import inspect
 import json
+import math
 import os
 import sys
 import time
@@ -27,16 +29,136 @@ from threading import BoundedSemaphore, Thread
 from fishaudio import AsyncFishAudio
 from fishaudio.types import TTSConfig, Prosody
 
+# The exception module is not part of every SDK build that has tts.convert(); when it
+# is absent the error text simply stays generic instead of breaking the import.
+try:
+    from fishaudio import exceptions as fish_errors
+except ImportError:  # pragma: no cover - depends on the user's installed SDK
+    fish_errors = None
+
 MAX_BODY_BYTES = 1024 * 1024
 MAX_CONCURRENT_REQUESTS = 4
 TOKEN_HEADER = "X-TTS-Token"
 SECURE_MODE_FLAG = "--token-stdin"
+
+# prosody.speed is documented, and validated by the SDK, as 0.5-2.0. A value outside
+# that range fails while the request body is being built, which loses the whole line,
+# so it is clamped here instead.
+SPEED_MIN = 0.5
+SPEED_MAX = 2.0
+
+
+class _NeverRaised(Exception):
+    """Stand-in for an exception class the installed SDK does not define."""
+
+
+def _sdk_error(name):
+    """`fishaudio.exceptions.<name>` when present, otherwise a class nothing raises."""
+    if fish_errors is None:
+        return _NeverRaised
+    return getattr(fish_errors, name, _NeverRaised)
+
+
+# Resolved once: a missing class just falls through to the generic handler.
+_SDK_AUTH_ERROR = _sdk_error("AuthenticationError")
+_SDK_PERMISSION_ERROR = _sdk_error("PermissionError")
+_SDK_NOT_FOUND_ERROR = _sdk_error("NotFoundError")
+_SDK_RATE_LIMIT_ERROR = _sdk_error("RateLimitError")
+_SDK_SERVER_ERROR = _sdk_error("ServerError")
+_SDK_VALIDATION_ERROR = _sdk_error("ValidationError")
+_SDK_BASE_ERROR = _sdk_error("FishAudioError")
+
+# None until the installed SDK's tts.convert() signature has been inspected.
+_MODEL_ARG_SUPPORTED = None
 
 
 def log(message):
     """Write one diagnostic line to stderr (the C# side forwards it to its log)."""
     sys.stderr.write(f"[TTS Server] {message}\n")
     sys.stderr.flush()
+
+
+def clamp_speed(value):
+    """Speech speed inside the range the API accepts.
+
+    Clamped while the FishAudio request body is built, so an out-of-range slider value
+    still produces audio instead of failing before the request leaves the machine.
+    """
+    try:
+        speed = float(value)
+    except (TypeError, ValueError):
+        speed = 1.0
+    if not math.isfinite(speed):
+        speed = 1.0
+
+    clamped = min(max(speed, SPEED_MIN), SPEED_MAX)
+    if clamped != speed:
+        log(f"Speech speed {speed} is outside {SPEED_MIN}-{SPEED_MAX}; clamped to {clamped}")
+    return clamped
+
+
+def describe_sdk_gap():
+    """Names of the exception classes this SDK build lacks (empty when complete)."""
+    if fish_errors is None:
+        return ["fishaudio.exceptions"]
+    names = (
+        "AuthenticationError", "PermissionError", "NotFoundError",
+        "RateLimitError", "ServerError", "ValidationError", "FishAudioError",
+    )
+    return [name for name in names if not hasattr(fish_errors, name)]
+
+
+def requested_model(raw):
+    """The configured model id, handed to the API exactly as it is stored.
+
+    No allow-list and no substitution: preset ids, user-typed ids and ids that a
+    settings update stopped offering all travel verbatim, and whatever the service
+    answers (audio or an error) is what the caller gets. Only a value that is not a
+    string at all (field missing) becomes "".
+    """
+    return raw if isinstance(raw, str) else ""
+
+
+def convert_supports_model_argument(client):
+    """Whether this SDK version takes the model as an argument of tts.convert().
+
+    Older builds only read the model from TTSConfig, newer ones only from the
+    argument (and silently ignore it on the config), so the call site has to know.
+    """
+    global _MODEL_ARG_SUPPORTED
+    if _MODEL_ARG_SUPPORTED is None:
+        try:
+            _MODEL_ARG_SUPPORTED = "model" in inspect.signature(client.tts.convert).parameters
+        except (TypeError, ValueError):
+            # Unintrospectable callable: assume the modern shape and let a real
+            # TypeError surface through the normal error path.
+            _MODEL_ARG_SUPPORTED = True
+        if not _MODEL_ARG_SUPPORTED:
+            log("This fish-audio-sdk build cannot select a model; the SDK's own default "
+                "will be used. Run: pip install -U fish-audio-sdk")
+    return _MODEL_ARG_SUPPORTED
+
+
+def config_carrying_model(config, model):
+    """Config with `model` attached, for SDK builds that keep it on TTSConfig."""
+    fields = getattr(type(config), "model_fields", None)
+    if fields and "model" in fields:
+        try:
+            return config.model_copy(update={"model": model})
+        except Exception:
+            return config
+    return config
+
+
+def describe_network_failure(error):
+    """Readable sentence for transport-level failures (no HTTP status attached)."""
+    text = str(error)
+    lowered = text.lower()
+    if "timeout" in lowered or "timed out" in lowered:
+        return f"Network timeout: {text}. Check your internet connection."[:300]
+    if "connection" in lowered or "connect" in lowered:
+        return f"Connection error: {text}. Check your internet connection and firewall."[:300]
+    return None
 
 
 class TTSServer(ThreadingHTTPServer):
@@ -76,7 +198,7 @@ class TTSRequestHandler(BaseHTTPRequestHandler):
             api_key = request_data.get("api_key")
             text = request_data.get("text")
             reference_id = request_data.get("reference_id")
-            model = request_data.get("model", "s2-pro")
+            model = requested_model(request_data.get("model"))
             latency = request_data.get("latency", "normal")
             speed = request_data.get("speed", 1.0)
             normalize = request_data.get("normalize", False)
@@ -89,27 +211,44 @@ class TTSRequestHandler(BaseHTTPRequestHandler):
                     "error": "Missing required parameters: api_key, text, or reference_id"
                 }
 
-            # Create client with proper base_url to avoid SSL hostname mismatch
-            client = AsyncFishAudio(
-                api_key=api_key,
-                base_url="https://api.fish.audio"
-            )
+            # Create client with proper base_url to avoid SSL hostname mismatch.
+            # A build without that parameter still works on its own default host.
+            try:
+                client = AsyncFishAudio(
+                    api_key=api_key,
+                    base_url="https://api.fish.audio"
+                )
+            except TypeError:
+                log("This fish-audio-sdk build has no base_url parameter; using its default host")
+                client = AsyncFishAudio(api_key=api_key)
 
+            # The model is not a TTSConfig field in current SDK builds: it travels as
+            # the `model` request header, passed to convert(). Putting it on the config
+            # is silently ignored (pydantic drops unknown fields), which leaves the SDK
+            # default in place - hence the explicit placement below.
             config = TTSConfig(
-                prosody=Prosody(speed=float(speed), volume=0),
+                prosody=Prosody(speed=clamp_speed(speed), volume=0),
                 reference_id=reference_id,
                 format="wav",
                 latency=latency,
                 normalize=normalize,
-                model=model,
                 temperature=temperature,
                 top_p=top_p
             )
 
-            # Convert text to speech with timeout (45 seconds max - increased for slow networks)
+            # Convert text to speech with timeout (45 seconds max - increased for slow networks).
+            # The model string goes out exactly as configured; this log line is the only
+            # record of what was asked for, because the service substitutes its own default
+            # for a `model` value it does not recognize instead of rejecting the request.
+            log(f"Model for this request: {model}")
+            convert_args = {"text": text, "config": config}
+            if convert_supports_model_argument(client):
+                convert_args["model"] = model
+            else:
+                convert_args["config"] = config_carrying_model(config, model)
             try:
                 audio_data = await asyncio.wait_for(
-                    client.tts.convert(text=text, config=config),
+                    client.tts.convert(**convert_args),
                     timeout=45.0
                 )
             except asyncio.TimeoutError:
@@ -117,41 +256,55 @@ class TTSRequestHandler(BaseHTTPRequestHandler):
                     "success": False,
                     "error": "TTS generation timed out after 45 seconds. This may be due to slow network or Fish Audio API issues."
                 }
+            # Named SDK exceptions (fishaudio.exceptions): the status code lives on the
+            # exception, so these stay correct regardless of how the message is worded.
+            # Each constant is a no-op class when the installed SDK lacks it.
+            except _SDK_AUTH_ERROR:
+                return {
+                    "success": False,
+                    "error": "Invalid API key. Please check your Fish Audio API key."
+                }
+            except _SDK_PERMISSION_ERROR:
+                return {
+                    "success": False,
+                    "error": "Access forbidden. Your API key may not have permission to use this feature."
+                }
+            except _SDK_NOT_FOUND_ERROR:
+                return {
+                    "success": False,
+                    "error": f"Reference voice ID '{reference_id}' not found. Please check the voice ID."
+                }
+            except _SDK_RATE_LIMIT_ERROR:
+                return {
+                    "success": False,
+                    "error": "Rate limit exceeded. Please wait a moment and try again."
+                }
+            except _SDK_SERVER_ERROR as server_error:
+                return {
+                    "success": False,
+                    "error": f"Fish Audio server error (HTTP {getattr(server_error, 'status', '?')}). "
+                             "Please try again later."
+                }
+            except _SDK_VALIDATION_ERROR as validation_error:
+                return {
+                    "success": False,
+                    "error": f"Request rejected by Fish Audio: {validation_error}"[:300]
+                }
+            except _SDK_BASE_ERROR as sdk_error:
+                # Remaining SDK failures that carry no HTTP status (websocket, missing
+                # dependency, unknown API error shape).
+                status = getattr(sdk_error, "status", None)
+                detail = f" (HTTP {status})" if status else ""
+                return {
+                    "success": False,
+                    "error": f"Fish Audio SDK error{detail}: {sdk_error}"[:300]
+                }
             except Exception as api_error:
-                # Catch specific API errors
-                error_msg = str(api_error)
-                if "401" in error_msg or "Unauthorized" in error_msg:
-                    return {
-                        "success": False,
-                        "error": "Invalid API key. Please check your Fish Audio API key."
-                    }
-                elif "403" in error_msg or "Forbidden" in error_msg:
-                    return {
-                        "success": False,
-                        "error": "Access forbidden. Your API key may not have permission to use this feature."
-                    }
-                elif "404" in error_msg or "Not Found" in error_msg:
-                    return {
-                        "success": False,
-                        "error": f"Reference voice ID '{reference_id}' not found. Please check the voice ID."
-                    }
-                elif "429" in error_msg or "Too Many Requests" in error_msg:
-                    return {
-                        "success": False,
-                        "error": "Rate limit exceeded. Please wait a moment and try again."
-                    }
-                elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
-                    return {
-                        "success": False,
-                        "error": f"Network timeout: {error_msg}. Check your internet connection."
-                    }
-                elif "connection" in error_msg.lower():
-                    return {
-                        "success": False,
-                        "error": f"Connection error: {error_msg}. Check your internet connection and firewall."
-                    }
-                else:
-                    raise  # Re-raise unknown errors to be caught by outer exception handler
+                # Transport-level failures arrive here rather than as SDK exceptions.
+                message = describe_network_failure(api_error)
+                if message:
+                    return {"success": False, "error": message}
+                raise  # Re-raise unknown errors to be caught by outer exception handler
 
             # Collect all chunks if it's a stream
             if hasattr(audio_data, 'collect'):
@@ -581,12 +734,25 @@ def main():
     # Verify fishaudio package is available
     try:
         import fishaudio
-        sys.stderr.write(f"[TTS Server] fishaudio package version: {getattr(fishaudio, '__version__', 'unknown')}\n")
+        version = getattr(fishaudio, "__version__", None)
+        try:
+            import importlib.metadata as metadata
+            version = metadata.version("fish-audio-sdk") or version
+        except Exception:
+            pass
+        sys.stderr.write(f"[TTS Server] fishaudio package version: {version or 'unknown'}\n")
         sys.stderr.flush()
     except ImportError:
         sys.stderr.write("[TTS Server] fishaudio package not found. Please install: pip install fish-audio-sdk\n")
         sys.stderr.flush()
         sys.exit(1)
+
+    # Not fatal: a build without the named exceptions still works, it just reports
+    # failures with generic messages.
+    missing = describe_sdk_gap()
+    if missing:
+        log(f"Installed fish-audio-sdk does not provide {', '.join(missing)}; error details "
+            "will be generic (pip install -U fish-audio-sdk fixes it)")
 
     run_server(0, parent_pid, auth_token)
 

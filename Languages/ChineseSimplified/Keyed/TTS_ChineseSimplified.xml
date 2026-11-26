@@ -16,11 +16,10 @@
     <RimTalk.TTS.Off>关闭</RimTalk.TTS.Off>
     <RimTalk.Settings.TTS.ApiKey>API 密钥：</RimTalk.Settings.TTS.ApiKey>
     <RimTalk.Settings.TTS.ModelLabel>TTS 模型：{0}</RimTalk.Settings.TTS.ModelLabel>
-    <RimTalk.Settings.TTS.ModelHighQuality>fishaudio-1（v1.6）</RimTalk.Settings.TTS.ModelHighQuality>
-    <RimTalk.Settings.TTS.ModelFaster>s1</RimTalk.Settings.TTS.ModelFaster>
     <RimTalk.Settings.TTS.ModelS2Pro>s2-pro</RimTalk.Settings.TTS.ModelS2Pro>
     <RimTalk.Settings.TTS.ModelS21Pro>s2.1-pro</RimTalk.Settings.TTS.ModelS21Pro>
     <RimTalk.Settings.TTS.ModelS21ProFree>s2.1-pro-free（s2.1-pro的免费版，生成时间可能很长）</RimTalk.Settings.TTS.ModelS21ProFree>
+    <RimTalk.Settings.TTS.ModelDrama3>drama-3（情感表现最强，按字符量计费，需账户有 API 额度）</RimTalk.Settings.TTS.ModelDrama3>
     <RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>生成冷却时间(毫秒): {0}</RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>
     <RimTalk.Settings.TTS.RequestTimeoutLabel>请求超时：{0} 秒（0 = 不超时）</RimTalk.Settings.TTS.RequestTimeoutLabel>
     <RimTalk.Settings.TTS.RequestTimeoutInfo>从请求发往供应商时开始计时（不含预处理与冷却排队）。超时的句子只显示文字、不发声。</RimTalk.Settings.TTS.RequestTimeoutInfo>
@@ -60,8 +59,7 @@
     <RimTalk.Settings.TTS.AddModelButton>添加模型</RimTalk.Settings.TTS.AddModelButton>
     <RimTalk.Settings.TTS.ProcessingPromptTip>使用 {language} 代表目标语言. 建议使用外部编辑器编辑复杂提示词。</RimTalk.Settings.TTS.ProcessingPromptTip>
     <RimTalk.Settings.TTS.ResetPrompt>重置提示词</RimTalk.Settings.TTS.ResetPrompt>
-    <RimTalk.Settings.TTS.ResetPrompt.FishAudioOld>使用 FishAudio 默认提示词(v1.6/S1)</RimTalk.Settings.TTS.ResetPrompt.FishAudioOld>
-    <RimTalk.Settings.TTS.ResetPrompt.FishAudioS2>使用 FishAudio 默认提示词(S2-pro)</RimTalk.Settings.TTS.ResetPrompt.FishAudioS2>
+    <RimTalk.Settings.TTS.ResetPrompt.FishAudioS2>使用 FishAudio 默认提示词</RimTalk.Settings.TTS.ResetPrompt.FishAudioS2>
     <RimTalk.Settings.TTS.ResetPrompt.CosyVoice>使用 CosyVoice 默认提示词</RimTalk.Settings.TTS.ResetPrompt.CosyVoice>
     <RimTalk.Settings.TTS.ResetPrompt.IndexTTS>使用 IndexTTS 默认提示词</RimTalk.Settings.TTS.ResetPrompt.IndexTTS>
     <RimTalk.Settings.TTS.ResetPrompt.AzureTTS>使用 Azure TTS 默认提示词</RimTalk.Settings.TTS.ResetPrompt.AzureTTS>

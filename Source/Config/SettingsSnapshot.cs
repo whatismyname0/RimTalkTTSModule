@@ -30,9 +30,6 @@ namespace RimTalk.TTS.Config
         public string ApiKey;
         public string Model;
         public bool RemoveBrackets;
-
-        /// <summary>Old Fish Audio models read "[]" as SSML; brackets are rewritten to "()".</summary>
-        public bool ConvertBracketsToParentheses;
     }
 
     /// <summary>Resolved TTS supplier values used to build one synthesis request.</summary>

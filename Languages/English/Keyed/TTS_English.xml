@@ -16,11 +16,10 @@
     <RimTalk.TTS.Off>turned off</RimTalk.TTS.Off>
     <RimTalk.Settings.TTS.ApiKey>API Key:</RimTalk.Settings.TTS.ApiKey>
     <RimTalk.Settings.TTS.ModelLabel>TTS Model: {0}</RimTalk.Settings.TTS.ModelLabel>
-    <RimTalk.Settings.TTS.ModelHighQuality>fishaudio-1（v1.6）</RimTalk.Settings.TTS.ModelHighQuality>
-    <RimTalk.Settings.TTS.ModelFaster>s1</RimTalk.Settings.TTS.ModelFaster>
     <RimTalk.Settings.TTS.ModelS2Pro>s2-pro</RimTalk.Settings.TTS.ModelS2Pro>
     <RimTalk.Settings.TTS.ModelS21Pro>s2.1-pro</RimTalk.Settings.TTS.ModelS21Pro>
     <RimTalk.Settings.TTS.ModelS21ProFree>s2.1-pro-free（Free version of s2.1-pro, time to response may be longer）</RimTalk.Settings.TTS.ModelS21ProFree>
+    <RimTalk.Settings.TTS.ModelDrama3>drama-3 (most expressive; billed per byte, needs API credit)</RimTalk.Settings.TTS.ModelDrama3>
     <RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>Generate Cooldown (miliseconds): {0}</RimTalk.Settings.TTS.GenerateCooldownMiliSecondsLabel>
     <RimTalk.Settings.TTS.RequestTimeoutLabel>Request timeout: {0} s (0 = no timeout)</RimTalk.Settings.TTS.RequestTimeoutLabel>
     <RimTalk.Settings.TTS.RequestTimeoutInfo>Counted from the moment a request is sent to the supplier (preprocessing and cooldown excluded). A timed-out line is displayed without speech.</RimTalk.Settings.TTS.RequestTimeoutInfo>
@@ -60,8 +59,7 @@
     <RimTalk.Settings.TTS.AddModelButton>Add Model</RimTalk.Settings.TTS.AddModelButton>
     <RimTalk.Settings.TTS.ProcessingPromptTip>Use {language} for target language and {text} for dialogue text. External editor recommended for complex prompts.</RimTalk.Settings.TTS.ProcessingPromptTip>
     <RimTalk.Settings.TTS.ResetPrompt>Reset Prompt</RimTalk.Settings.TTS.ResetPrompt>
-    <RimTalk.Settings.TTS.ResetPrompt.FishAudioOld>Use Default FishAudio Prompt(v1.6/S1)</RimTalk.Settings.TTS.ResetPrompt.FishAudioOld>
-    <RimTalk.Settings.TTS.ResetPrompt.FishAudioS2>Use Default FishAudio Prompt(S2-pro)</RimTalk.Settings.TTS.ResetPrompt.FishAudioS2>
+    <RimTalk.Settings.TTS.ResetPrompt.FishAudioS2>Use Default FishAudio Prompt</RimTalk.Settings.TTS.ResetPrompt.FishAudioS2>
     <RimTalk.Settings.TTS.ResetPrompt.CosyVoice>Use Default CosyVoice Prompt</RimTalk.Settings.TTS.ResetPrompt.CosyVoice>
     <RimTalk.Settings.TTS.ResetPrompt.IndexTTS>Use Default IndexTTS Prompt</RimTalk.Settings.TTS.ResetPrompt.IndexTTS>
     <RimTalk.Settings.TTS.ResetPrompt.AzureTTS>Use Default Azure TTS Prompt</RimTalk.Settings.TTS.ResetPrompt.AzureTTS>

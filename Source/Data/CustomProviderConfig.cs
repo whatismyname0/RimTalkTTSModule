@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using Verse;
 
 namespace RimTalk.TTS.Data
@@ -88,6 +89,27 @@ namespace RimTalk.TTS.Data
         {
             Name = name;
             BaseUrl = baseUrl;
+        }
+
+        /// <summary>
+        /// Copy used by the editor window: it edits a draft so "Cancel"/X cannot change the stored
+        /// provider (all fields are strings, bools or ints, so the memberwise copy is deep enough).
+        /// </summary>
+        public CustomProviderConfig Clone()
+        {
+            return (CustomProviderConfig)MemberwiseClone();
+        }
+
+        /// <summary>Apply a saved draft to this stored instance, keeping the object identity.</summary>
+        public void CopyFrom(CustomProviderConfig source)
+        {
+            if (source == null || ReferenceEquals(source, this)) return;
+
+            foreach (FieldInfo field in typeof(CustomProviderConfig).GetFields(
+                         BindingFlags.Instance | BindingFlags.Public))
+            {
+                field.SetValue(this, field.GetValue(source));
+            }
         }
 
         public void ExposeData()

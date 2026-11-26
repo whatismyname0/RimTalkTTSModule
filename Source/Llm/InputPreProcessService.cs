@@ -30,7 +30,7 @@ namespace RimTalk.TTS.Llm
                     return null;
                 }
 
-                response.Text = CleanText(response.Text, options.ConvertBracketsToParentheses);
+                response.Text = CleanText(response.Text);
                 if (string.IsNullOrEmpty(response.Text))
                 {
                     TTSLog.Warning("[RimTalk.TTS] Preprocess result was empty after cleaning");
@@ -46,24 +46,16 @@ namespace RimTalk.TTS.Llm
             }
         }
 
-        private static string CleanText(string text, bool convertBrackets)
+        private static string CleanText(string text)
         {
             if (string.IsNullOrEmpty(text)) return text;
 
-            text = System.Text.RegularExpressions.Regex.Replace(
+            return System.Text.RegularExpressions.Regex.Replace(
                         System.Text.RegularExpressions.Regex.Replace(
                             text.Normalize(NormalizationForm.FormKC), @"\([^)]*\)", ""
                         )
                         , @"\s+", " "
                     ).Trim();
-
-            // Old Fish Audio models read "[]" as SSML - those suppliers expect "()".
-            if (convertBrackets)
-            {
-                text = text.Replace("[", "(").Replace("]", ")");
-            }
-
-            return text;
         }
     }
 }

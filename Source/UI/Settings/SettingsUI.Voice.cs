@@ -156,9 +156,22 @@ namespace RimTalk.TTS.UI
                     
                     if (isDoubleClick)
                     {
-                        // Double click - open editor
-                        Find.WindowStack.Add(new VoiceRuleEditorWindow(rule, settings, () =>
+                        // Double click - edit a draft copy. The editor mutates the object it is given,
+                        // so editing the stored rule directly would make Cancel/X change the live
+                        // settings (and skip SetVoiceRules/OnRulesChanged).
+                        var draft = rule.Clone();
+                        Find.WindowStack.Add(new VoiceRuleEditorWindow(draft, settings, edited =>
                         {
+                            int editedIndex = rules.IndexOf(rule);
+                            if (editedIndex >= 0)
+                            {
+                                rules[editedIndex].CopyFrom(edited);
+                            }
+                            else
+                            {
+                                // The list was rebuilt while the editor was open: keep the edit.
+                                rules.Add(edited);
+                            }
                             editor.SetVoiceRules(supplierKey, rules);
                         }));
                         lastClickedRuleIndex = -1; // Reset to prevent triple-click
@@ -217,9 +230,9 @@ namespace RimTalk.TTS.UI
             if (Widgets.ButtonText(addButtonRect, "+"))
             {
                 var newRule = new VoiceAssignmentRule();
-                Find.WindowStack.Add(new VoiceRuleEditorWindow(newRule, settings, () =>
+                Find.WindowStack.Add(new VoiceRuleEditorWindow(newRule, settings, edited =>
                 {
-                    rules.Add(newRule);
+                    rules.Add(edited);
                     editor.SetVoiceRules(supplierKey, rules);
                     selectedRuleIndex = rules.Count - 1;
                 }));

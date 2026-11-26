@@ -85,7 +85,7 @@ namespace RimTalk.TTS.Bootstrap
             // ---- optional RimTalk UI windows -------------------------------------------------
             Patch(harmony, "ui/character-card", RimTalkHooks.CharacterCardDoTopStack,
                 transpiler: Method(typeof(BioTabVoicePatch), nameof(BioTabVoicePatch.Transpiler)));
-            Patch(harmony, "ui/persona-editor", RimTalkHooks.PersonaEditorDoWindowContents,
+            Patch(harmony, "ui/persona-editor", RimTalkHooks.PersonaEditorDrawPersonalityTab,
                 postfix: Method(typeof(PersonaEditorPatch), nameof(PersonaEditorPatch.Postfix)));
         }
 

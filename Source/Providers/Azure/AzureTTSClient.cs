@@ -140,10 +140,11 @@ namespace RimTalk.TTS.Providers
             // Process text content with SSML enhancements
             string processedText = ProcessTextWithSSMLTags(request.Input, ns);
             
-            // Build prosody element with all supported attributes
-            bool needsProsody = Math.Abs(request.Speed - 1.0f) > 0.01f || 
-                               Math.Abs(request.Temperature - 0.5f) > 0.01f || 
-                               Math.Abs(request.TopP - 0.5f) > 0.01f;
+            // Build prosody element. Azure only gets the rate mapping here: Temperature/TopP are
+            // Fish Audio sampling parameters (the settings UI labels them "used only by Fish Audio")
+            // and must NOT be reinterpreted as pitch. The old code mapped Temperature as a pitch
+            // offset around 0.5, which turned the default 0.9 into a constant +40% pitch.
+            bool needsProsody = Math.Abs(request.Speed - 1.0f) > 0.01f;
             
             object content;
             
@@ -157,14 +158,6 @@ namespace RimTalk.TTS.Providers
                     int ratePercent = (int)((request.Speed - 1.0f) * 100);
                     string rateStr = ratePercent >= 0 ? $"+{ratePercent}%" : $"{ratePercent}%";
                     prosody.Add(new XAttribute("rate", rateStr));
-                }
-                
-                // Pitch (use Temperature as pitch modifier: 0.0-1.0 -> -50% to +50%)
-                if (Math.Abs(request.Temperature - 0.5f) > 0.01f)
-                {
-                    int pitchPercent = (int)((request.Temperature - 0.5f) * 100);
-                    string pitchStr = pitchPercent >= 0 ? $"+{pitchPercent}%" : $"{pitchPercent}%";
-                    prosody.Add(new XAttribute("pitch", pitchStr));
                 }
                 
                 prosody.Add(XElement.Parse(processedText));

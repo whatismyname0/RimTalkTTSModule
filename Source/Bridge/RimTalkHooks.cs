@@ -20,6 +20,19 @@ namespace RimTalk.TTS.Bridge
         CreateInteraction
     }
 
+    /// <summary>
+    /// Which persona-editor layout RimTalk ships. The tabbed 1.4.4 release reworked the window (it
+    /// exposes <c>IsPersonalityTabSelected</c>) and uses a shorter prompt box, which moves the
+    /// Save/SmartGen/RollGen/Clear action row 33px up compared with the dev build.
+    /// </summary>
+    internal enum PersonaEditorLayoutKind
+    {
+        /// <summary>Dev build: 180px prompt box, action row at content.y + 295.</summary>
+        Legacy,
+        /// <summary>1.4.4 tabbed release: 160px prompt box, action row at content.y + 262.</summary>
+        Tabbed
+    }
+
     /// <summary>How much a missing hook hurts. Controls the report severity.</summary>
     internal enum HookSeverity
     {
@@ -94,10 +107,10 @@ namespace RimTalk.TTS.Bridge
 
         // --- optional RimTalk UI windows ----------------------------------------------------
         public static MethodInfo CharacterCardDoTopStack { get; private set; }
-        public static MethodInfo PersonaEditorDoWindowContents { get; private set; }
+        /// <summary>The personality tab's body. RimTalk calls it only while that tab is selected.</summary>
+        public static MethodInfo PersonaEditorDrawPersonalityTab { get; private set; }
         public static FieldInfo PersonaEditorPawnField { get; private set; }
-        /// <summary>1.4.4+ tab state; null on builds without persona-editor tabs (dev).</summary>
-        public static PropertyInfo PersonaEditorIsPersonalityTab { get; private set; }
+        public static PersonaEditorLayoutKind PersonaEditorLayout { get; private set; }
 
         public static IReadOnlyList<HookIssue> Issues => _issues;
 
@@ -258,19 +271,29 @@ namespace RimTalk.TTS.Bridge
             Type personaEditor = AccessTools_TypeByName("RimTalk.UI.PersonaEditorWindow");
             if (personaEditor != null)
             {
-                PersonaEditorDoWindowContents = FindMethodAny(personaEditor, "DoWindowContents", InstancePublic);
+                // Drawing follows DrawPersonalityTab rather than DoWindowContents: RimTalk calls it
+                // only while the Personality tab is selected, so the voice button can never appear
+                // on the Memories tab (the old DoWindowContents hook had to guess the tab state,
+                // which is impossible on builds without IsPersonalityTabSelected).
+                PersonaEditorDrawPersonalityTab = FindMethod(personaEditor, "DrawPersonalityTab",
+                                                    InstanceNonPublic, typeof(Rect))
+                                                ?? FindMethodAny(personaEditor, "DrawPersonalityTab",
+                                                    InstancePublic | BindingFlags.NonPublic);
                 PersonaEditorPawnField = FindField(personaEditor, "pawn", InstanceNonPublic | InstancePublic)
                                          ?? FindField(personaEditor, "_pawn", InstanceNonPublic | InstancePublic);
-                // 1.4.4 added Personality/Memories tabs. Dev builds have no tabs, so a missing
-                // property means "always visible" (the pre-tabs behaviour).
-                PersonaEditorIsPersonalityTab = FindProperty(personaEditor, "IsPersonalityTabSelected", InstancePublic);
+
+                // The tab API arrived together with the reworked layout (1.4.4), so feature-detect
+                // the layout instead of trusting a version number: both builds can be installed at
+                // the same time and only one of them is loaded by the game.
+                PersonaEditorLayout =
+                    FindProperty(personaEditor, "IsPersonalityTabSelected", InstancePublic) != null
+                        ? PersonaEditorLayoutKind.Tabbed
+                        : PersonaEditorLayoutKind.Legacy;
             }
 
-            if (PersonaEditorDoWindowContents == null || PersonaEditorPawnField == null)
-                AddIssue("PersonaEditorWindow.DoWindowContents/pawn", HookSeverity.Info, "persona editor voice button disabled");
-            else if (PersonaEditorIsPersonalityTab == null)
-                AddIssue("PersonaEditorWindow.IsPersonalityTabSelected", HookSeverity.Info,
-                    "voice button is shown on every persona editor tab");
+            if (PersonaEditorDrawPersonalityTab == null || PersonaEditorPawnField == null)
+                AddIssue("PersonaEditorWindow.DrawPersonalityTab/pawn", HookSeverity.Info,
+                    "persona editor voice button disabled");
         }
 
         /// <summary>One aggregated report: fatal/degraded as warnings, the rest as verbose info.</summary>

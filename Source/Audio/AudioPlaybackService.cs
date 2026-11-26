@@ -71,16 +71,43 @@ public static class AudioPlaybackService
             token = ++_playbackToken;
         }
 
+        AudioClip clip = null;
         try
         {
-            AudioClip clip = await LoadAudioClipFromData(audioData, dialogueId.ToString());
-            if (clip == null || clip.length <= 0)
+            clip = await LoadAudioClipFromData(audioData, dialogueId.ToString());
+
+            // StopAndClear (game load / supplier switch / TTS off) may have run while the clip was
+            // loading: drop the stale result instead of playing it over a reset.
+            bool current;
+            lock (_lock)
             {
-                TTSLog.Error("[RimTalk.TTS] Failed to create audio clip from audio data or clip length is 0");
+                current = token == _playbackToken;
+            }
+            if (!current)
+            {
+                DestroyClip(clip, "stopped while loading");
+                clip = null;
                 return;
             }
 
+            if (clip == null || clip.length <= 0)
+            {
+                TTSLog.Error("[RimTalk.TTS] Failed to create audio clip from audio data or clip length is 0");
+                DestroyClip(clip, "invalid clip");
+                clip = null;
+                return;
+            }
+
+            // Playback is serialized, so any clip still assigned has finished: release it before
+            // replacing it. Runtime-created AudioClips are not freed by dropping the reference; the
+            // native buffer would live until the next Resources.UnloadUnusedAssets (game load).
+            AudioClip previous = _audioSource.clip;
             _audioSource.clip = clip;
+            if (previous != null && previous != clip)
+            {
+                DestroyClip(previous, "replaced");
+            }
+
             _audioSource.volume = UnityEngine.Mathf.Clamp01(volume);
             TTSLog.Message($"[RimTalk.TTS] Playback start [{dialogueId.ToString().Substring(0, 8)}]: {clip.length:F1}s, {audioData.Length} bytes");
             _audioSource.Play();
@@ -94,14 +121,40 @@ public static class AudioPlaybackService
         }
         finally
         {
-            lock (_lock)
+            ReleasePlayback(clip, token);
+        }
+    }
+
+    /// <summary>Clear the playing flag and release the clip owned by this playback task.</summary>
+    private static void ReleasePlayback(AudioClip clip, int token)
+    {
+        bool owns;
+        lock (_lock)
+        {
+            owns = token == _playbackToken;
+            if (owns)
             {
-                if (token == _playbackToken)
-                {
-                    _isPlaying = false;
-                }
+                _isPlaying = false;
             }
         }
+
+        // StopAndClear already stopped playback and destroyed the active clip.
+        if (!owns) return;
+
+        try
+        {
+            if (_audioSource != null && _audioSource.clip == clip)
+            {
+                _audioSource.Stop();
+                _audioSource.clip = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            TTSLog.Error($"[RimTalk.TTS] AudioPlaybackService.ReleasePlayback exception: {ex.GetType().Name}: {ex.Message}");
+        }
+
+        DestroyClip(clip, "playback finished");
     }
 
     /// <summary>
@@ -190,6 +243,7 @@ public static class AudioPlaybackService
     private static async Task<AudioClip> LoadAudioClipFromMP3(byte[] mp3Data, string dialogueId)
     {
         string tempFile = null;
+        AudioClip clip = null;
         try
         {
             // Write to temp file
@@ -197,7 +251,6 @@ public static class AudioPlaybackService
             await System.IO.File.WriteAllBytesAsync(tempFile, mp3Data);
 
             // Load using UnityWebRequestMultimedia (file:// URI; new Uri handles spaces/backslashes)
-            AudioClip clip = null;
             using (var www = UnityEngine.Networking.UnityWebRequestMultimedia.GetAudioClip(new System.Uri(tempFile).AbsoluteUri, UnityEngine.AudioType.MPEG))
             {
                 var operation = www.SendWebRequest();
@@ -229,6 +282,8 @@ public static class AudioPlaybackService
         catch (Exception ex)
         {
             TTSLog.Error($"[RimTalk.TTS] AudioPlaybackService.LoadAudioClipFromMP3 exception: {ex.GetType().Name}: {ex.Message}");
+            // Do not leak a clip that was decoded before the failure.
+            DestroyClip(clip, "mp3 load failed");
             return null;
         }
         finally
@@ -415,7 +470,16 @@ public static class AudioPlaybackService
 
             // Create AudioClip
             AudioClip clip = AudioClip.Create("RimTalkTTS", sampleCount / channels, channels, sampleRate, false);
-            clip.SetData(audioData, 0);
+            try
+            {
+                clip.SetData(audioData, 0);
+            }
+            catch
+            {
+                // The native clip already exists; do not leak it when filling it fails.
+                DestroyClip(clip, "set data failed");
+                throw;
+            }
 
             return clip;
         }
@@ -426,13 +490,43 @@ public static class AudioPlaybackService
         }
     }
 
-    /// <summary>Stop playback and reset the playing flag (game load, provider switch, shutdown).</summary>
+    /// <summary>
+    /// Release a runtime-created AudioClip. No-op for null and already-destroyed clips (Unity's
+    /// overloaded == treats a destroyed object as null).
+    /// </summary>
+    private static void DestroyClip(AudioClip clip, string reason)
+    {
+        if (clip == null) return;
+
+        try
+        {
+            UnityEngine.Object.Destroy(clip);
+        }
+        catch (Exception ex)
+        {
+            TTSLog.Error($"[RimTalk.TTS] Failed to destroy AudioClip ({reason}): {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    /// <summary>Stop playback and release the active clip (game load, provider switch, shutdown).</summary>
     public static void StopAndClear()
     {
-        if (_audioSource != null && _audioSource.isPlaying)
+        AudioClip clip = null;
+        try
         {
-            _audioSource.Stop();
-            _audioSource.clip = null;
+            if (_audioSource != null)
+            {
+                clip = _audioSource.clip;
+                if (_audioSource.isPlaying)
+                {
+                    _audioSource.Stop();
+                }
+                _audioSource.clip = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            TTSLog.Error($"[RimTalk.TTS] AudioPlaybackService.StopAndClear exception: {ex.GetType().Name}: {ex.Message}");
         }
 
         lock (_lock)
@@ -441,5 +535,7 @@ public static class AudioPlaybackService
             _playbackToken++;
             _isPlaying = false;
         }
+
+        DestroyClip(clip, "stop and clear");
     }
 }

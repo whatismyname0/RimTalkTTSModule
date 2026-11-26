@@ -14,8 +14,6 @@ namespace RimTalk.TTS.Config
     /// </summary>
     internal static class SnapshotFactory
     {
-        private static readonly string[] FishAudioS2Models = { "s2-pro", "s2.1-pro", "s2.1-pro-free" };
-
         public static SettingsSnapshot Build(TTSSettings settings, Pawn pawn)
         {
             var s = settings ?? new TTSSettings();
@@ -70,9 +68,6 @@ namespace RimTalk.TTS.Config
                 Skip = s.ApiProvider == TTSApiProvider.Skip,
                 PromptTemplate = TTSConstant.GetTTSProcessingPrompt(s),
                 RemoveBrackets = s.RemoveBracketsInPreProcess,
-                ConvertBracketsToParentheses =
-                    s.Supplier == TTSSettings.TTSSupplier.FishAudio &&
-                    !FishAudioS2Models.Contains(s.GetSupplierModel(TTSSettings.TTSSupplier.FishAudio)),
             };
 
             if (options.Skip)

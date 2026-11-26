@@ -215,6 +215,7 @@ namespace RimTalk.TTS.Providers
             template = template.Replace("{response_format}", EscapeForTemplate(config.ResponseFormat ?? "mp3"));
             template = template.Replace("{temperature}", request.Temperature.ToString(System.Globalization.CultureInfo.InvariantCulture));
             template = template.Replace("{top_p}", request.TopP.ToString(System.Globalization.CultureInfo.InvariantCulture));
+	    template = template.Replace("{seed}", request.Seed.ToString(System.Globalization.CultureInfo.InvariantCulture));
             template = template.Replace("{emotion}", EscapeForTemplate(request.InstructText ?? ""));
             template = template.Replace("{instruct_text}", EscapeForTemplate(request.InstructText ?? ""));
             template = template.Replace("{api_key}", EscapeForTemplate(request.ApiKey ?? ""));

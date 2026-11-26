@@ -10,6 +10,7 @@ namespace RimTalk.TTS.Providers
         public string Model { get; set; }
         public string Input { get; set; }
         public string InstructText { get; set; }
+	public long Seed { get; set; }
 
         // voice URI or preset (can be empty string for dynamic references)
         public string Voice { get; set; }

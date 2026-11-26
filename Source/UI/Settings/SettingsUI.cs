@@ -81,6 +81,16 @@ namespace RimTalk.TTS.UI
             listing.CheckboxLabeled("RimTalk.Settings.TTS.ControlButtonEnable".Translate(), ref showControlButtons, "RimTalk.Settings.TTS.ControlButtonEnableTooltip".Translate());
             if (showControlButtons != settings.ControlButtonDisplay) editor.SetControlButtonDisplay(showControlButtons);
 
+		listing.Gap();
+
+		bool stripStageDirections = settings.Ui.StripStageDirections;
+listing.CheckboxLabeled(
+    "RimTalk.Settings.TTS.StripStageDirections".Translate(),
+    ref stripStageDirections,
+    "RimTalk.Settings.TTS.StripStageDirectionsTooltip".Translate());
+
+if (stripStageDirections != settings.Ui.StripStageDirections)
+    editor.SetStripStageDirections(stripStageDirections);
             listing.Gap();
 
             // Per-request timeout: global (not per supplier) because it protects the whole TTS

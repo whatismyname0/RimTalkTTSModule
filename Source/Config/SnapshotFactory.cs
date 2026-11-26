@@ -21,9 +21,12 @@ namespace RimTalk.TTS.Config
 
             return new SettingsSnapshot
             {
+		StripStageDirections = s.Ui.StripStageDirections,
+		Seed = PawnVoiceManager.GetSeed(pawn),
                 PawnLabel = pawn?.LabelShort,
                 VoiceModelId = ResolveVoiceModelId(s, pawn, supplierKey),
                 VoiceLanguage = PawnVoiceManager.GetEffectiveLanguage(pawn, s),
+                InstructText = PawnVoiceManager.GetVoiceInstruction(pawn),
                 Llm = BuildLlmOptions(s),
                 Supplier = BuildSupplierOptions(s, supplierKey),
                 RequestTimeoutSeconds = s.GetTtsRequestTimeoutSeconds(),

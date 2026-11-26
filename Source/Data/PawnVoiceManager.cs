@@ -18,6 +18,12 @@ namespace RimTalk.TTS.Data
         // Dictionary: PawnId -> Custom language for TTS (null/empty = use global setting)
         private static Dictionary<int, string> _pawnLanguageMap = new Dictionary<int, string>();
 
+	// Dictionary: PawnId -> Unique voice seed
+	private static Dictionary<int, long> _pawnSeedMap = new Dictionary<int, long>();
+
+	// Random generator for pawn-specific voice seeds
+	private static readonly System.Random _seedRandom = new System.Random();
+
         /// <summary>
         /// Get voice model ID for a pawn (resolved to actual voice model for TTS)
         /// </summary>
@@ -150,24 +156,49 @@ namespace RimTalk.TTS.Data
             if (settings == null) return VoiceModel.NONE_MODEL_ID;
 
             string supplierKey = settings.GetCurrentSupplierKey();
-            var rules = settings.GetSupplierVoiceRules(supplierKey);
-            if (rules == null || rules.Count == 0)
-            {
-                // No rules defined, fallback to standard default
-                return settings.GetSupplierDefaultVoiceModelId(supplierKey) ?? VoiceModel.NONE_MODEL_ID;
-            }
+            var matchingRule = GetMatchingVoiceRule(pawn, settings, supplierKey);
+            if (matchingRule != null)
+                return matchingRule.GetVoiceModelIdFor(pawn);
 
-            // Iterate through rules in order, return first match
+            // No matching rule: fallback to the standard default.
+            return settings.GetSupplierDefaultVoiceModelId(supplierKey) ?? VoiceModel.NONE_MODEL_ID;
+        }
+
+        /// <summary>
+        /// Get the instruction from the same first matching rule used for automatic voice assignment.
+        /// A direct per-pawn voice choice always takes precedence and bypasses developer rules.
+        /// </summary>
+        public static string GetVoiceInstruction(Pawn pawn)
+        {
+            if (pawn == null) return null;
+
+            string userChoice = GetRawVoiceModel(pawn);
+            bool usesRules = userChoice == VoiceModel.RULE_BASED_MODEL_ID
+                             || (userChoice == VoiceModel.DEFAULT_MODEL_ID && IsDefaultRuleBased());
+            if (!usesRules) return null;
+
+            var settings = TtsRuntime.Current?.Settings;
+            if (settings == null) return null;
+
+            var rule = GetMatchingVoiceRule(pawn, settings, settings.GetCurrentSupplierKey());
+            return string.IsNullOrWhiteSpace(rule?.InstructText) ? null : rule.InstructText.Trim();
+        }
+
+        private static VoiceAssignmentRule GetMatchingVoiceRule(Pawn pawn, TTSSettings settings, string supplierKey)
+        {
+            if (pawn == null || settings == null) return null;
+
+            var rules = settings.GetSupplierVoiceRules(supplierKey);
+            if (rules == null) return null;
+
+            // Preserve the existing priority: the first matching rule wins.
             foreach (var rule in rules)
             {
-                if (rule.Matches(pawn))
-                {
-                    return rule.GetRandomVoiceModelId();
-                }
+                if (rule != null && rule.Matches(pawn))
+                    return rule;
             }
 
-            // No matching rule, fallback to standard default
-            return settings.GetSupplierDefaultVoiceModelId(supplierKey) ?? VoiceModel.NONE_MODEL_ID;
+            return null;
         }
 
         /// <summary>
@@ -196,16 +227,73 @@ namespace RimTalk.TTS.Data
         /// </summary>
         public static void RemovePawn(Pawn pawn)
         {
+
             if (pawn == null) return;
-            
+	    _pawnSeedMap.Remove(pawn.thingIDNumber);
             _pawnVoiceMap.Remove(pawn.thingIDNumber);
             _pawnResolvedVoiceMap.Remove(pawn.thingIDNumber);
             _pawnLanguageMap.Remove(pawn.thingIDNumber);
         }
         
+	/// <summary>
+	/// Get a persistent unique seed for a pawn.
+	/// Generates a new seed if the pawn does not have one yet.
+	/// </summary>
+	public static long GetSeed(Pawn pawn)
+	{
+	    if (pawn == null)
+	        return 0;
+
+	    int pawnId = pawn.thingIDNumber;
+
+	   if (_pawnSeedMap.TryGetValue(pawnId, out long existingSeed))
+	       return existingSeed;
+
+		  long newSeed;
+
+		   do
+		   {
+	        int[] digits = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+	        // Shuffle digits
+	        for (int i = digits.Length - 1; i > 0; i--)
+	        {
+	            int j = _seedRandom.Next(i + 1);
+	            int temp = digits[i];
+	            digits[i] = digits[j];
+	            digits[j] = temp;
+	        }
+
+	        // Random length: 9 or 10 digits
+	        int length = _seedRandom.Next(9, 11);
+
+	        // Ensure the first digit is not zero
+	        if (digits[0] == 0)
+	        {
+	            int swapIndex = _seedRandom.Next(1, length);
+	            int temp = digits[0];
+	            digits[0] = digits[swapIndex];
+	            digits[swapIndex] = temp;
+	        }
+
+	        string seedString = "";
+
+	        for (int i = 0; i < length; i++)
+	            seedString += digits[i].ToString();
+
+	        newSeed = long.Parse(seedString);
+
+	    } while (_pawnSeedMap.ContainsValue(newSeed));
+
+	    _pawnSeedMap[pawnId] = newSeed;
+
+	    return newSeed;
+	}
+
         /// <summary>
         /// Get custom language for a pawn (returns null/empty if using global setting)
         /// </summary>
+
         public static string GetLanguage(Pawn pawn)
         {
             if (pawn == null) return null;
@@ -256,6 +344,7 @@ namespace RimTalk.TTS.Data
         /// </summary>
         public static void Clear()
         {
+	    _pawnSeedMap.Clear();
             _pawnVoiceMap.Clear();
             _pawnResolvedVoiceMap.Clear();
             _pawnLanguageMap.Clear();
@@ -369,12 +458,15 @@ namespace RimTalk.TTS.Data
         /// </summary>
         public static void ExposeData()
         {
+	    Scribe_Collections.Look(ref _pawnSeedMap, "pawnSeedMap", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref _pawnVoiceMap, "pawnVoiceMap", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref _pawnLanguageMap, "pawnLanguageMap", LookMode.Value, LookMode.Value);
             // Note: We don't save _pawnResolvedVoiceMap - it's a cache that will be rebuilt
             
             if (Scribe.mode == LoadSaveMode.LoadingVars)
             {
+		if (_pawnSeedMap == null)
+		    _pawnSeedMap = new Dictionary<int, long>();
                 if (_pawnVoiceMap == null)
                     _pawnVoiceMap = new Dictionary<int, string>();
                 
